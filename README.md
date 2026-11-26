@@ -2,6 +2,8 @@
 
 An independent validator for business decisions, with a benchmark that measures what happens when a planner acts, waits, reviews or rejects a proposal.
 
+[Open the live workspace](https://enterprise-decision-intelligence.pages.dev/) · [Explore the benchmark](https://enterprise-decision-intelligence.pages.dev/benchmark)
+
 Fresh-food replenishment makes the trade-off concrete. A forecast drives an order, but spoilage, supplier limits, stale inventory and approval costs determine whether the order should go ahead. The validator checks a standard decision record against current terms and explains its decision across seven gates. The browser workspace lets planners compare actions, change scenario assumptions and record decisions locally.
 
 ## Results

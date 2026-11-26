@@ -4,6 +4,8 @@ The product is a static site. Hosting it costs nothing on Cloudflare Pages' free
 
 The release uses the dedicated `enterprise-decision-intelligence` Pages project. The commands below reproduce the static deployment from an authorized Wrangler session.
 
+The production deployment was verified on 2026-11-26. It serves the build from source commit `6638da5ce64f5567d5c7358a3a0c91ec52d55248`. [Production](https://enterprise-decision-intelligence.pages.dev/) · [Immutable deployment](https://3db57a48.enterprise-decision-intelligence.pages.dev/)
+
 ## Prerequisites
 
 - Node.js 22 or newer.

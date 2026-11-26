@@ -89,6 +89,20 @@ The findings depend on the reference demand. In the pilot's normal condition, P5
 
 The [README](../README.md) contains the pinned dataset, environment, CLI and browser commands. Preserve the historical synthetic artifacts by running fresh synthetic experiments in an isolated checkout. The pilot exports a separate data file alongside the synthetic workspace cases.
 
+| Release check | Observed result |
+|---|---|
+| Python and data pipelines | 65 tests passed on Python 3.13. Ruff lint and format checks and mypy passed. The CI-sized synthetic pipeline, secondary domain and isolated export completed locally. |
+| App and parity | 42 Vitest tests passed, including Python golden fixture parity. ESLint and TypeScript passed. |
+| Production browser | 16 journey tests passed across desktop and mobile. All 21 axe scans passed across desktop, tablet and mobile. The remaining Studio and workspace controls were exercised in Chrome at tablet width. |
+| Visual review | All seven pages captured at 1440, 820 and 390 px. The captures passed the document overflow check. [Screenshots](screenshots) |
+| Dependency and bundle review | Zero known vulnerabilities in the locked Python and shipped npm dependency queries. The bundle contains only static assets and uses self-hosted fonts. |
+| Release integrity | All seven public routes and two case deep links returned HTTP 200 with the expected HTML and security headers. All eight served JSON files matched the build byte for byte. `research_evidence.json` SHA-256 is `7d635d8847dfbccf06ca3898f2a75377c2f4cda2297441e62c6df2ff79f48354`. |
+| Replay | Both forecast tables (31,500 total rows), 58,800 decisions and 8,400 episode totals matched exactly across two pilot runs after omitting timings. The full amendment 2 synthetic run was audited from its committed aggregates. |
+
+The pilot benchmark replay took **192 seconds** with ten workers, plus **5.0 seconds** for forecasting. The single-process validator measured **3.5 ms p50** and **4.6 ms p95** across 400 saved decisions at 40 paths. Nine production Studio edits took 6–57 ms in Chrome (median 35 ms); the measured combinations varied with the assumptions. The production build is **1.05 MB** across 30 static files including header configuration. Its main JavaScript chunk is approximately **84 kB gzip**.
+
+Cloudflare Pages source commit `6638da5ce64f5567d5c7358a3a0c91ec52d55248`. Incremental development and static hosting spend was **$0**. GitHub publication and the hosted Actions result await authorization. Local verification is recorded above. [Production workspace](https://enterprise-decision-intelligence.pages.dev/) · [Deployment snapshot](https://3db57a48.enterprise-decision-intelligence.pages.dev/)
+
 ## Resume bullets
 
 - Audited and released a seven-gate decision validation system and benchmark that replayed 58,800 simulated replenishment decisions using observed FreshRetailNet-50K inputs, reducing hard-breached submissions from 46 to 0 under matched unreliable-data scenarios.

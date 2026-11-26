@@ -55,7 +55,7 @@ The review questions were the ones the design system sets out (`docs/DESIGN_SYST
 
 Payment Integrity informed the placement of uncertainty near the reported effect. Patient Outreach made the separation between modeled scenarios and observed evidence especially clear. Clinical Trace's screenshot sequence showed how workflow state and scope can stay visible on narrow screens. Enterprise Decision Intelligence uses its own IBM Plex typography, cobalt selection states, decision queue and aligned financial comparisons. [Payment Integrity](https://healthcare-payment-integrity.pages.dev/) · [Patient Outreach](https://patient-outreach-optimization.pages.dev/) · [Clinical Trace](https://github.com/AbhinavVarma02/Clinical-Trace-AI#clinical-workspace-screenshots)
 
-The benchmark now opens with a source switch, a safety ledger and a keyboard-operable breach-cost slider. The Studio shows the best-scoring feasible order and separate validator verdict, with a concise result above the controls on narrow screens. The workspace distinguishes blocked submissions from executable alternatives. The data page identifies the observed-data pilot independently of synthetic cases. The history flow now supports verified export, clear, cancellation, re-import and validation of an external bundle's dimensions.
+The benchmark now opens with a source switch, a safety ledger and a keyboard-operable breach-cost slider. The Studio shows the best-scoring feasible order and separate validator verdict, with a concise result above the controls on narrow screens. The workspace distinguishes blocked submissions from executable alternatives and aligns its cost spread under tail cost to keep fill rate visible. The data page identifies the observed-data pilot independently of synthetic cases. The history flow now supports verified export, clear, cancellation, re-import and validation of an external bundle's dimensions.
 
 ## Verified state
 
@@ -63,7 +63,7 @@ The benchmark now opens with a source switch, a safety ledger and a keyboard-ope
 - 16 browser journey tests pass (desktop and mobile).
 - 21 of 21 accessibility scans pass (7 pages x desktop, phone, tablet).
 - 21 screenshots captured without errors.
-- Bundle: 30 static files, about 1.04 MB in total, inside the 3 MB budget.
+- Bundle: 30 static files, about 1.05 MB in total, inside the 3 MB budget.
 
 ## Known limits
 

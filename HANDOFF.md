@@ -8,6 +8,6 @@ The observed-data audit is complete locally. `configs/research-real.yaml` reads 
 
 The original and replayed real runs match for 31,500 forecast rows, 58,800 decision rows and 8,400 episode totals after excluding timing columns. Both independent study artifacts and original synthetic artifacts are retained. The test history and relevant changes are in `PROGRESS.md` and `CHANGELOG.md`. The audit did not rerun the full historical amendment 2 synthetic study. The current CI-sized synthetic pipeline and the alternate-domain experiment were executed locally.
 
-## Remaining release work
+## Publication status
 
-Verify the final built assets and rendered screenshots, then deploy to the already-created `enterprise-decision-intelligence` Pages project. Run Playwright against the production URL and compare the served evidence JSON with the local build. Commit release evidence locally and record the deployment metadata. GitHub publication awaits explicit authorization. The pre-existing `Claude outputs/` files remain untracked.
+The live Pages site serves source commit `6638da5ce64f5567d5c7358a3a0c91ec52d55248`. Production browser workflows, accessibility scans, security headers and byte equality for served JSON all passed. The next executable task after explicit authorization is GitHub publication followed by verification of the hosted Actions run. The pre-existing `Claude outputs/` files remain untracked. [Production](https://enterprise-decision-intelligence.pages.dev/)

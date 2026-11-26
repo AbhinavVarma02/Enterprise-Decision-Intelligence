@@ -9,8 +9,8 @@ Updated 2026-11-26 America/New_York.
 | Synthetic benchmark | Historical amendment 2 remains intact. Headline metrics were reconciled with the committed aggregate and the current synthetic CI-sized pipeline completed locally. `docs/BENCHMARK_FINDINGS.md` |
 | Independent audit | Corrected volume-scale leakage, split preservation, simulation fulfillment, matching of reviewer draws, grid feasibility, resource ordering, browser decisions and history integrity. `docs/RELEASE_AUDIT.md` |
 | Cloud capacity | Re-executed the secondary synthetic experiment with the 40-path audit configuration. The reusable contract and shared statistical methods are documented. |
-| Engineering | 65 Python tests and 42 web tests pass. Ruff, mypy, ESLint and TypeScript pass. Local Playwright passed 16 workflows and 21 accessibility scans. Production build 30 files, approximately 1.04 MB. |
-| Cloudflare Pages | Dedicated `enterprise-decision-intelligence` project created with the existing Pages login. Final upload and production checks pending. |
+| Engineering | 65 Python tests and 42 web tests pass. Ruff, mypy, ESLint and TypeScript pass. Playwright passed 16 production workflows and 21 axe scans. Captured and inspected 21 screenshots. Build 30 files, approximately 1.05 MB. |
+| Cloudflare Pages | Production routes, headers and eight served JSON files verified. [Live site](https://enterprise-decision-intelligence.pages.dev/) |
 | GitHub | GitHub publication and hosted Actions verification await publication authorization. |
 
-Latest audit implementation commit `20bcd78`. The full replay ran with `20bcd78+dirty` while validation hardening was being developed. Its numerical results matched the first corrected pilot exactly. Final deployment commit will be recorded after browser verification.
+Deployed and verified source commit `6638da5ce64f5567d5c7358a3a0c91ec52d55248`. The full replay ran with `20bcd78+dirty` while validation hardening was being developed. Its numerical results matched the first corrected pilot exactly. The remaining work is GitHub publication and hosted workflow verification after authorization.
