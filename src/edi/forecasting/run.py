@@ -13,7 +13,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from edi.core import get_logger, log_event, repo_path, write_json, write_parquet
+from edi.core import artifact_path, get_logger, log_event, write_json, write_parquet
 from edi.forecasting import features as F
 from edi.forecasting.metrics import evaluate
 from edi.forecasting.models import BaseModel, LGBMPoint, LGBMQuantile, MovingAverage, SeasonalNaive
@@ -158,7 +158,11 @@ def _filter(d: F.Design, keep: np.ndarray) -> F.Design:
 
 def run(cfg: dict[str, Any], panel: Panel) -> dict[str, Any]:
     t0 = time.perf_counter()
-    summary: dict[str, Any] = {"data_source": panel.data_source, "quantiles": cfg["forecast"]["quantiles"]}
+    summary: dict[str, Any] = {
+        "run_name": cfg["run_name"],
+        "data_source": panel.data_source,
+        "quantiles": cfg["forecast"]["quantiles"],
+    }
     for stage in ("A", "B"):
         df, info, targets = run_stage(panel, cfg, stage)
         write_parquet(df, forecast_path(cfg, stage))
@@ -166,7 +170,7 @@ def run(cfg: dict[str, Any], panel: Panel) -> dict[str, Any]:
         summary[f"stage_{stage}"] = info
     summary["censoring_experiment"] = censoring_experiment(panel, cfg["windows"]["b_fit_end"], cfg)
     summary["runtime_seconds"] = round(time.perf_counter() - t0, 1)
-    write_json(repo_path("artifacts", "forecast", "metrics.json"), summary)
+    write_json(artifact_path(cfg, "forecast", "metrics.json"), summary)
     return summary
 
 

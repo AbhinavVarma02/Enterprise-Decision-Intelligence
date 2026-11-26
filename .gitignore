@@ -39,3 +39,6 @@ apps/web/.vite/
 .DS_Store
 Thumbs.db
 data_dev/
+data_ci/
+artifacts_dev/
+artifacts_ci/

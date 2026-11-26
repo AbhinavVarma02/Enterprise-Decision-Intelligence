@@ -23,7 +23,7 @@ import pandas as pd
 
 from edi.benchmark.report import detection, paired
 from edi.benchmark.stats import bootstrap_mean
-from edi.core import repo_path, utc_now, write_json
+from edi.core import artifact_path, utc_now, write_json
 from edi.simulation.engine import cvar
 from edi.simulation.scenarios import sample_paths, stream
 from edi.validation.engine import ValidatorParams, validate
@@ -496,6 +496,7 @@ def run_experiment(
     B = int(cfg["benchmark"]["bootstrap_resamples"])
     res: dict[str, Any] = {
         "meta": {
+            "run_name": cfg["run_name"],
             "data_source": "synthetic",
             "n_services": n_services,
             "weeks": list(weeks),
@@ -546,6 +547,6 @@ def run_experiment(
         "engine_change_needed": "one generalization: spend counts only resources marked committed (usage-priced limits excluded)",
     }
     res["meta"]["runtime_seconds"] = round(time.perf_counter() - t0, 1)
-    path = repo_path("artifacts", "benchmark", "secondary_cloud.json")
+    path = artifact_path(cfg, "benchmark", "secondary_cloud.json")
     write_json(path, res)
     return {"path": str(path), "runtime_seconds": res["meta"]["runtime_seconds"], **res}

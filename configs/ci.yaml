@@ -1,6 +1,8 @@
 extends: base.yaml
 run_name: ci
+artifacts_dir: artifacts_ci
 data:
+  dir: data_ci
   source: synthetic
   synthetic: {n_series: 24, n_stores: 4}
 forecast:

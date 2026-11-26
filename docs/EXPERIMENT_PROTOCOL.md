@@ -77,3 +77,12 @@ The first development run was used for debugging and is not reported as a result
 4. *Validator internals changed during engineering, before any reported run:* G3 separates claim reconciliation (standard-error tolerance) from the cost impact of stale terms; investigation is triggered by the value of verification relative to the candidate (EVPI is also reported). See ADR-0009.
 
 Hypotheses, metrics, windows, conditions and the unsafe-decision definition are unchanged.
+
+**Amendment 2 (2026-11-26, after the first research run, before results were published).**
+Inspecting the decisions that P5a and P5b executed under unreliable data showed hard-constraint breaches after an `investigate` outcome. Cause: a harness bug, not a validator or policy rule. After the simulated stock count, the harness re-planned with true inventory but kept the planner's (possibly stale) supplier snapshot, while every other re-plan path (reject, escalation review) used the terms of record. Changes:
+
+1. The investigation re-plan uses the terms of record, like the other re-plan paths.
+2. `edi report` now checks a harness invariant: no order re-planned after a reject, review or stock count may breach a hard constraint. It refuses to produce a report otherwise. On the first research run it flagged 46 such decisions across all experiments (3 in P5a and 4 in P5b in the main unreliable-data comparison), all from this bug.
+3. Forecast metrics, secondary-domain results and benchmark summaries now record the config that produced them, and reports refuse to mix configs. Dev and CI configs write to their own data and artifact directories. (A development forecast run had replaced the research forecast metrics; the research forecasts were regenerated bit-identically before the rerun.)
+
+The first research run (`research-34e2e906a51d916f`) is superseded and not reported, except that `docs/BENCHMARK_FINDINGS.md` notes how its headline numbers differ. Policies, tuning grids, windows, conditions, metrics, hypotheses and the unsafe-decision definition are unchanged.

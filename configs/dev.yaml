@@ -1,6 +1,8 @@
 extends: base.yaml
 run_name: dev
+artifacts_dir: artifacts_dev
 data:
+  dir: data_dev            # keeps dev runs from overwriting the research data lake in data/
   synthetic: {n_series: 80}
 benchmark:
   n_series: 40

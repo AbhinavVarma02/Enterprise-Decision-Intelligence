@@ -16,7 +16,7 @@ import pandas as pd
 
 from edi.benchmark.runner import violations
 from edi.benchmark.stats import bootstrap_mean, excludes_zero
-from edi.core import git_sha, read_json, repo_path, utc_now, write_json
+from edi.core import artifact_path, config_hash, git_sha, read_json, require_same_run, utc_now, write_json
 from edi.optimization.milp import action_grid
 from edi.simulation.engine import cvar, evaluate_actions, horizon_for
 from edi.simulation.scenarios import sample_paths, stream
@@ -29,8 +29,11 @@ CONDITIONS = ["normal", "unreliable", "disruption"]
 
 
 def latest_run(cfg: dict[str, Any]) -> Path:
+    exact = artifact_path(cfg, "runs", f"{cfg['run_name']}-{config_hash(cfg)}")
+    if (exact / "manifest.json").exists():
+        return exact
     runs = sorted(
-        repo_path("artifacts", "runs").glob(f"{cfg['run_name']}-*/manifest.json"),
+        artifact_path(cfg, "runs").glob(f"{cfg['run_name']}-*/manifest.json"),
         key=lambda p: p.stat().st_mtime,
     )
     if not runs:
@@ -302,15 +305,41 @@ def _kendall(a: list[float], b: list[float]) -> float:
     return s / (n * (n - 1) / 2) if n > 1 else float("nan")
 
 
+def harness_invariants(dec: pd.DataFrame) -> dict[str, int]:
+    """Checks on the simulation harness itself, not on the policies. Raises when one fails.
+
+    When the validator rejects, or a stock count or review leads to a re-plan, the harness re-plans
+    on the terms of record, so the executed order must respect them. A hard breach there would
+    mean the harness, not the policy, produced it (this caught the bug fixed in amendment 2).
+    """
+    note = dec["reviewer_note"].fillna("")
+    replanned = (dec["outcome"] == "reject") | (dec["reviewed"].astype(bool) & (note == ""))
+    counted = (dec["outcome"] == "investigate") & ~dec["reviewed"].astype(bool) & (dec["governance_cost"] > 0)
+    rows = dec[replanned | counted]
+    bad = rows[rows["exec_hard_violation"].fillna(False).astype(bool)]
+    if len(bad):
+        sample = (
+            bad[["series_id", "day", "policy", "condition", "experiment", "outcome"]]
+            .head(5)
+            .to_dict("records")
+        )
+        raise RuntimeError(
+            f"harness invariant failed: {len(bad)} re-planned orders breach hard constraints, e.g. {sample}"
+        )
+    return {"replanned_orders_checked": int(len(rows)), "hard_breaches_after_replan": 0}
+
+
 def build_report(cfg: dict[str, Any]) -> dict[str, Any]:
     run = latest_run(cfg)
     manifest = read_json(run / "manifest.json")
     tot = pd.read_parquet(run / "series_totals.parquet")
     dec = pd.read_parquet(run / "decisions.parquet")
+    invariants = harness_invariants(dec)
     samples = read_json(run / "samples.json")
     B = int(cfg["benchmark"]["bootstrap_resamples"])
     seed = 20261125
-    fmetrics = read_json(repo_path("artifacts", "forecast", "metrics.json"))
+    fmetrics = read_json(artifact_path(cfg, "forecast", "metrics.json"))
+    require_same_run(fmetrics, cfg, "artifacts/forecast/metrics.json")
 
     summary: dict[str, Any] = {
         "meta": {
@@ -326,6 +355,7 @@ def build_report(cfg: dict[str, Any]) -> dict[str, Any]:
             "runtime_seconds": manifest["runtime_seconds"],
             "n_decisions": manifest["n_decisions"],
             "currency_note": "Assumed unit economics applied to (normalized) volumes; not real money.",
+            "harness_invariants": invariants,
         }
     }
     main_t = tot[tot["experiment"] == "main"]
@@ -529,7 +559,7 @@ def build_report(cfg: dict[str, Any]) -> dict[str, Any]:
         }
     )
     summary["hypotheses"] = hyp
-    path = repo_path("artifacts", "benchmark", "summary.json")
+    path = artifact_path(cfg, "benchmark", "summary.json")
     write_json(path, summary)
     summary["paths"] = {"summary": str(path), "run": str(run)}
     return summary

@@ -17,11 +17,11 @@ import pandas as pd
 
 from edi.benchmark.runner import ForecastStore, PolicySpec, SeriesSetup, make_setup, run_episode
 from edi.core import (
+    artifact_path,
     config_hash,
     get_logger,
     git_sha,
     log_event,
-    repo_path,
     utc_now,
     write_json,
     write_parquet,
@@ -318,7 +318,7 @@ def run_all(cfg: dict[str, Any], n_jobs: int = 2) -> dict[str, Any]:
     bc = cfg["benchmark"]
     series_idx = select_series(panel, int(bc["n_series"]))
     run_id = f"{cfg['run_name']}-{config_hash(cfg)}"
-    out_dir = repo_path("artifacts", "runs", run_id)
+    out_dir = artifact_path(cfg, "runs", run_id)
     log_event(log, "benchmark start", run_id=run_id, series=len(series_idx), data_source=panel.data_source)
 
     tuning = tune(cfg, series_idx, n_jobs)

@@ -117,6 +117,7 @@ def atomic_write_bytes(path: Path, data: bytes) -> None:
     try:
         with os.fdopen(fd, "wb") as fh:
             fh.write(data)
+        os.chmod(tmp, 0o644)  # mkstemp creates 0600; artifacts are meant to be shared
         os.replace(tmp, path)
     except BaseException:
         if os.path.exists(tmp):
@@ -183,6 +184,7 @@ def write_parquet(df: Any, path: Path) -> None:
     os.close(fd)
     try:
         df.to_parquet(tmp, index=False)
+        os.chmod(tmp, 0o644)
         os.replace(tmp, path)
     except BaseException:
         if os.path.exists(tmp):
@@ -195,7 +197,16 @@ def git_sha() -> str:
         out = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"], cwd=REPO_ROOT, capture_output=True, text=True, timeout=5
         )
-        return out.stdout.strip() or "unknown"
+        sha = out.stdout.strip() or "unknown"
+        status = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=no", "--", "src", "configs"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        # Flag runs made from uncommitted code or configs, so a manifest never overstates provenance.
+        return f"{sha}+dirty" if status.stdout.strip() else sha
     except (OSError, subprocess.SubprocessError):
         return "unknown"
 
@@ -233,3 +244,22 @@ class Manifest:
             **info,
         }
         write_json(self.path, self.data)
+
+
+def require_same_run(doc: dict[str, Any], cfg: dict[str, Any], what: str) -> None:
+    """Refuse to combine artifacts from different configs (for example dev forecasts with research results).
+
+    Forecast metrics and secondary-domain results live at fixed paths shared by every config, so a
+    later run under another config silently replaces them. Each records the run name that wrote it.
+    """
+    found = doc.get("run_name")
+    if found != cfg["run_name"]:
+        raise RuntimeError(
+            f"{what} was written by run '{found}', not '{cfg['run_name']}'. "
+            f"Re-run that stage with this config before building reports."
+        )
+
+
+def artifact_path(cfg: dict[str, Any], *parts: str) -> Path:
+    """Path under this config's artifacts directory (``artifacts`` for research, separate for dev and ci)."""
+    return repo_path(str(cfg.get("artifacts_dir", "artifacts")), *parts)

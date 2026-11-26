@@ -554,9 +554,11 @@ def _validated(
             inp, spec.pid, spec.model, objective=obj, alpha=alpha, lam=spec.lam, supply=auth
         ).orders
     elif outcome == "investigate" and spec.use_voi:
+        # The stock count reveals true inventory; the re-plan uses the terms of record, as the
+        # validator does (fixed in protocol amendment 2: it previously kept the planner's snapshot).
         gov += inv_cost
         executed = milp_policy(
-            true_inp, spec.pid, spec.model, objective=obj, alpha=alpha, lam=spec.lam
+            true_inp, spec.pid, spec.model, objective=obj, alpha=alpha, lam=spec.lam, supply=auth
         ).orders
     elif outcome == "defer":
         executed = np.zeros(3)

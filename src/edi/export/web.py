@@ -16,7 +16,16 @@ import numpy as np
 
 from edi.benchmark.report import latest_run
 from edi.benchmark.runner import ForecastStore
-from edi.core import config_hash, git_sha, read_json, repo_path, utc_now, write_json
+from edi.core import (
+    artifact_path,
+    config_hash,
+    git_sha,
+    read_json,
+    repo_path,
+    require_same_run,
+    utc_now,
+    write_json,
+)
 from edi.finance.economics import SupplyContext, UnitEconomics
 from edi.forecasting.run import load_forecasts
 from edi.optimization.milp import action_grid
@@ -560,11 +569,18 @@ def export_all(cfg: dict[str, Any]) -> dict[str, Any]:
     soft = float(manifest["tuning"].get("validator_soft_scale", 1.0))
     k = int(cfg["web"]["case_scenarios"])
     vp = validator_params(cfg, soft, k)
-    summary = read_json(repo_path("artifacts", "benchmark", "summary.json"))
-    fmetrics = read_json(repo_path("artifacts", "forecast", "metrics.json"))
+    summary = read_json(artifact_path(cfg, "benchmark", "summary.json"))
+    fmetrics = read_json(artifact_path(cfg, "forecast", "metrics.json"))
+    require_same_run(fmetrics, cfg, "artifacts/forecast/metrics.json")
+    if not str(summary["meta"]["run_id"]).startswith(f"{cfg['run_name']}-"):
+        raise RuntimeError(
+            f"benchmark summary is from run {summary['meta']['run_id']}; run `edi report` with this config"
+        )
     dq = read_json(layout(cfg).dq_report)
-    sec_path = repo_path("artifacts", "benchmark", "secondary_cloud.json")
+    sec_path = artifact_path(cfg, "benchmark", "secondary_cloud.json")
     secondary = read_json(sec_path) if sec_path.exists() else None
+    if secondary is not None:
+        require_same_run(secondary["meta"], cfg, "artifacts/benchmark/secondary_cloud.json")
 
     cases = build_cases(cfg, vp, int(cfg["web"]["n_cases"]), min(k, CASE_SCENARIOS_MAX))
     meta = {

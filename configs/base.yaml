@@ -1,5 +1,6 @@
 # Shared defaults. dev.yaml and research.yaml extend this file.
 run_name: base
+artifacts_dir: artifacts   # summaries; dev and ci configs use their own so they never replace committed results
 data:
   source: auto            # auto | synthetic | freshretailnet
   dir: data
