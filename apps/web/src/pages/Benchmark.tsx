@@ -149,7 +149,7 @@ export function Benchmark() {
 
       <Panel title={`Detail: ${CONDITIONS.find((c) => c.key === cond)?.label.toLowerCase()}`} pad={false}>
         <div className="table-wrap" style={{ padding: "4px 8px 8px" }}>
-          <table className="data stack-sm">
+          <table className="data stack-sm stack-md">
             <thead>
               <tr>
                 <th scope="col">Policy</th><th scope="col" className="r">Cost per day</th><th scope="col" className="r">Tail (CVaR90)</th>

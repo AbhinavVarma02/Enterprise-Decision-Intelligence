@@ -185,6 +185,7 @@ table.data th.rowhead {
   border-bottom: 1px solid var(--line-2); white-space: normal;
 }
 table.data tr:last-child th.rowhead { border-bottom: 0; }
+table.data th.rowhead .btn { text-align: left; justify-content: flex-start; }
 table.data caption { text-align: left; padding: 0 12px 8px; color: var(--ink-3); font-size: var(--fs-xs); caption-side: bottom; }
 
 /* key-value */
@@ -250,7 +251,7 @@ label.row:has(select) { max-width: 100%; flex-wrap: nowrap; min-width: 0; }
 .chart-box > svg { display: block; }
 .chart .axis line, .chart .axis path { stroke: var(--line); }
 .chart .gridline { stroke: var(--line-2); }
-.chart-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: var(--fs-xs); color: var(--ink-2); }
+.chart-legend { display: flex; gap: 6px 16px; flex-wrap: wrap; font-size: var(--fs-xs); color: var(--ink-2); }
 .chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .chart-legend i { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
 .tooltip { position: absolute; pointer-events: none; background: var(--ink); color: #fff; font-size: var(--fs-xs); padding: 6px 9px; border-radius: var(--r-sm); white-space: nowrap; z-index: 10; }
@@ -304,7 +305,7 @@ ol.flow li:not(:last-child):not(:nth-child(4))::after { content: "\2192"; positi
 @media (max-width: 640px) {
   table.data.stack-sm, table.data.stack-sm tbody, table.data.stack-sm caption { display: block; }
   table.data.stack-sm thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  table.data.stack-sm tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 14px; padding: 12px 12px 14px; border-bottom: 1px solid var(--line-2); }
+  table.data.stack-sm tr { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px 14px; padding: 12px 12px 14px; border-bottom: 1px solid var(--line-2); }
   table.data.stack-sm tr:last-child { border-bottom: 0; }
   table.data.stack-sm tr > * { padding: 0; border: 0; text-align: left; background: transparent; box-shadow: none; }
   table.data.stack-sm .full { grid-column: 1 / -1; }
@@ -316,6 +317,21 @@ ol.flow li:not(:last-child):not(:nth-child(4))::after { content: "\2192"; positi
   table.data.stack-sm caption { padding: 10px 12px 4px; }
   .order-lines { white-space: normal; }
   dl.kv dd { text-align: left; }
+}
+/* Wide tables (many columns) stack earlier, at tablet widths. */
+@media (max-width: 900px) {
+  table.data.stack-md, table.data.stack-md tbody, table.data.stack-md caption { display: block; }
+  table.data.stack-md thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  table.data.stack-md tr { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px 14px; padding: 12px 12px 14px; border-bottom: 1px solid var(--line-2); }
+  table.data.stack-md tr:last-child { border-bottom: 0; }
+  table.data.stack-md tr > * { padding: 0; border: 0; text-align: left; background: transparent; box-shadow: none; }
+  table.data.stack-md .full { grid-column: 1 / -1; }
+  table.data.stack-md th.rowhead { grid-column: 1 / -1; }
+  table.data.stack-md .hide-sm { display: none; }
+  table.data.stack-md td[data-label]::before { content: attr(data-label); display: block; font-size: var(--fs-xs); color: var(--ink-3); font-family: var(--font-cond); font-weight: 600; margin-bottom: 1px; }
+  table.data.stack-md tr.selected { background: var(--citrine-soft); box-shadow: inset 4px 0 0 var(--citrine); }
+  table.data.stack-md tbody tr.clickable:hover > * { background: transparent; }
+  table.data.stack-md caption { padding: 10px 12px 4px; }
 }
 @media (max-width: 860px) {
   .shell { grid-template-columns: minmax(0, 1fr); }

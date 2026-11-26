@@ -61,7 +61,7 @@ export function RangeBar({ expected, cvar, p90, domain, width = 150 }: { expecte
 }
 
 export function FanChart({ fan, dates, height = 200, onHand }: { fan: FanPoint[]; dates: string[]; height?: number; onHand?: number }) {
-  const width = 330;
+  const [ref, width] = useWidth(330);
   const m = { t: 14, r: 34, b: 28, l: 34 };
   const x = scaleLinear().domain([0, fan.length - 1]).range([m.l, width - m.r]);
   const ymax = Math.max(...fan.map((f) => f.p95), onHand ?? 0) * 1.1 || 1;
@@ -69,8 +69,12 @@ export function FanChart({ fan, dates, height = 200, onHand }: { fan: FanPoint[]
   const outer = area<FanPoint>().x((d) => x(d.day)).y0((d) => y(d.p5)).y1((d) => y(d.p95)).curve(curveMonotoneX)(fan) ?? "";
   const inner = area<FanPoint>().x((d) => x(d.day)).y0((d) => y(d.p25)).y1((d) => y(d.p75)).curve(curveMonotoneX)(fan) ?? "";
   const med = line<FanPoint>().x((d) => x(d.day)).y((d) => y(d.p50)).curve(curveMonotoneX)(fan) ?? "";
+  // Keep the "on hand" label off the median line: put it below the dashed line when they nearly meet.
+  const lastMedian = fan.length ? y(fan[fan.length - 1].p50) : 0;
+  const onHandY = onHand !== undefined ? y(onHand) : 0;
+  const labelY = onHand !== undefined && Math.abs(onHandY - lastMedian) < 16 && onHandY >= lastMedian - 2 ? onHandY + 15 : onHandY - 5;
   return (
-    <figure style={{ margin: 0 }}>
+    <figure ref={ref} style={{ margin: 0 }}>
       <svg className="chart" viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label="Demand forecast range for the next three days">
         {y.ticks(4).map((t) => (
           <g key={t}>
@@ -85,7 +89,7 @@ export function FanChart({ fan, dates, height = 200, onHand }: { fan: FanPoint[]
         {onHand !== undefined && (
           <g>
             <line x1={m.l} x2={width - m.r} y1={y(onHand)} y2={y(onHand)} stroke={CITRINE} strokeDasharray="4 3" strokeWidth={1.5} />
-            <text x={width - m.r} y={y(onHand) - 5} textAnchor="end" style={{ fill: "#6d5100" }}>on hand {units(onHand)}</text>
+            <text x={width - m.r} y={labelY} textAnchor="end" style={{ fill: "#6d5100" }}>on hand {units(onHand)}</text>
           </g>
         )}
         {fan.map((f, i) => <text key={f.day} x={x(f.day)} y={height - 8} textAnchor="middle">{dates[i] ?? `+${f.day}`}</text>)}
@@ -100,15 +104,17 @@ export function FanChart({ fan, dates, height = 200, onHand }: { fan: FanPoint[]
 }
 
 export function InventoryBars({ recorded, verified, labels }: { recorded: number[]; verified: number[]; labels: string[] }) {
-  const width = 330;
+  const [ref, width] = useWidth(330);
   const height = 170;
   const m = { t: 10, r: 8, b: 26, l: 34 };
-  const x0 = scaleBand<number>().domain(recorded.map((_, i) => i)).range([m.l, width - m.r]).padding(0.3);
+  // Bars stop growing past ~110 px per age group so wide panels do not produce slabs.
+  const right = Math.min(width - m.r, m.l + recorded.length * 110);
+  const x0 = scaleBand<number>().domain(recorded.map((_, i) => i)).range([m.l, right]).padding(0.3);
   const x1 = scaleBand<string>().domain(["rec", "ver"]).range([0, x0.bandwidth()]).padding(0.1);
   const y = scaleLinear().domain([0, Math.max(1, ...recorded, ...verified) * 1.1]).nice().range([height - m.b, m.t]);
   const differs = recorded.some((r, i) => Math.abs(r - verified[i]) > 1e-6);
   return (
-    <figure style={{ margin: 0 }}>
+    <figure ref={ref} style={{ margin: 0 }}>
       <svg className="chart" viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label="On-hand stock by age, recorded versus verified">
         {y.ticks(3).map((t) => (
           <g key={t}>

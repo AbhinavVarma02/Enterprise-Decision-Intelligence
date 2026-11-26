@@ -30,7 +30,7 @@ Suppliers, prices, costs, disruptions and data faults are simulated by this proj
 | lucide-react | 1.80.0 | ISC |
 | zod | 4.6.7 | MIT |
 
-Build and test tooling (not shipped): TypeScript (Apache-2.0), Vite (MIT), Vitest (MIT), Playwright (Apache-2.0), ESLint and typescript-eslint (MIT), jsdom (MIT), @testing-library/react (MIT).
+Build and test tooling (not shipped): TypeScript (Apache-2.0), Vite (MIT), Vitest (MIT), Playwright (Apache-2.0), axe-core and @axe-core/playwright (MPL-2.0), ESLint and typescript-eslint (MIT), jsdom (MIT), @testing-library/react (MIT).
 
 ## Python dependencies
 

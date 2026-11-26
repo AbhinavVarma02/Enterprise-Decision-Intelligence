@@ -111,7 +111,7 @@ function ForecastQuality({ f }: { f: Loose }) {
         {hasLatent ? " and, for the synthetic fixture, true demand" : ""} are shown separately.
       </p>
       <div className="panel table-wrap" style={{ padding: "4px 8px 8px" }}>
-        <table className="data stack-sm">
+        <table className="data stack-sm stack-md">
           <thead>
             <tr>
               <th scope="col">Model</th><th scope="col" className="r">WAPE, in-stock days</th><th scope="col" className="r">Bias, in-stock days</th>
