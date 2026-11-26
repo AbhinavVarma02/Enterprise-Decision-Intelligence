@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+htmlcov/
+
+# Data lake and large outputs (see data/README.md)
+data/*
+!data/README.md
+artifacts/runs/
+artifacts/**/*.parquet
+*.parquet
+*.duckdb
+*.duckdb.wal
+models/
+
+# Node / web
+node_modules/
+apps/web/dist/
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/.vite/
+
+# Local tooling and secrets
+.env
+.env.*
+.wrangler/
+.dev.vars
+.sync/
+.local-docs/
+*.log
+.DS_Store
+Thumbs.db
