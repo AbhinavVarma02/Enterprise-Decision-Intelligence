@@ -42,16 +42,20 @@ The review questions were the ones the design system sets out (`docs/DESIGN_SYST
 ## Pass 3: accessibility and robustness
 
 - Faint text failed the 4.5:1 contrast minimum on the page background (see Known limits for the measurement). Darkened.
-
 - The skip link was focusable but invisible when focused. It now appears at the top left on focus.
 - The off-canvas navigation on phones stayed in the tab order while hidden, so keyboard users tabbed through invisible links. It is now hidden from focus until opened.
 - The journey test had a race (pressing Tab before the app mounted). It now waits for the first heading.
 - The journey test on mobile tried to click a navigation link that is off-canvas. It now uses the in-page link to the decision history, which is what a phone user would tap.
 
+## Pass 4: automated accessibility scan
+
+`e2e/a11y.spec.ts` runs axe-core (WCAG 2.0 and 2.1, levels A and AA) on all seven pages at desktop, phone (Pixel 7) and tablet (820 px) widths. The first run found one serious issue: on phones the Scenario studio's result table scrolled sideways inside a container that keyboard users could not reach. That table now stacks on phones, and any table wrapper that does overflow at the current width becomes a focusable, labeled region (only while it overflows). axe checks a subset of WCAG; screen-reader behavior has not been tested with a real screen reader.
+
 ## Verified state
 
 - No horizontal overflow on any route at 390 px or 820 px.
 - 10 of 10 browser journey tests pass (desktop and mobile).
+- 21 of 21 accessibility scans pass (7 pages x desktop, phone, tablet).
 - 21 screenshots captured without errors.
 - Bundle: 29 files, about 0.95 MB in total, inside the 3 MB budget.
 

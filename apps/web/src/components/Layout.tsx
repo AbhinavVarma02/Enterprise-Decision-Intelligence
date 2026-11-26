@@ -38,10 +38,49 @@ function BrandMark() {
   );
 }
 
+/**
+ * Tables that scroll sideways must be reachable by keyboard (WCAG 2.1.1). Only wrappers that actually
+ * overflow get a tab stop, so wide screens do not gain pointless focus targets.
+ */
+function useFocusableScrollRegions() {
+  useEffect(() => {
+    const main = document.getElementById("main");
+    if (!main) return;
+    let frame = 0;
+    const update = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        main.querySelectorAll<HTMLElement>(".table-wrap").forEach((el) => {
+          if (el.scrollWidth > el.clientWidth + 1) {
+            el.tabIndex = 0;
+            el.setAttribute("role", "region");
+            const heading = el.closest("section, .panel")?.querySelector("h2, h3")?.textContent;
+            el.setAttribute("aria-label", heading ? `${heading} (scrolls sideways)` : "Table (scrolls sideways)");
+          } else if (el.hasAttribute("tabindex")) {
+            el.removeAttribute("tabindex");
+            el.removeAttribute("role");
+            el.removeAttribute("aria-label");
+          }
+        });
+      });
+    };
+    const mo = new MutationObserver(update);
+    mo.observe(main, { childList: true, subtree: true });
+    window.addEventListener("resize", update);
+    update();
+    return () => {
+      mo.disconnect();
+      window.removeEventListener("resize", update);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+}
+
 export function Layout() {
   const [open, setOpen] = useState(false);
   const loc = useLocation();
   const meta = useData<Meta>("meta");
+  useFocusableScrollRegions();
   const log = useLog();
   useEffect(() => setOpen(false), [loc.pathname]);
   useEffect(() => {

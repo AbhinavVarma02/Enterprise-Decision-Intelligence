@@ -62,3 +62,9 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Browser journey tests
         run: npx playwright test e2e/journey.spec.ts
+      - name: Accessibility scan (axe, WCAG 2.1 A/AA) at desktop, phone and tablet widths
+        run: |
+          npx playwright test e2e/a11y.spec.ts
+          A11Y_TABLET=1 npx playwright test e2e/a11y.spec.ts --project=desktop
+      - name: Dependency audit (shipped packages)
+        run: npm audit --omit=dev

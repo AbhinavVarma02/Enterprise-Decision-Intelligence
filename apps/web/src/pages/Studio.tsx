@@ -188,11 +188,11 @@ function Results({ c, r, ms }: { c: DecisionCase; r: ReturnType<typeof studioEva
             <p className="small muted" style={{ marginTop: 4 }}>{r.validation.reasons[0]}</p>
           </div>
           <div className="table-wrap" style={{ flex: "1 1 100%" }}>
-          <table className="data">
+          <table className="data stack-sm">
             <thead><tr><th scope="col">Order</th><th scope="col" className="r">Expected</th><th scope="col" className="r">Worst 10% avg</th><th scope="col" className="r">Risk-adjusted</th></tr></thead>
             <tbody>
-              <tr><td>Recommended</td><td className="r num">{money(r.recommended.expected)}</td><td className="r num">{money(r.recommended.cvar)}</td><td className="r num">{money(r.recommended.score)}</td></tr>
-              <tr><td>Original proposal</td><td className="r num">{money(r.original.expected)}</td><td className="r num">{money(r.original.cvar)}</td><td className="r num">{money(r.original.score)}</td></tr>
+              <tr><td className="full" style={{ fontWeight: 500 }}>Recommended</td><td className="r num" data-label="Expected">{money(r.recommended.expected)}</td><td className="r num" data-label="Worst 10% avg">{money(r.recommended.cvar)}</td><td className="r num" data-label="Risk-adjusted">{money(r.recommended.score)}</td></tr>
+              <tr><td className="full" style={{ fontWeight: 500 }}>Original proposal</td><td className="r num" data-label="Expected">{money(r.original.expected)}</td><td className="r num" data-label="Worst 10% avg">{money(r.original.cvar)}</td><td className="r num" data-label="Risk-adjusted">{money(r.original.score)}</td></tr>
             </tbody>
             <caption>Risk-adjusted cost is what the search minimizes. Re-planning {diff >= 0 ? "saves" : "costs"} {money(Math.abs(diff))} on that measure over {r.horizon} days.</caption>
           </table>

@@ -48,7 +48,7 @@ Each record stores the SHA-256 of the previous record, so accidental edits or tr
 
 - Cloudflare Pages serves `_headers` only when deployed there; other static hosts need equivalent headers configured.
 - The CSP keeps `style-src 'unsafe-inline'`. Removing it would require moving all chart geometry into CSS classes or SVG attributes; React's `style` prop does not use inline `<style>` blocks, so the practical risk is low, but it is still a relaxation.
-- Dependency vulnerabilities are not scanned in CI beyond `npm audit` being available locally. Run `npm audit --omit=dev` and `pip-audit` (not installed by default) before deploying.
+- Dependency scanning: CI runs `npm audit --omit=dev` on the shipped web packages. Python packages are not scanned in CI; on 2026-11-26 `pip-audit` over the installed environment (the versions in `requirements-lock.txt`) and `npm audit --omit=dev` both reported no known vulnerabilities. Re-run both before deploying.
 - The download script trusts Hugging Face's TLS and the dataset publisher. It records hashes so later runs can detect a changed upstream file, but it cannot tell whether the first download was genuine.
 
 ## Reporting
