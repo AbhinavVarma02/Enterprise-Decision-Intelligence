@@ -1,10 +1,12 @@
 # Enterprise Decision Intelligence
 
-An independent validator for business decisions, with a benchmark that measures what happens when a planner acts, waits, reviews or rejects a proposal.
+An independent decision validator and reliability benchmark for fresh-food replenishment.
 
 [Open the live workspace](https://enterprise-decision-intelligence.pages.dev/) · [Explore the benchmark](https://enterprise-decision-intelligence.pages.dev/benchmark)
 
-Fresh-food replenishment makes the trade-off concrete. A forecast drives an order, but spoilage, supplier limits, stale inventory and approval costs determine whether the order should go ahead. The validator checks a standard decision record against current terms and explains its decision across seven gates. The browser workspace lets planners compare actions, change scenario assumptions and record decisions locally.
+## Business use case
+
+A replenishment planner receives an order based on stale inventory or supplier terms. The order must balance shortages and spoilage while meeting current supplier limits and the purchasing budget. Seven independent gates check the proposal against authoritative data and explain whether to recommend it, investigate, defer, escalate or reject it. The browser workspace compares alternatives, replays changed assumptions and records the planner's decision locally.
 
 ## Results
 
@@ -15,15 +17,13 @@ Fresh-food replenishment makes the trade-off concrete. A forecast drives an orde
 
 The synthetic break-even was **$10.65 in additional assumed cost per breached submission**. In the retail pilot, validation raised modeled cost **3.94% in normal operations**. Selective review reduced governance cost in fresh simulated scenarios, and its unreliable-data total cost interval included zero. The [independent audit](docs/RELEASE_AUDIT.md) reconciles the counts, assesses all five hypotheses and explains how assumptions change the result.
 
-**Evidence provenance.** The retail pilot uses observed, publisher-normalized sales and hourly stockout flags. Demand during genuine stockouts is estimated. Both studies simulate inventory, supplier events, reviews and fulfillment under assumed financial inputs. The browser decision cases and the cloud capacity experiment use synthetic data.
+Both studies use modeled financial inputs. The FreshRetailNet pilot uses observed, publisher-normalized sales and hourly stockout flags, with estimated demand during genuine stockouts. Browser decision cases and the cloud capacity experiment use synthetic data.
 
 ## Application
 
-| Decision workspace | Scenario studio |
-|---|---|
-| ![Decision options and independent validation gates](docs/screenshots/workspace-desktop.png) | ![Assumption controls and the bounded cost surface](docs/screenshots/studio-desktop.png) |
+![Decision workspace showing order alternatives, modeled costs, fill rates and validation gates](docs/screenshots/workspace-preview.png)
 
-[Benchmark on tablet](docs/screenshots/benchmark-tablet.png) · [Benchmark on mobile](docs/screenshots/benchmark-mobile.png) · [All screenshots](docs/screenshots)
+[Full decision workspace](docs/screenshots/workspace-desktop.png) · [Scenario Studio](docs/screenshots/studio-desktop.png) · [Benchmark on mobile](docs/screenshots/benchmark-mobile.png)
 
 ## Architecture
 
@@ -32,26 +32,23 @@ flowchart LR
   DATA[Stockout-annotated sales] --> PIPE[DuckDB validation and staging]
   PIPE --> FC[Demand recovery and calibrated forecasts]
   FC --> P[Base-stock and HiGHS policies]
+  P -->|Baseline actions| SIM[Matched simulation]
   P --> V[Independent decision validator]
-  V --> BEN[Matched simulation and paired analysis]
+  V -->|Validated actions| SIM
+  SIM --> BEN[Paired benchmark analysis]
   BEN -->|Versioned evidence JSON| UI[Static React workspace]
   V -->|Python golden fixtures| E[TypeScript grid evaluator and gates]
   E --> UI
 ```
 
-Python runs the research pipeline on CPU. The static site uses a feasible, bounded action grid and Python-generated parity fixtures. The production bundle needs no API, model service, account or server-side compute. The cloud experiment shares the decision contract, validator, information-value and statistics routines and supplies its own capacity and SLA cost model.
+Python runs forecasting, optimization and simulation on CPU. The static app uses a bounded action grid with parity tested against Python golden fixtures. The browser runs the evaluator and stores records locally. The cloud experiment reuses the decision contract, validation gates and statistics with its own capacity and SLA cost model.
 
 ## Reproduce
 
-Use Python 3.10+ for general development, Python 3.13 with `requirements-lock.txt` for the pinned audit, and Node.js 22+ for the web app.
+Use Python 3.10+ for development and Node.js 22+ for the web app. Activate a virtual environment before installing Python dependencies.
 
 ```bash
-python -m pip install -r requirements-lock.txt -e ".[dev,download]"
-python scripts/download_freshretailnet.py --revision c374e85975c82816c495acfa904cc55ab14a47d3
-python scripts/audit_freshretailnet.py
-edi run-all --config configs/research-real.yaml --jobs 4
-edi selective-validation --config configs/research-real.yaml --jobs 4
-edi export-web --config configs/research-real.yaml
+python -m pip install -e ".[dev]"
 python -m pytest -q
 
 cd apps/web
@@ -62,11 +59,22 @@ npx playwright install chromium
 npm run e2e
 ```
 
-`configs/ci.yaml` is the small synthetic smoke configuration. Synthetic amendment 2 reproduction uses commit `97acf8b`. The current `configs/research.yaml` runs the amended harness on synthetic data. Run non-release exports in a separate checkout to keep the committed cases and fixtures intact.
+To reproduce the observed-data pilot from the repository root, use Python 3.13 with the pinned audit environment.
 
-## Scope and sources
+```bash
+python -m pip install -r requirements-lock.txt -e ".[dev,download]"
+python scripts/download_freshretailnet.py --revision c374e85975c82816c495acfa904cc55ab14a47d3
+python scripts/audit_freshretailnet.py
+edi run-all --config configs/research-real.yaml --jobs 4
+edi selective-validation --config configs/research-real.yaml --jobs 4
+edi export-web --config configs/research-real.yaml
+```
 
-The retail pilot covers one evaluation week and a 60-series sample. It uses single-item decisions, modeled reviewers and estimated censored demand. Intervals condition on the evaluation week and the experiment's demand, operational and financial assumptions. The local decision history is a browser demonstration.
+Use `edi run-all --config configs/ci.yaml` in a separate checkout for the small synthetic smoke run, which regenerates local browser fixtures. Commit `97acf8b` reproduces the historical amendment 2 synthetic study.
+
+## Scientific limitations and sources
+
+The pilot covers 60 series and one evaluation week. It models single-item inventory decisions, supplier disruptions and reviewer behavior. Clustered intervals condition on that week and those assumptions. Estimated stockout demand and simulated costs limit conclusions about actual retailer savings. Browser history is a demonstration of local decision records.
 
 - [Independent release audit](docs/RELEASE_AUDIT.md) and [controlled synthetic findings](docs/BENCHMARK_FINDINGS.md)
 - [Experiment protocol](docs/EXPERIMENT_PROTOCOL.md), [data lineage](docs/DATA_MODEL.md), and [architecture](docs/ARCHITECTURE.md)

@@ -10,4 +10,4 @@ The original and replayed real runs match for 31,500 forecast rows, 58,800 decis
 
 ## Publication status
 
-The live Pages site serves source commit `6638da5ce64f5567d5c7358a3a0c91ec52d55248`. Production browser workflows, accessibility scans, security headers and byte equality for served JSON all passed. The next executable task after explicit authorization is GitHub publication followed by verification of the hosted Actions run. The pre-existing `Claude outputs/` files remain untracked. [Production](https://enterprise-decision-intelligence.pages.dev/)
+The Pages site serves source commit `6638da5ce64f5567d5c7358a3a0c91ec52d55248`. The release review prepares the authorized GitHub publication and verifies hosted CI and production. The local `Claude outputs/` folder is ignored. [Production](https://enterprise-decision-intelligence.pages.dev/)

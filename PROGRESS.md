@@ -11,6 +11,6 @@ Updated 2026-11-26 America/New_York.
 | Cloud capacity | Re-executed the secondary synthetic experiment with the 40-path audit configuration. The reusable contract and shared statistical methods are documented. |
 | Engineering | 65 Python tests and 42 web tests pass. Ruff, mypy, ESLint and TypeScript pass. Playwright passed 16 production workflows and 21 axe scans. Captured and inspected 21 screenshots. Build 30 files, approximately 1.05 MB. |
 | Cloudflare Pages | Production routes, headers and eight served JSON files verified. [Live site](https://enterprise-decision-intelligence.pages.dev/) |
-| GitHub | GitHub publication and hosted Actions verification await publication authorization. |
+| GitHub | Publication authorized. Release review includes the Git history, tracked artifacts, hosted workflows and the existing Pages site. |
 
-Deployed and verified source commit `6638da5ce64f5567d5c7358a3a0c91ec52d55248`. The full replay ran with `20bcd78+dirty` while validation hardening was being developed. Its numerical results matched the first corrected pilot exactly. The remaining work is GitHub publication and hosted workflow verification after authorization.
+Deployed and verified source commit `6638da5ce64f5567d5c7358a3a0c91ec52d55248`. The full replay ran with `20bcd78+dirty` while validation hardening was being developed. Its numerical results matched the first corrected pilot exactly.

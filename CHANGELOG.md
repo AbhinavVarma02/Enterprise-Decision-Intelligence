@@ -5,6 +5,7 @@ All notable changes. Dates are America/New_York.
 ## [Unreleased]
 
 ### Added
+- 2026-11-26: Refined the public README with a business use case, compact workspace preview, separate reproducibility commands and a clearer scope statement.
 - 2026-11-26: Pinned FreshRetailNet-50K dataset audit and a separately published 60-series pilot. Added crossed store/product sensitivity, breached-submission pricing and a separately seeded selective-validation experiment.
 - 2026-11-26: Separate observed-data and synthetic benchmark views, interactive break-even analysis, a narrow-screen Studio result summary and release audit evidence.
 - 2026-11-26: Deployed the static site to the dedicated Cloudflare Pages project and verified production browser workflows, headers and evidence files.

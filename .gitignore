@@ -35,6 +35,7 @@ apps/web/.vite/
 .dev.vars
 .sync/
 .local-docs/
+/Claude outputs/
 *.log
 .DS_Store
 Thumbs.db
