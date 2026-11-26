@@ -1,0 +1,16 @@
+extends: base.yaml
+run_name: ci
+data:
+  source: synthetic
+  synthetic: {n_series: 24, n_stores: 4}
+forecast:
+  lgbm: {n_estimators: 60}
+benchmark:
+  n_series: 8
+  realizations: 1
+  scenarios: 40
+  bootstrap_resamples: 200
+  sensitivity: false
+web:
+  n_cases: 3
+  case_scenarios: 120

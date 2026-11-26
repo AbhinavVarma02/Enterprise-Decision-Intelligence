@@ -1,0 +1,88 @@
+# Shared defaults. dev.yaml and research.yaml extend this file.
+run_name: base
+data:
+  source: auto            # auto | synthetic | freshretailnet
+  dir: data
+  synthetic:
+    n_series: 80
+    n_stores: 8
+    seed: 20261125
+  freshretailnet:
+    n_series: 300         # deterministic stratified subset of the 50,000 series
+    subset_seed: 7
+    target_median_daily_units: 20   # global volume rescale of normalized sale_amount (assumption)
+windows:
+  warmup_end: 28
+  a_fit_end: 69
+  a_cal_end: 76
+  tune_start: 77
+  tune_end: 90
+  b_fit_end: 83
+  b_cal_end: 90
+  test_start: 91
+  test_end: 97
+forecast:
+  quantiles: [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
+  horizons: [1, 2, 3, 4, 5]
+  lgbm:
+    n_estimators: 250
+    learning_rate: 0.05
+    num_leaves: 31
+    min_child_samples: 20
+    subsample: 0.9
+    subsample_freq: 1
+    colsample_bytree: 0.9
+    random_state: 7
+    verbose: -1
+    n_jobs: 2
+recovery:
+  profile_shrinkage: 5.0
+  max_multiplier: 4.0
+  censor_fraction: 0.3
+  censor_seed: 11
+economics:
+  currency: "USD (assumed)"
+  profiles:
+    leafy:   {price: 3.2, unit_cost: 1.8, shelf_life: 2, holding: 0.04, disposal: 0.10, goodwill: 0.5, terminal_waste_risk: 0.50}
+    fruit:   {price: 4.5, unit_cost: 2.7, shelf_life: 4, holding: 0.05, disposal: 0.10, goodwill: 0.6, terminal_waste_risk: 0.25}
+    dairy:   {price: 3.8, unit_cost: 2.4, shelf_life: 5, holding: 0.04, disposal: 0.08, goodwill: 0.5, terminal_waste_risk: 0.20}
+    protein: {price: 8.9, unit_cost: 5.8, shelf_life: 3, holding: 0.10, disposal: 0.25, goodwill: 1.2, terminal_waste_risk: 0.35}
+  investigation_price_mult: 0.6
+  review_price_mult: 1.2
+suppliers:
+  primary:   {lead: 1, cost_mult: 1.00, capacity_mult: 2.5, moq_mult: 0.4}
+  alternate: {lead: 1, cost_mult: 1.12, capacity_mult: 1.2, moq_mult: 0.0}
+  expedite:  {lead: 0, cost_mult: 1.35, capacity_mult: 0.6, moq_mult: 0.0}
+  budget_mult: 3.0
+governance:
+  approval_spend_mult: 2.4
+  max_expedite_share: 0.6
+validation:
+  freshness_max_age_hours: 30
+  financial_tol_warn: 0.05
+  financial_tol_fail: 0.15
+  cvar_alpha: 0.9
+  loss_tolerance_mult: 1.6
+  stress_tolerance_mult: 2.5
+  uncertainty_ratio_warn: 1.5
+  anomaly_min_stockout_hours: 4
+  anomaly_min_cover_days: 0.25
+  prior_clean: 0.95
+  prior_anomalous: 0.35
+  error_multipliers: [1.0, 0.7, 0.45, 0.2, 0.0]
+  reviewer_error_rate: 0.1
+benchmark:
+  n_series: 40
+  realizations: 2
+  scenarios: 100
+  scenario_day_correlation: 0.5
+  seed: 20261125
+  bootstrap_resamples: 1000
+  base_stock_z_grid: [0.0, 0.5, 1.0, 1.5, 2.0]
+  cvar_lambda_grid: [0.25, 0.5]
+  unsafe_regret_days_revenue: 0.5
+  fault_rate: 0.3
+  sensitivity: true
+web:
+  n_cases: 8
+  case_scenarios: 300

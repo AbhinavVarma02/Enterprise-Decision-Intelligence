@@ -1,0 +1,8 @@
+extends: base.yaml
+run_name: research
+data:
+  synthetic: {n_series: 240}
+  freshretailnet: {n_series: 300}
+benchmark:
+  n_series: 200
+  realizations: 3

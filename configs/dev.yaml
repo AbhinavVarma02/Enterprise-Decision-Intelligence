@@ -1,0 +1,7 @@
+extends: base.yaml
+run_name: dev
+data:
+  synthetic: {n_series: 80}
+benchmark:
+  n_series: 40
+  realizations: 2
