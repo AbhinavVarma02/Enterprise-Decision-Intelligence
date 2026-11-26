@@ -92,7 +92,9 @@ def base_stock(inp: DecisionInputs, z: float, model: str = "moving_average") -> 
     lead = int(sup.suppliers[0].lead)
     cover = min(lead, len(fc.point) - 1)
     mu_t = fc.point[: cover + 1]
-    sigma_t = np.maximum((fc.q[: cover + 1, fc.levels.index(0.9)] - fc.q[: cover + 1, fc.levels.index(0.1)]) / Z90, 0)
+    sigma_t = np.maximum(
+        (fc.q[: cover + 1, fc.levels.index(0.9)] - fc.q[: cover + 1, fc.levels.index(0.1)]) / Z90, 0
+    )
     target = float(mu_t.sum() + z * np.sqrt((sigma_t**2).sum()))
     on_hand = float(inp.cohorts.sum())
     position = on_hand + float(inp.pipeline[: cover + 1].sum())
@@ -183,8 +185,17 @@ def oracle(
     d = np.zeros(h)
     d[: min(h, len(realized))] = realized[:h]
     res = solve(true_cohorts, pipeline[:h], sup, d[None, :], econ)
-    return PolicyDecision("ORACLE", res.orders, res.status, res.expected_cost, None, "realized", "oracle",
-                          (time.perf_counter() - t0) * 1e3, h)
+    return PolicyDecision(
+        "ORACLE",
+        res.orders,
+        res.status,
+        res.expected_cost,
+        None,
+        "realized",
+        "oracle",
+        (time.perf_counter() - t0) * 1e3,
+        h,
+    )
 
 
 def with_supply(inp: DecisionInputs, supply: SupplyContext) -> DecisionInputs:

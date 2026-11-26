@@ -38,3 +38,4 @@ apps/web/.vite/
 *.log
 .DS_Store
 Thumbs.db
+data_dev/

@@ -102,7 +102,13 @@ class WorldScenario:
 
 
 def make_world(
-    seed: int, series_id: str, condition: str, realization: int, window: tuple[int, int], phase: str, fault_rate: float
+    seed: int,
+    series_id: str,
+    condition: str,
+    realization: int,
+    window: tuple[int, int],
+    phase: str,
+    fault_rate: float,
 ) -> WorldScenario:
     """Draw the world for one (series, condition, realization). phase is 'tuning' or 'test'."""
     ws, we = window

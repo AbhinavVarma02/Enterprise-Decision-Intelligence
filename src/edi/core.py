@@ -124,7 +124,30 @@ def atomic_write_bytes(path: Path, data: bytes) -> None:
         raise
 
 
+def sanitize(obj: Any) -> Any:
+    """Replace non-finite floats with None so JSON output stays standards-compliant."""
+    import math
+
+    import numpy as np
+
+    if isinstance(obj, dict):
+        return {str(k): sanitize(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [sanitize(v) for v in obj]
+    if isinstance(obj, np.ndarray):
+        return sanitize(obj.tolist())
+    if isinstance(obj, (float, np.floating)):
+        f = float(obj)
+        return f if math.isfinite(f) else None
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.bool_):
+        return bool(obj)
+    return obj
+
+
 def write_json(path: Path, obj: Any, *, compact: bool = False) -> None:
+    obj = sanitize(obj)
     if compact:
         text = json.dumps(obj, separators=(",", ":"), default=_json_default, allow_nan=False)
     else:

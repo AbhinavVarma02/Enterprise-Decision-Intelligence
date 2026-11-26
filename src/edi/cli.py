@@ -57,8 +57,14 @@ def _export(cfg: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
 
 def _run_all(cfg: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
     out = {}
-    for name, fn in (("pipeline", _pipeline), ("forecast", _forecast), ("benchmark", _benchmark),
-                     ("report", _report), ("secondary", _secondary), ("export", _export)):
+    for name, fn in (
+        ("pipeline", _pipeline),
+        ("forecast", _forecast),
+        ("benchmark", _benchmark),
+        ("report", _report),
+        ("secondary", _secondary),
+        ("export", _export),
+    ):
         t0 = time.perf_counter()
         out[name] = fn(cfg, args)
         log_event(log, "stage complete", stage=name, seconds=round(time.perf_counter() - t0, 1))

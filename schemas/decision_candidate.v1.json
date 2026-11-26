@@ -1,0 +1,544 @@
+{
+  "$defs": {
+    "Alternative": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "maxLength": 60,
+          "title": "Label",
+          "type": "string"
+        },
+        "action": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Action",
+          "type": "object"
+        }
+      },
+      "required": [
+        "label",
+        "action"
+      ],
+      "title": "Alternative",
+      "type": "object"
+    },
+    "Constraints": {
+      "additionalProperties": false,
+      "properties": {
+        "resources": {
+          "items": {
+            "$ref": "#/$defs/Resource"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Resources",
+          "type": "array"
+        },
+        "budget": {
+          "minimum": 0,
+          "title": "Budget",
+          "type": "number"
+        },
+        "min_commitment": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Min Commitment",
+          "type": "number"
+        },
+        "extra": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Extra",
+          "type": "object"
+        }
+      },
+      "required": [
+        "resources",
+        "budget"
+      ],
+      "title": "Constraints",
+      "type": "object"
+    },
+    "DataSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "snapshot_id": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Snapshot Id",
+          "type": "string"
+        },
+        "as_of": {
+          "title": "As Of",
+          "type": "string"
+        },
+        "age_hours": {
+          "maximum": 8760,
+          "minimum": 0,
+          "title": "Age Hours",
+          "type": "number"
+        },
+        "history_days_missing": {
+          "default": 0,
+          "maximum": 365,
+          "minimum": 0,
+          "title": "History Days Missing",
+          "type": "integer"
+        },
+        "state": {
+          "additionalProperties": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "title": "State",
+          "type": "object"
+        }
+      },
+      "required": [
+        "snapshot_id",
+        "as_of",
+        "age_hours"
+      ],
+      "title": "DataSnapshot",
+      "type": "object"
+    },
+    "Entity": {
+      "additionalProperties": false,
+      "properties": {
+        "entity_id": {
+          "maxLength": 80,
+          "title": "Entity Id",
+          "type": "string"
+        },
+        "label": {
+          "default": "",
+          "maxLength": 120,
+          "title": "Label",
+          "type": "string"
+        },
+        "category": {
+          "default": "",
+          "maxLength": 40,
+          "title": "Category",
+          "type": "string"
+        },
+        "typical_daily_volume": {
+          "exclusiveMinimum": 0,
+          "title": "Typical Daily Volume",
+          "type": "number"
+        }
+      },
+      "required": [
+        "entity_id",
+        "typical_daily_volume"
+      ],
+      "title": "Entity",
+      "type": "object"
+    },
+    "FinancialAssumptions": {
+      "additionalProperties": false,
+      "properties": {
+        "currency": {
+          "default": "USD (assumed)",
+          "title": "Currency",
+          "type": "string"
+        },
+        "price": {
+          "exclusiveMinimum": 0,
+          "title": "Price",
+          "type": "number"
+        },
+        "unit_cost": {
+          "exclusiveMinimum": 0,
+          "title": "Unit Cost",
+          "type": "number"
+        },
+        "holding": {
+          "minimum": 0,
+          "title": "Holding",
+          "type": "number"
+        },
+        "disposal": {
+          "minimum": 0,
+          "title": "Disposal",
+          "type": "number"
+        },
+        "goodwill": {
+          "minimum": 0,
+          "title": "Goodwill",
+          "type": "number"
+        },
+        "shelf_life_days": {
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Shelf Life Days",
+          "type": "integer"
+        },
+        "terminal_waste_risk": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Terminal Waste Risk",
+          "type": "number"
+        }
+      },
+      "required": [
+        "price",
+        "unit_cost",
+        "holding",
+        "disposal",
+        "goodwill",
+        "shelf_life_days",
+        "terminal_waste_risk"
+      ],
+      "title": "FinancialAssumptions",
+      "type": "object"
+    },
+    "ForecastDistribution": {
+      "additionalProperties": false,
+      "properties": {
+        "model_version": {
+          "title": "Model Version",
+          "type": "string"
+        },
+        "levels": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 21,
+          "minItems": 3,
+          "title": "Levels",
+          "type": "array"
+        },
+        "quantiles": {
+          "items": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "maxItems": 31,
+          "minItems": 1,
+          "title": "Quantiles",
+          "type": "array"
+        }
+      },
+      "required": [
+        "model_version",
+        "levels",
+        "quantiles"
+      ],
+      "title": "ForecastDistribution",
+      "type": "object"
+    },
+    "Objective": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "expected",
+            "cvar",
+            "deterministic",
+            "rule",
+            "external"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "alpha": {
+          "anyOf": [
+            {
+              "exclusiveMaximum": 1,
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Alpha"
+        },
+        "lam": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lam"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Objective",
+      "type": "object"
+    },
+    "Resource": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 40,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "lead_days": {
+          "maximum": 3,
+          "minimum": 0,
+          "title": "Lead Days",
+          "type": "integer"
+        },
+        "unit_cost": {
+          "exclusiveMaximum": 1000000.0,
+          "exclusiveMinimum": 0,
+          "title": "Unit Cost",
+          "type": "number"
+        },
+        "capacity": {
+          "exclusiveMaximum": 1000000000.0,
+          "minimum": 0,
+          "title": "Capacity",
+          "type": "number"
+        },
+        "min_quantity": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Min Quantity",
+          "type": "number"
+        },
+        "eligible": {
+          "default": true,
+          "title": "Eligible",
+          "type": "boolean"
+        },
+        "available": {
+          "default": true,
+          "title": "Available",
+          "type": "boolean"
+        },
+        "attributes": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "title": "Attributes",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "lead_days",
+        "unit_cost",
+        "capacity"
+      ],
+      "title": "Resource",
+      "type": "object"
+    },
+    "RiskTolerance": {
+      "additionalProperties": false,
+      "properties": {
+        "cvar_alpha": {
+          "default": 0.9,
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Cvar Alpha",
+          "type": "number"
+        },
+        "loss_tolerance": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Loss Tolerance"
+        }
+      },
+      "title": "RiskTolerance",
+      "type": "object"
+    },
+    "ScenarioResults": {
+      "additionalProperties": false,
+      "properties": {
+        "expected_cost": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected Cost"
+        },
+        "cvar": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cvar"
+        },
+        "n_scenarios": {
+          "default": 0,
+          "minimum": 0,
+          "title": "N Scenarios",
+          "type": "integer"
+        }
+      },
+      "title": "ScenarioResults",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "decision_id": {
+      "pattern": "^[A-Za-z0-9_.:\\-]{1,120}$",
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "domain": {
+      "enum": [
+        "inventory_replenishment",
+        "cloud_capacity"
+      ],
+      "title": "Domain",
+      "type": "string"
+    },
+    "decision_day": {
+      "minimum": 0,
+      "title": "Decision Day",
+      "type": "integer"
+    },
+    "decision_time": {
+      "title": "Decision Time",
+      "type": "string"
+    },
+    "entity": {
+      "$ref": "#/$defs/Entity"
+    },
+    "data_snapshot": {
+      "$ref": "#/$defs/DataSnapshot"
+    },
+    "action": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Action",
+      "type": "object"
+    },
+    "alternatives": {
+      "items": {
+        "$ref": "#/$defs/Alternative"
+      },
+      "maxItems": 12,
+      "title": "Alternatives",
+      "type": "array"
+    },
+    "objective": {
+      "$ref": "#/$defs/Objective"
+    },
+    "constraints": {
+      "$ref": "#/$defs/Constraints"
+    },
+    "forecast": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ForecastDistribution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "financial_assumptions": {
+      "$ref": "#/$defs/FinancialAssumptions"
+    },
+    "scenario_results": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ScenarioResults"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "model_version": {
+      "default": "unknown",
+      "title": "Model Version",
+      "type": "string"
+    },
+    "policy_version": {
+      "default": "unknown",
+      "title": "Policy Version",
+      "type": "string"
+    },
+    "risk_tolerance": {
+      "$ref": "#/$defs/RiskTolerance"
+    },
+    "decision_status": {
+      "const": "proposed",
+      "default": "proposed",
+      "title": "Decision Status",
+      "type": "string"
+    },
+    "approval_requirements": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Approval Requirements",
+      "type": "array"
+    }
+  },
+  "required": [
+    "decision_id",
+    "domain",
+    "decision_day",
+    "decision_time",
+    "entity",
+    "data_snapshot",
+    "action",
+    "objective",
+    "constraints",
+    "financial_assumptions"
+  ],
+  "title": "DecisionCandidate",
+  "type": "object"
+}

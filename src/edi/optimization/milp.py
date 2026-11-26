@@ -121,7 +121,7 @@ def solve(
             qcoef += w * oc
             for tau in range(arr, ex + 1):
                 xcoef[pos[(tau, c)]] -= w
-    for j, (t, c) in enumerate(active):
+    for j in range(len(active)):
         xcoef[j] -= short
     scen_const = const_q + short * demand.sum(axis=1)
 
@@ -223,12 +223,18 @@ def _infeasible(msg: str, n: int, r: int) -> SolveResult:
     return SolveResult("infeasible", np.zeros(3), None, None, None, msg, n, r)
 
 
-def action_grid(supply: SupplyContext, horizon: int, n_primary: int = 12, n_alt: int = 6, n_exp: int = 5) -> np.ndarray:
+def action_grid(
+    supply: SupplyContext, horizon: int, n_primary: int = 12, n_alt: int = 6, n_exp: int = 5
+) -> np.ndarray:
     """Bounded candidate grid used for brute-force checks, VOI and the browser evaluator."""
     caps = supply.capacities.copy()
     caps[supply.leads >= horizon] = 0.0
     moq = supply.moqs[0]
-    pri = np.unique(np.concatenate([[0.0], np.linspace(max(moq, 0.0), caps[0], n_primary)])) if caps[0] > 0 else np.array([0.0])
+    pri = (
+        np.unique(np.concatenate([[0.0], np.linspace(max(moq, 0.0), caps[0], n_primary)]))
+        if caps[0] > 0
+        else np.array([0.0])
+    )
     alt = np.linspace(0.0, caps[1], n_alt) if caps[1] > 0 else np.array([0.0])
     exp = np.linspace(0.0, caps[2], n_exp) if caps[2] > 0 else np.array([0.0])
     grid = np.array(np.meshgrid(pri, alt, exp, indexing="ij")).reshape(3, -1).T

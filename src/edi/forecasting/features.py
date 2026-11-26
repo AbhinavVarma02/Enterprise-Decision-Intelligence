@@ -67,10 +67,12 @@ def _nanstd(a: np.ndarray, axis: int) -> np.ndarray:
     return np.sqrt(_nanmean(dev, axis))
 
 
-def build(panel: Panel, target: np.ndarray, origins: list[int], horizons: list[int], max_target: int) -> Design:
+def build(
+    panel: Panel, target: np.ndarray, origins: list[int], horizons: list[int], max_target: int
+) -> Design:
     """Build features for every series, origin in `origins` and h in `horizons` with t <= max_target."""
     dates = pd.to_datetime(pd.Series(panel.dates))
-    dow = dates.dt.weekday.to_numpy()
+    dow = dates.dt.day_of_week.to_numpy()
     n_s = panel.n_series
     blocks = []
     for o in origins:
@@ -116,9 +118,7 @@ def build(panel: Panel, target: np.ndarray, origins: list[int], horizons: list[i
                 }
             )
             y = target[:, ti] if ti < target.shape[1] else np.full(n_s, np.nan)
-            blocks.append(
-                (df, y, scale, np.arange(n_s), np.full(n_s, o), np.full(n_s, h), np.full(n_s, t))
-            )
+            blocks.append((df, y, scale, np.arange(n_s), np.full(n_s, o), np.full(n_s, h), np.full(n_s, t)))
     if not blocks:
         raise ValueError("no rows: check origins, horizons and max_target")
     X = pd.concat([b[0] for b in blocks], ignore_index=True)[FEATURES]

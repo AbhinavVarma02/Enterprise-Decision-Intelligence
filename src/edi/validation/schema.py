@@ -7,11 +7,11 @@ the payload (inventory replenishment, cloud capacity). JSON Schema: schemas/deci
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION: Final = "1.0"
 Outcome = Literal["recommend", "investigate", "defer", "escalate", "reject"]
 GateStatus = Literal["pass", "warn", "fail"]
 

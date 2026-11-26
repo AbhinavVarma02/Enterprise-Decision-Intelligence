@@ -16,7 +16,16 @@ import numpy as np
 import pandas as pd
 
 from edi.benchmark.runner import ForecastStore, PolicySpec, SeriesSetup, make_setup, run_episode
-from edi.core import config_hash, get_logger, git_sha, log_event, repo_path, utc_now, write_json, write_parquet
+from edi.core import (
+    config_hash,
+    get_logger,
+    git_sha,
+    log_event,
+    repo_path,
+    utc_now,
+    write_json,
+    write_parquet,
+)
 from edi.forecasting.run import load_forecasts
 from edi.pipeline import Panel, layout, load_panel
 from edi.simulation.scenarios import make_world
@@ -38,6 +47,7 @@ class Cell:
     reference: str = "default"  # default | lower | upper
     econ_variant: str = ""  # "" | goodwill_x2 | holding_x2
     keep_samples: int = 0
+    vscale: float = 1.0  # multiplier on the validator's soft (risk and stress) tolerances
 
 
 def select_series(panel: Panel, n: int) -> np.ndarray:
@@ -67,7 +77,11 @@ def _econ_cfg(cfg: dict[str, Any], variant: str) -> dict[str, Any]:
     if not variant:
         return cfg
     c = copy.deepcopy(cfg)
-    key, mult = {"goodwill_x2": ("goodwill", 2.0), "goodwill_x0.5": ("goodwill", 0.5), "holding_x2": ("holding", 2.0)}[variant]
+    key, mult = {
+        "goodwill_x2": ("goodwill", 2.0),
+        "goodwill_x0.5": ("goodwill", 0.5),
+        "holding_x2": ("holding", 2.0),
+    }[variant]
     for p in c["economics"]["profiles"].values():
         p[key] = p[key] * mult
     return c
@@ -83,7 +97,9 @@ def _init(cfg: dict[str, Any]) -> None:
     _G["vparams"] = ValidatorParams.from_config(cfg)
 
 
-def _run_chunk(args: tuple[list[int], list[Cell]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+def _run_chunk(
+    args: tuple[list[int], list[Cell]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     series_idx, cells = args
     cfg, panel = _G["cfg"], _G["panel"]
     w = cfg["windows"]
@@ -92,35 +108,91 @@ def _run_chunk(args: tuple[list[int], list[Cell]]) -> tuple[list[dict[str, Any]]
     samples: list[dict[str, Any]] = []
     for cell in cells:
         stage = "A" if cell.phase == "tuning" else "B"
-        window = (w["tune_start"], w["tune_end"]) if cell.phase == "tuning" else (w["test_start"], w["test_end"])
+        window = (
+            (w["tune_start"], w["tune_end"]) if cell.phase == "tuning" else (w["test_start"], w["test_end"])
+        )
         fit_end = w["a_fit_end"] if stage == "A" else w["b_fit_end"]
         ccfg = _econ_cfg(cfg, cell.econ_variant)
         ref = _G["refs"][stage][cell.reference]
         for i in series_idx:
             setup: SeriesSetup = make_setup(panel, int(i), ref, ccfg, fit_end)
-            world = make_world(int(cfg["benchmark"]["seed"]), setup.series_id, cell.condition, cell.realization,
-                               window, cell.phase, float(cfg["benchmark"]["fault_rate"]))
+            world = make_world(
+                int(cfg["benchmark"]["seed"]),
+                setup.series_id,
+                cell.condition,
+                cell.realization,
+                window,
+                cell.phase,
+                float(cfg["benchmark"]["fault_rate"]),
+            )
             t0 = time.perf_counter()
-            res = run_episode(setup, world, cell.spec, _G["stores"][stage], ccfg, window, _G["vparams"],
-                              dict(cell.overrides), keep_samples=cell.keep_samples)
-            tags = {"experiment": cell.experiment, "phase": cell.phase, "condition": cell.condition,
-                    "realization": cell.realization, "policy": cell.spec.pid, "reference": cell.reference,
-                    "econ_variant": cell.econ_variant, "overrides": ",".join(f"{k}={v}" for k, v in cell.overrides),
-                    "series_id": setup.series_id, "profile": setup.profile, "mu": setup.mu}
+            vp = _G["vparams"]
+            if cell.vscale != 1.0:
+                vp = replace(
+                    vp,
+                    loss_tolerance_mult=vp.loss_tolerance_mult * cell.vscale,
+                    stress_tolerance_mult=vp.stress_tolerance_mult * cell.vscale,
+                )
+            res = run_episode(
+                setup,
+                world,
+                cell.spec,
+                _G["stores"][stage],
+                ccfg,
+                window,
+                vp,
+                dict(cell.overrides),
+                keep_samples=cell.keep_samples,
+            )
+            tags = {
+                "experiment": cell.experiment,
+                "phase": cell.phase,
+                "condition": cell.condition,
+                "realization": cell.realization,
+                "policy": cell.spec.pid,
+                "reference": cell.reference,
+                "econ_variant": cell.econ_variant,
+                "overrides": ",".join(f"{k}={v}" for k, v in cell.overrides),
+                "vscale": cell.vscale,
+                "series_id": setup.series_id,
+                "profile": setup.profile,
+                "mu": setup.mu,
+            }
             t = res.totals.to_dict()
-            totals_rows.append({**tags, **t, "events": "|".join(world.labels()),
-                                "runtime_s": time.perf_counter() - t0, "n_days": window[1] - window[0] + 1,
-                                "daily_revenue_scale": setup.mu * setup.econ.price})
+            totals_rows.append(
+                {
+                    **tags,
+                    **t,
+                    "events": "|".join(world.labels()),
+                    "runtime_s": time.perf_counter() - t0,
+                    "n_days": window[1] - window[0] + 1,
+                    "daily_revenue_scale": setup.mu * setup.econ.price,
+                }
+            )
             for d in res.decisions:
-                d.update({k: tags[k] for k in ("experiment", "phase", "reference", "econ_variant", "overrides", "profile")})
+                d.update(
+                    {
+                        k: tags[k]
+                        for k in ("experiment", "phase", "reference", "econ_variant", "overrides", "profile")
+                    }
+                )
                 decisions.append(d)
             for s in res.samples:
-                samples.append({**s, "experiment": cell.experiment, "condition": cell.condition, "policy": cell.spec.pid,
-                                "events": "|".join(world.labels())})
+                samples.append(
+                    {
+                        **s,
+                        "experiment": cell.experiment,
+                        "condition": cell.condition,
+                        "policy": cell.spec.pid,
+                        "events": "|".join(world.labels()),
+                    }
+                )
     return totals_rows, decisions, samples
 
 
-def run_cells(cfg: dict[str, Any], cells: list[Cell], series_idx: np.ndarray, n_jobs: int) -> tuple[pd.DataFrame, pd.DataFrame, list[dict[str, Any]]]:
+def run_cells(
+    cfg: dict[str, Any], cells: list[Cell], series_idx: np.ndarray, n_jobs: int
+) -> tuple[pd.DataFrame, pd.DataFrame, list[dict[str, Any]]]:
     chunks = [list(c) for c in np.array_split(series_idx, max(1, n_jobs * 2)) if len(c)]
     jobs = [(c, cells) for c in chunks]
     totals: list[dict[str, Any]] = []
@@ -131,7 +203,9 @@ def run_cells(cfg: dict[str, Any], cells: list[Cell], series_idx: np.ndarray, n_
         results = [_run_chunk(j) for j in jobs]
     else:
         ctx = mp.get_context("fork") if "fork" in mp.get_all_start_methods() else mp.get_context()
-        with ProcessPoolExecutor(max_workers=n_jobs, mp_context=ctx, initializer=_init, initargs=(cfg,)) as ex:
+        with ProcessPoolExecutor(
+            max_workers=n_jobs, mp_context=ctx, initializer=_init, initargs=(cfg,)
+        ) as ex:
             results = list(ex.map(_run_chunk, jobs))
     for t, d, s in results:
         totals += t
@@ -144,22 +218,44 @@ def _per_day_cost(df: pd.DataFrame) -> pd.Series:
     return df["total"] / df["n_days"]
 
 
+VSCALE_GRID = (1.0, 2.0, 4.0, 1e6)  # 1e6 effectively disables soft risk/stress escalation
+
+
 def tune(cfg: dict[str, Any], series_idx: np.ndarray, n_jobs: int) -> dict[str, Any]:
-    """Tune the base-stock safety factor and the CVaR weight on the tuning window (days 77-90)."""
+    """Tune on the tuning window only (days 77-90; protocol section 2): the base-stock safety factor, the
+    CVaR weight and the validator's soft-tolerance scale. Objective: mean total cost per series-day over
+    normal, unreliable and tuning-set disruption conditions."""
     bc = cfg["benchmark"]
     cells = []
-    for cond in ("normal", "disruption"):
+    for cond in ("normal", "unreliable", "disruption"):
         for z in bc["base_stock_z_grid"]:
             cells.append(Cell("tuning", "tuning", cond, 0, PolicySpec(f"P1_z{z}", "base_stock", z=float(z))))
         for lam in bc["cvar_lambda_grid"]:
             cells.append(Cell("tuning", "tuning", cond, 0, PolicySpec(f"P4_l{lam}", "cvar", lam=float(lam))))
-    totals, _, _ = run_cells(cfg, cells, series_idx, n_jobs)
+        for vs in VSCALE_GRID:
+            cells.append(
+                Cell(
+                    "tuning",
+                    "tuning",
+                    cond,
+                    0,
+                    PolicySpec(f"P5a_v{vs:g}", "validated", wrapped="saa"),
+                    vscale=vs,
+                )
+            )
+    totals, decisions, _ = run_cells(cfg, cells, series_idx, n_jobs)
     totals["cost_per_day"] = _per_day_cost(totals)
     agg = totals.groupby("policy")["cost_per_day"].mean()
     z_best = min(bc["base_stock_z_grid"], key=lambda z: agg[f"P1_z{z}"])
     lam_best = min(bc["cvar_lambda_grid"], key=lambda lam: agg[f"P4_l{lam}"])
-    return {"z": float(z_best), "lambda": float(lam_best), "grid": agg.round(4).to_dict(),
-            "objective": "mean total cost per series-day over normal and tuning-set disruptions, days 77-90"}
+    vs_best = min(VSCALE_GRID, key=lambda vs: agg[f"P5a_v{vs:g}"])
+    return {
+        "z": float(z_best),
+        "lambda": float(lam_best),
+        "validator_soft_scale": float(vs_best),
+        "grid": agg.round(4).to_dict(),
+        "objective": "mean total cost per series-day over normal, unreliable and tuning-set disruptions, days 77-90",
+    }
 
 
 def main_specs(z: float, lam: float) -> list[PolicySpec]:
@@ -176,13 +272,33 @@ def main_specs(z: float, lam: float) -> list[PolicySpec]:
 
 def ablation_specs() -> list[PolicySpec]:
     return [
-        PolicySpec("P3_obs", "saa", model="lgbm_quantile_observed", label="P3 without stockout-aware forecasts"),
-        PolicySpec("P5a_no_stockout_aware", "validated", wrapped="saa", model="lgbm_quantile_observed",
-                   label="P5a without stockout-aware forecasts"),
-        PolicySpec("P5a_no_voi", "validated", wrapped="saa", use_voi=False, label="P5a without value of information"),
-        PolicySpec("P5a_no_escalation", "validated", wrapped="saa", use_escalation=False, label="P5a without escalation"),
-        PolicySpec("P5a_no_risk_review", "validated", wrapped="saa", risk_review=False,
-                   label="P5a with expected-cost review"),
+        PolicySpec(
+            "P3_obs", "saa", model="lgbm_quantile_observed", label="P3 without stockout-aware forecasts"
+        ),
+        PolicySpec(
+            "P5a_no_stockout_aware",
+            "validated",
+            wrapped="saa",
+            model="lgbm_quantile_observed",
+            label="P5a without stockout-aware forecasts",
+        ),
+        PolicySpec(
+            "P5a_no_voi", "validated", wrapped="saa", use_voi=False, label="P5a without value of information"
+        ),
+        PolicySpec(
+            "P5a_no_escalation",
+            "validated",
+            wrapped="saa",
+            use_escalation=False,
+            label="P5a without escalation",
+        ),
+        PolicySpec(
+            "P5a_no_risk_review",
+            "validated",
+            wrapped="saa",
+            risk_review=False,
+            label="P5a with expected-cost review",
+        ),
     ]
 
 
@@ -207,7 +323,7 @@ def run_all(cfg: dict[str, Any], n_jobs: int = 2) -> dict[str, Any]:
 
     tuning = tune(cfg, series_idx, n_jobs)
     log_event(log, "tuning done", **{k: tuning[k] for k in ("z", "lambda")})
-    z, lam = tuning["z"], tuning["lambda"]
+    z, lam, vs = tuning["z"], tuning["lambda"], tuning["validator_soft_scale"]
     R = int(bc["realizations"])
     conditions = ("normal", "unreliable", "disruption")
     cells: list[Cell] = []
@@ -215,12 +331,18 @@ def run_all(cfg: dict[str, Any], n_jobs: int = 2) -> dict[str, Any]:
         for r in range(R):
             for spec in main_specs(z, lam):
                 keep = 60 if spec.pid == "P5a" else 0
-                cells.append(Cell("main", "test", cond, r, spec, keep_samples=keep))
+                cells.append(Cell("main", "test", cond, r, spec, keep_samples=keep, vscale=vs))
             for spec in ablation_specs():
-                cells.append(Cell("ablation", "test", cond, r, spec))
+                cells.append(Cell("ablation", "test", cond, r, spec, vscale=vs))
+            # untuned validator thresholds, reported for transparency
+            cells.append(
+                Cell("ablation", "test", cond, r, PolicySpec("P5a_untuned", "validated", wrapped="saa"))
+            )
     for r in range(R):
         for m in FORECAST_VARIANTS:
-            cells.append(Cell("forecast_variants", "test", "normal", r, PolicySpec(f"P3[{m}]", "saa", model=m)))
+            cells.append(
+                Cell("forecast_variants", "test", "normal", r, PolicySpec(f"P3[{m}]", "saa", model=m))
+            )
     if bc.get("sensitivity", True):
         sens: list[tuple[str, tuple[tuple[str, float], ...], str]] = [
             ("review_x0.5", (("review_mult", 0.5), ("investigation_mult", 0.5)), ""),
@@ -235,11 +357,24 @@ def run_all(cfg: dict[str, Any], n_jobs: int = 2) -> dict[str, Any]:
         for name, ov, ev in sens:
             for r in range(R):
                 for spec in (PolicySpec("P3", "saa"), PolicySpec("P5a", "validated", wrapped="saa")):
-                    cells.append(Cell(f"sensitivity:{name}", "test", "unreliable", r, spec, ov, econ_variant=ev))
+                    cells.append(
+                        Cell(
+                            f"sensitivity:{name}",
+                            "test",
+                            "unreliable",
+                            r,
+                            spec,
+                            ov,
+                            econ_variant=ev,
+                            vscale=vs,
+                        )
+                    )
         for ref in ("lower", "upper"):
             for r in range(R):
                 for spec in main_specs(z, lam)[:5]:
-                    cells.append(Cell(f"demand_bound:{ref}", "test", "normal", r, spec, reference=ref))
+                    cells.append(
+                        Cell(f"demand_bound:{ref}", "test", "normal", r, spec, reference=ref, vscale=vs)
+                    )
 
     totals, decisions, samples = run_cells(cfg, cells, series_idx, n_jobs)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -266,7 +401,9 @@ def run_all(cfg: dict[str, Any], n_jobs: int = 2) -> dict[str, Any]:
         "protocol_version": "1.0",
     }
     write_json(out_dir / "manifest.json", manifest)
-    log_event(log, "benchmark done", run_id=run_id, decisions=len(decisions), seconds=manifest["runtime_seconds"])
+    log_event(
+        log, "benchmark done", run_id=run_id, decisions=len(decisions), seconds=manifest["runtime_seconds"]
+    )
     return manifest
 
 

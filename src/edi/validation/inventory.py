@@ -6,7 +6,7 @@ from typing import Any
 
 import numpy as np
 
-from edi.finance.economics import SupplyContext, Supplier, UnitEconomics
+from edi.finance.economics import Supplier, SupplyContext, UnitEconomics
 from edi.optimization.milp import action_grid
 from edi.simulation.engine import evaluate_actions, horizon_for
 from edi.simulation.scenarios import sample_paths
@@ -72,7 +72,9 @@ def constraints_from(sup: SupplyContext) -> Constraints:
     )
 
 
-def supply_from(c: Constraints, approval_threshold: float = float("inf"), max_expedite_share: float = 1.0) -> SupplyContext:
+def supply_from(
+    c: Constraints, approval_threshold: float = float("inf"), max_expedite_share: float = 1.0
+) -> SupplyContext:
     by = {r.name: r for r in c.resources}
     sups = tuple(
         Supplier(
@@ -135,7 +137,9 @@ def build_candidate(
         domain="inventory_replenishment",
         decision_day=day,
         decision_time=decision_time,
-        entity=Entity(entity_id=series_id, label=series_id, category=category, typical_daily_volume=max(mu, 1e-6)),
+        entity=Entity(
+            entity_id=series_id, label=series_id, category=category, typical_daily_volume=max(mu, 1e-6)
+        ),
         data_snapshot=DataSnapshot(
             snapshot_id=snapshot_id,
             as_of=decision_time,
@@ -147,12 +151,17 @@ def build_candidate(
             },
         ),
         action={n: float(q) for n, q in zip(RESOURCES, orders)},
-        objective=Objective(type=objective if objective in ("expected", "cvar", "deterministic", "rule") else "external",  # type: ignore[arg-type]
-                            alpha=alpha if objective == "cvar" else None, lam=lam),
+        objective=Objective(
+            type=objective if objective in ("expected", "cvar", "deterministic", "rule") else "external",  # type: ignore[arg-type]
+            alpha=alpha if objective == "cvar" else None,
+            lam=lam,
+        ),
         constraints=constraints_from(snapshot_supply),
         forecast=fc,
         financial_assumptions=assumptions_from(econ),
-        scenario_results=ScenarioResults(expected_cost=expected_cost, cvar=cvar_value, n_scenarios=n_scenarios)
+        scenario_results=ScenarioResults(
+            expected_cost=expected_cost, cvar=cvar_value, n_scenarios=n_scenarios
+        )
         if expected_cost is not None
         else None,
         model_version=model_version,
@@ -200,7 +209,9 @@ class InventoryAdapter:
             sup = self._supply(ctx)
         h = self.horizon(cand, ctx)
         st = state or {}
-        cohorts = np.asarray(st.get("on_hand_by_age", cand.data_snapshot.state["on_hand_by_age"]), dtype=float)
+        cohorts = np.asarray(
+            st.get("on_hand_by_age", cand.data_snapshot.state["on_hand_by_age"]), dtype=float
+        )
         pipe = np.asarray(cand.data_snapshot.state["pipeline_by_day"], dtype=float)
         pipe_h = np.zeros(h)
         pipe_h[: min(h, len(pipe))] = pipe[:h]
@@ -213,7 +224,9 @@ class InventoryAdapter:
         sup = self._supply(ctx)
         return action_grid(sup, self.horizon(cand, ctx))
 
-    def stress_cases(self, cand: DecisionCandidate, ctx: AuthoritativeContext, scenarios: np.ndarray) -> list[tuple[str, Any]]:
+    def stress_cases(
+        self, cand: DecisionCandidate, ctx: AuthoritativeContext, scenarios: np.ndarray
+    ) -> list[tuple[str, Any]]:
         def primary_fails(acts: np.ndarray) -> np.ndarray:
             a = np.atleast_2d(acts).copy()
             a[:, 0] = 0.0
@@ -225,7 +238,9 @@ class InventoryAdapter:
             ("demand 40% below forecast", lambda acts: self.evaluate(cand, ctx, acts, scenarios * 0.6)),
         ]
 
-    def anomaly(self, cand: DecisionCandidate, ctx: AuthoritativeContext, params: ValidatorParams) -> dict[str, Any]:
+    def anomaly(
+        self, cand: DecisionCandidate, ctx: AuthoritativeContext, params: ValidatorParams
+    ) -> dict[str, Any]:
         coh = np.asarray(cand.data_snapshot.state.get("on_hand_by_age", []), dtype=float)
         mu = cand.entity.typical_daily_volume
         carry = float(coh[1:].sum()) if len(coh) > 1 else float(coh.sum())
@@ -237,9 +252,17 @@ class InventoryAdapter:
                 f"shelf was out of stock for {so:.0f} h yesterday, yet the record shows {carry:,.1f} units carried over"
             )
         if jump > params.anomaly_jump_ratio:
-            reasons.append(f"recorded on-hand moved {jump:.1f} days of demand more than receipts and sales explain")
-        return {"flag": bool(reasons), "reasons": reasons, "input": "on-hand inventory", "carryover": carry,
-                "stockout_hours_yesterday": so, "record_jump_ratio": jump}
+            reasons.append(
+                f"recorded on-hand moved {jump:.1f} days of demand more than receipts and sales explain"
+            )
+        return {
+            "flag": bool(reasons),
+            "reasons": reasons,
+            "input": "on-hand inventory",
+            "carryover": carry,
+            "stockout_hours_yesterday": so,
+            "record_jump_ratio": jump,
+        }
 
     def state_hypotheses(
         self, cand: DecisionCandidate, params: ValidatorParams, anomalous: bool
@@ -252,6 +275,8 @@ class InventoryAdapter:
         for m in mults:
             true = coh.copy()
             true[1:] = coh[1:] * m  # today's receipts are verified; carried-over stock is uncertain
-            label = "record correct" if m == 1.0 else f"carried-over stock is {int(round(100 * m))}% of record"
+            label = (
+                "record correct" if m == 1.0 else f"carried-over stock is {int(round(100 * m))}% of record"
+            )
             out.append((label, p1 if m == 1.0 else others, {"on_hand_by_age": true}))
         return out

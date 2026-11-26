@@ -76,7 +76,9 @@ def run_stage(
         cal = F.build(panel, y, list(range(fit_end - max(horizons) + 1, cal_end)), horizons, cal_end)
         keep = cal.target_day > fit_end
         cal = _filter(cal, keep)
-        pred = F.build(panel, y, list(range(ws - 3, we)), horizons, we)  # stale-history decisions use origin d-3
+        pred = F.build(
+            panel, y, list(range(ws - 3, we)), horizons, we
+        )  # stale-history decisions use origin d-3
         designs[tname] = {"fit": fit, "cal": cal, "pred": pred}
 
     rows = []
@@ -84,7 +86,9 @@ def run_stage(
     pred_design = designs["observed"]["pred"]
     obs_truth = pred_design.y
     instock = panel.stockout_hours[pred_design.series, pred_design.target_day - 1] == 0
-    latent_truth = panel.latent[pred_design.series, pred_design.target_day - 1] if panel.latent is not None else None
+    latent_truth = (
+        panel.latent[pred_design.series, pred_design.target_day - 1] if panel.latent is not None else None
+    )
     profiles = np.array(panel.profile)[pred_design.series]
     for name, tname in MODEL_SPECS:
         t0 = time.perf_counter()
@@ -111,11 +115,15 @@ def run_stage(
             "fit_seconds": round(elapsed, 2),
             "vs_observed_all": evaluate(obs_truth, pr.q, pr.point, levels),
             "vs_observed_instock": evaluate(np.where(instock, obs_truth, np.nan), pr.q, pr.point, levels),
-            "vs_observed_stockout_days": evaluate(np.where(~instock, obs_truth, np.nan), pr.q, pr.point, levels),
+            "vs_observed_stockout_days": evaluate(
+                np.where(~instock, obs_truth, np.nan), pr.q, pr.point, levels
+            ),
         }
         if latent_truth is not None:
             m["vs_latent_all"] = evaluate(latent_truth, pr.q, pr.point, levels)
-            m["vs_latent_stockout_days"] = evaluate(np.where(~instock, latent_truth, np.nan), pr.q, pr.point, levels)
+            m["vs_latent_stockout_days"] = evaluate(
+                np.where(~instock, latent_truth, np.nan), pr.q, pr.point, levels
+            )
         m["by_profile_instock"] = {
             p: evaluate(np.where(instock & (profiles == p), obs_truth, np.nan), pr.q, pr.point, levels)
             for p in sorted(set(profiles))

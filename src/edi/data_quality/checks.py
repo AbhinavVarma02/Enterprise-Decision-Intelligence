@@ -139,7 +139,11 @@ def consistency_checks(clean: pd.DataFrame) -> list[CheckResult]:
     stockout_share = float(np.mean(cnt > 0)) if len(cnt) else 0.0
     out.append(
         CheckResult(
-            "stockout_day_share", "soft", True, 0, f"share of series-days with any stockout hour={stockout_share:.3f}"
+            "stockout_day_share",
+            "soft",
+            True,
+            0,
+            f"share of series-days with any stockout hour={stockout_share:.3f}",
         )
     )
     max_dt = str(clean["dt"].max()) if len(clean) else "none"

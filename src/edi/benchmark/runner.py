@@ -9,6 +9,7 @@ Responsibilities:
 
 from __future__ import annotations
 
+import re
 import time
 from dataclasses import dataclass, field, replace
 from typing import Any
@@ -16,9 +17,22 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from edi.finance.economics import CostBreakdown, SupplyContext, UnitEconomics, base_supply_context, economics_for
+from edi.finance.economics import (
+    CostBreakdown,
+    SupplyContext,
+    UnitEconomics,
+    base_supply_context,
+    economics_for,
+)
 from edi.optimization.milp import action_grid
-from edi.optimization.policies import DecisionInputs, Forecast, PolicyDecision, base_stock, milp_policy, oracle
+from edi.optimization.policies import (
+    DecisionInputs,
+    Forecast,
+    PolicyDecision,
+    base_stock,
+    milp_policy,
+    oracle,
+)
 from edi.simulation.engine import day_costs, evaluate_actions, horizon_for, step
 from edi.simulation.scenarios import WorldScenario, sample_paths, stream
 from edi.validation.engine import ValidatorParams, validate
@@ -66,8 +80,12 @@ class ForecastStore:
         self.data: dict[str, np.ndarray] = {}
         for model, g in df.groupby("model"):
             arr = np.full((n_s, n_o, self.h_max, len(levels) + 1), np.nan)
-            arr[g["series"].to_numpy(), g["origin"].to_numpy() - self.o_min, g["h"].to_numpy() - 1, 0] = g["point"].to_numpy()
-            arr[g["series"].to_numpy(), g["origin"].to_numpy() - self.o_min, g["h"].to_numpy() - 1, 1:] = g[qcols].to_numpy()
+            arr[g["series"].to_numpy(), g["origin"].to_numpy() - self.o_min, g["h"].to_numpy() - 1, 0] = g[
+                "point"
+            ].to_numpy()
+            arr[g["series"].to_numpy(), g["origin"].to_numpy() - self.o_min, g["h"].to_numpy() - 1, 1:] = g[
+                qcols
+            ].to_numpy()
             self.data[str(model)] = arr
 
     def get(self, model: str, series: int, day: int, horizon: int, staleness: int = 0) -> Forecast:
@@ -83,7 +101,14 @@ class ForecastStore:
             else:
                 rows.append(np.zeros(len(self.levels) + 1))
         m = np.array(rows)
-        return Forecast(model=model, point=m[:, 0], q=m[:, 1:], levels=self.levels, origin=origin, staleness_days=staleness)
+        return Forecast(
+            model=model,
+            point=m[:, 0],
+            q=m[:, 1:],
+            levels=self.levels,
+            origin=origin,
+            staleness_days=staleness,
+        )
 
 
 @dataclass
@@ -195,19 +220,37 @@ def label_candidate(
     q = fc.q[:h]
     if len(q) < h:
         q = np.vstack([q, np.repeat(q[-1:], h - len(q), axis=0)])
-    S = sample_paths(q, fc.levels, int(cfg["benchmark"]["scenarios"]), float(cfg["benchmark"]["scenario_day_correlation"]),
-                     stream(cfg["benchmark"]["seed"], "label", *key))
+    S = sample_paths(
+        q,
+        fc.levels,
+        int(cfg["benchmark"]["scenarios"]),
+        float(cfg["benchmark"]["scenario_day_correlation"]),
+        stream(cfg["benchmark"]["seed"], "label", *key),
+    )
     grid = action_grid(auth, h)
     pipe = pipeline[:h]
-    e_grid = evaluate_actions(true_cohorts, pipe, grid, auth.leads, auth.unit_costs, S, econ).cost.mean(axis=1)
-    e_c = float(evaluate_actions(true_cohorts, pipe, deliver[None, :], auth.leads, auth.unit_costs, S, econ).cost.mean())
-    regret = e_c - float(e_grid.min())
+    e_grid = evaluate_actions(true_cohorts, pipe, grid, auth.leads, auth.unit_costs, S, econ).cost.mean(
+        axis=1
+    )
+    e_c = float(
+        evaluate_actions(
+            true_cohorts, pipe, deliver[None, :], auth.leads, auth.unit_costs, S, econ
+        ).cost.mean()
+    )
+    regret = e_c - float(np.min(e_grid))
     threshold = float(cfg["benchmark"]["unsafe_regret_days_revenue"]) * mu * econ.price
-    return {"unsafe": bool(viol) or regret > threshold, "hard_violation": bool(viol), "violations": viol,
-            "ex_ante_regret": regret, "regret_threshold": threshold}
+    return {
+        "unsafe": bool(viol) or regret > threshold,
+        "hard_violation": bool(viol),
+        "violations": viol,
+        "ex_ante_regret": regret,
+        "regret_threshold": threshold,
+    }
 
 
-def _review_costs(econ: UnitEconomics, cfg: dict[str, Any], overrides: dict[str, float]) -> tuple[float, float]:
+def _review_costs(
+    econ: UnitEconomics, cfg: dict[str, Any], overrides: dict[str, float]
+) -> tuple[float, float]:
     e = cfg["economics"]
     inv = float(e["investigation_price_mult"]) * econ.price * overrides.get("investigation_mult", 1.0)
     rev = float(e["review_price_mult"]) * econ.price * overrides.get("review_mult", 1.0)
@@ -288,15 +331,27 @@ def run_episode(
 
         # 3. decide
         t0 = time.perf_counter()
-        rec: dict[str, Any] = {"series_id": setup.series_id, "day": d, "policy": spec.pid, "condition": world.condition,
-                               "realization": world.realization, "events": "|".join(world.labels()),
-                               "fault_active": bool(f_rec is not None or staleness or _stale_active(world, d)),
-                               "outcome": "execute", "governance_cost": 0.0, "reviewed": False}
+        rec: dict[str, Any] = {
+            "series_id": setup.series_id,
+            "day": d,
+            "policy": spec.pid,
+            "condition": world.condition,
+            "realization": world.realization,
+            "events": "|".join(world.labels()),
+            "fault_active": bool(f_rec is not None or staleness or _stale_active(world, d)),
+            "outcome": "execute",
+            "governance_cost": 0.0,
+            "reviewed": False,
+        }
         candidate: PolicyDecision
         executed: np.ndarray
         if spec.kind == "oracle":
-            realized = np.array([setup.reference[d - 1 + t] * demand_multiplier(world, d + t) if d + t <= we else 0.0
-                                 for t in range(4)])
+            realized = np.array(
+                [
+                    setup.reference[d - 1 + t] * demand_multiplier(world, d + t) if d + t <= we else 0.0
+                    for t in range(4)
+                ]
+            )
             candidate = oracle(true_cohorts, pipe_view, auth, realized, econ, d, we)
             executed = candidate.orders
         elif spec.kind == "base_stock":
@@ -304,15 +359,30 @@ def run_episode(
             executed = candidate.orders
         elif spec.kind in ("deterministic", "saa", "cvar"):
             candidate = milp_policy(
-                inp, spec.pid, "lgbm_point" if spec.kind == "deterministic" else spec.model,
-                objective="cvar" if spec.kind == "cvar" else "expected", alpha=cvar_alpha, lam=spec.lam,
+                inp,
+                spec.pid,
+                "lgbm_point" if spec.kind == "deterministic" else spec.model,
+                objective="cvar" if spec.kind == "cvar" else "expected",
+                alpha=cvar_alpha,
+                lam=spec.lam,
                 deterministic=spec.kind == "deterministic",
             )
             executed = candidate.orders
         elif spec.kind == "validated":
             candidate, executed, vrec, sample = _validated(
-                inp, spec, auth, true_cohorts, setup, stockout_hours_y, jump, inv_cost, review_cost,
-                reviewer_error, vparams, cfg, d,
+                inp,
+                spec,
+                auth,
+                true_cohorts,
+                setup,
+                stockout_hours_y,
+                jump,
+                inv_cost,
+                review_cost,
+                reviewer_error,
+                vparams,
+                cfg,
+                d,
             )
             rec.update(vrec)
             totals.governance += rec["governance_cost"]
@@ -325,12 +395,34 @@ def run_episode(
         # label the candidate (protocol definition: its own forecast) and the executed action (common forecast)
         own_fc = fcs.get(candidate.forecast_model) or fcs["lgbm_quantile_recovered"]
         if spec.kind != "oracle":
-            lab = label_candidate(candidate.orders, true_cohorts, pipe_view, auth, econ, own_fc, setup.mu, cfg,
-                                  (setup.series_id, d, world.condition, world.realization, "own"))
+            lab = label_candidate(
+                candidate.orders,
+                true_cohorts,
+                pipe_view,
+                auth,
+                econ,
+                own_fc,
+                setup.mu,
+                cfg,
+                (setup.series_id, d, world.condition, world.realization, "own"),
+            )
             rec.update({f"cand_{k}": v for k, v in lab.items() if k != "violations"})
-            common = fcs["lgbm_quantile_recovered"] if staleness == 0 else store.get("lgbm_quantile_recovered", setup.idx, d, h_need, 0)
-            lab2 = label_candidate(executed, true_cohorts, pipe_view, auth, econ, common, setup.mu, cfg,
-                                   (setup.series_id, d, world.condition, world.realization, "common"))
+            common = (
+                fcs["lgbm_quantile_recovered"]
+                if staleness == 0
+                else store.get("lgbm_quantile_recovered", setup.idx, d, h_need, 0)
+            )
+            lab2 = label_candidate(
+                executed,
+                true_cohorts,
+                pipe_view,
+                auth,
+                econ,
+                common,
+                setup.mu,
+                cfg,
+                (setup.series_id, d, world.condition, world.realization, "common"),
+            )
             rec["exec_unsafe"] = lab2["unsafe"]
             rec["exec_hard_violation"] = lab2["hard_violation"]
             rec["exec_regret"] = lab2["ex_ante_regret"]
@@ -339,8 +431,10 @@ def run_episode(
         viol, deliver = violations(executed, auth)
         spend = float(executed @ auth.unit_costs)
         total_q = float(executed.sum())
+        standard_usable = bool((auth.capacities[:2] > 1e-9).any())
         needs_approval = spend > auth.approval_threshold + 1e-9 or (
-            total_q > 1e-9 and executed[2] / total_q > auth.max_expedite_share + 1e-9)
+            standard_usable and total_q > 1e-9 and executed[2] / total_q > auth.max_expedite_share + 1e-9
+        )
         if needs_approval and not rec["reviewed"]:
             totals.governance += review_cost
             rec["governance_cost"] += review_cost
@@ -359,21 +453,25 @@ def run_episode(
         out = step(inv[None, :], np.array([deliver[2]]), np.array([demand]), econ)  # mutates inv in place
         dc = day_costs(out, econ, demand, 0.0)
         totals.add(dc)
-        stockout_hours_y = SHELF_HOURS * float(out["lost"][0]) / demand if demand > 0 and out["lost"][0] > 1e-9 else 0.0
-        rec.update({
-            "orders_candidate": [round(float(x), 4) for x in candidate.orders],
-            "orders_executed": [round(float(x), 4) for x in executed],
-            "violations": "|".join(viol),
-            "n_violations": len(viol),
-            "spend": spend,
-            "demand": demand,
-            "sales": float(out["sales"][0]),
-            "lost": float(out["lost"][0]),
-            "waste": float(out["waste"][0]),
-            "end_units": float(out["end_units"][0]),
-            "day_cost": dc.total + float(charge.sum()) + rec["governance_cost"],
-            "status": candidate.status,
-        })
+        stockout_hours_y = (
+            SHELF_HOURS * float(out["lost"][0]) / demand if demand > 0 and out["lost"][0] > 1e-9 else 0.0
+        )
+        rec.update(
+            {
+                "orders_candidate": [round(float(x), 4) for x in candidate.orders],
+                "orders_executed": [round(float(x), 4) for x in executed],
+                "violations": "|".join(viol),
+                "n_violations": len(viol),
+                "spend": spend,
+                "demand": demand,
+                "sales": float(out["sales"][0]),
+                "lost": float(out["lost"][0]),
+                "waste": float(out["waste"][0]),
+                "end_units": float(out["end_units"][0]),
+                "day_cost": dc.total + float(charge.sum()) + rec["governance_cost"],
+                "status": candidate.status,
+            }
+        )
         res.decisions.append(rec)
 
     # terminal valuation of stock left at the end of the window (identical rule for every policy)
@@ -405,9 +503,11 @@ def _validated(
     base = milp_policy(inp, spec.pid, spec.model, objective=obj, alpha=alpha, lam=spec.lam)
     fc = inp.forecasts[spec.model]
     h = base.horizon
-    decision_id = f"{setup.series_id}.d{d}.{inp.supply.snapshot_id}.{spec.pid}"
+    decision_id = re.sub(
+        r"[^A-Za-z0-9_.:\-]", "_", f"{setup.series_id}.d{d}.{inp.supply.snapshot_id}.{spec.pid}"
+    )
     cand = build_candidate(
-        decision_id=decision_id.replace("|", "_")[:120],
+        decision_id=decision_id[:120],
         day=d,
         decision_time=f"day-{d}T06:00",
         series_id=setup.series_id,
@@ -450,10 +550,14 @@ def _validated(
     note = ""
     true_inp = replace(inp, cohorts=true_cohorts)
     if outcome == "reject":
-        executed = milp_policy(inp, spec.pid, spec.model, objective=obj, alpha=alpha, lam=spec.lam, supply=auth).orders
+        executed = milp_policy(
+            inp, spec.pid, spec.model, objective=obj, alpha=alpha, lam=spec.lam, supply=auth
+        ).orders
     elif outcome == "investigate" and spec.use_voi:
         gov += inv_cost
-        executed = milp_policy(true_inp, spec.pid, spec.model, objective=obj, alpha=alpha, lam=spec.lam).orders
+        executed = milp_policy(
+            true_inp, spec.pid, spec.model, objective=obj, alpha=alpha, lam=spec.lam
+        ).orders
     elif outcome == "defer":
         executed = np.zeros(3)
     elif outcome in ("escalate", "investigate"):
@@ -464,8 +568,13 @@ def _validated(
                 note = "reviewer approved the original candidate"
             else:
                 executed = milp_policy(
-                    true_inp, spec.pid, spec.model, objective="cvar" if spec.risk_review else "expected",
-                    alpha=alpha, lam=0.5, supply=auth,
+                    true_inp,
+                    spec.pid,
+                    spec.model,
+                    objective="cvar" if spec.risk_review else "expected",
+                    alpha=alpha,
+                    lam=0.5,
+                    supply=auth,
                 ).orders
         elif rep.recommended_action is not None:
             executed = np.array([rep.recommended_action[n] for n in ("primary", "alternate", "expedite")])
@@ -487,8 +596,12 @@ def _validated(
         "approval_required": bool(g["G7"].evidence.get("approval_required", False)),
         "investigation_cost": inv_cost,
     }
-    sample = {"candidate": cand.model_dump(), "context": ctx.model_dump(), "report_outcome": outcome,
-              "true_on_hand_by_age": [float(x) for x in true_cohorts]}
+    sample = {
+        "candidate": cand.model_dump(),
+        "context": ctx.model_dump(),
+        "report_outcome": outcome,
+        "true_on_hand_by_age": [float(x) for x in true_cohorts],
+    }
     return base, executed, vrec, sample
 
 
@@ -497,5 +610,11 @@ def make_setup(panel: Any, idx: int, reference: np.ndarray, cfg: dict[str, Any],
     econ = economics_for(profile, cfg)
     hist = panel.sales[idx, 28:fit_end]
     mu = float(np.nanmean(hist)) if np.isfinite(hist).any() else 1.0
-    return SeriesSetup(idx=idx, series_id=panel.series_ids[idx], profile=profile, econ=econ, mu=max(mu, 0.5),
-                       reference=reference[idx])
+    return SeriesSetup(
+        idx=idx,
+        series_id=panel.series_ids[idx],
+        profile=profile,
+        econ=econ,
+        mu=max(mu, 0.5),
+        reference=reference[idx],
+    )

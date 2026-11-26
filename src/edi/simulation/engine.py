@@ -22,7 +22,9 @@ from edi.finance.economics import CostBreakdown, UnitEconomics
 MAX_HORIZON = 4
 
 
-def step(inv: np.ndarray, arrivals: np.ndarray, demand: np.ndarray, econ: UnitEconomics) -> dict[str, np.ndarray]:
+def step(
+    inv: np.ndarray, arrivals: np.ndarray, demand: np.ndarray, econ: UnitEconomics
+) -> dict[str, np.ndarray]:
     """Advance one day in place. inv has shape (..., L); arrivals and demand broadcast to inv[..., 0]."""
     inv[..., 0] += arrivals
     remaining = np.broadcast_to(demand, inv.shape[:-1]).astype(float).copy()
@@ -100,7 +102,9 @@ def evaluate_actions(
     end_units = out["end_units"]
     procurement = orders @ np.asarray(unit_costs, dtype=float)
     cost += econ.terminal_charge * end_units + procurement[:, None]
-    return HorizonResult(cost=cost, procurement=procurement, shortage_units=short, waste_units=waste, end_units=end_units)
+    return HorizonResult(
+        cost=cost, procurement=procurement, shortage_units=short, waste_units=waste, end_units=end_units
+    )
 
 
 def cvar(costs: np.ndarray, alpha: float, axis: int = -1) -> np.ndarray:
@@ -117,7 +121,9 @@ def cvar(costs: np.ndarray, alpha: float, axis: int = -1) -> np.ndarray:
     return tail / k
 
 
-def day_costs(out: dict[str, np.ndarray], econ: UnitEconomics, demand: float, arrivals: float) -> CostBreakdown:
+def day_costs(
+    out: dict[str, np.ndarray], econ: UnitEconomics, demand: float, arrivals: float
+) -> CostBreakdown:
     """Cost breakdown for one simulated day of a single trajectory (scalars)."""
     sales = float(np.asarray(out["sales"]).sum())
     lost = float(np.asarray(out["lost"]).sum())

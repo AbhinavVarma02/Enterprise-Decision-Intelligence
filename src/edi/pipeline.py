@@ -273,7 +273,9 @@ def load_panel(cfg: dict[str, Any]) -> Panel:
         return sd[col].astype(float).fillna(fill).to_numpy().reshape(n_s, n_d)
 
     def hours(col: str, fill: float) -> np.ndarray:
-        vals = [x if isinstance(x, (list, np.ndarray)) and len(x) == HOURS else [fill] * HOURS for x in sd[col]]
+        vals = [
+            x if isinstance(x, (list, np.ndarray)) and len(x) == HOURS else [fill] * HOURS for x in sd[col]
+        ]
         return np.asarray(vals, dtype=float).reshape(n_s, n_d, HOURS)
 
     start = dt.date.fromisoformat(report["date_range"][0])

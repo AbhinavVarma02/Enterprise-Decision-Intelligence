@@ -28,6 +28,7 @@ from edi.validation.schema import (
     AuthoritativeContext,
     DecisionCandidate,
     GateResult,
+    GateStatus,
     ValidationReport,
 )
 
@@ -41,7 +42,9 @@ class ValidatorParams:
     cvar_alpha: float = 0.9
     loss_tolerance_mult: float = 1.6
     stress_tolerance_mult: float = 2.5
-    hedge_cost_share: float = 0.10  # an alternative counts as a cheap hedge within this share of daily revenue
+    hedge_cost_share: float = (
+        0.10  # an alternative counts as a cheap hedge within this share of daily revenue
+    )
     uncertainty_ratio_warn: float = 1.5
     defer_cost_share: float = 0.25
     anomaly_min_stockout_hours: float = 4
@@ -80,7 +83,9 @@ class DomainAdapter(Protocol):
 
     def revenue_scale(self, cand: DecisionCandidate, ctx: AuthoritativeContext) -> float: ...
 
-    def scenarios(self, cand: DecisionCandidate, k: int, rho: float, rng: np.random.Generator) -> np.ndarray: ...
+    def scenarios(
+        self, cand: DecisionCandidate, k: int, rho: float, rng: np.random.Generator
+    ) -> np.ndarray: ...
 
     def evaluate(
         self,
@@ -118,12 +123,19 @@ def _fmt(x: float) -> str:
     return f"{x:,.2f}"
 
 
+def _usd(x: float) -> str:
+    return f"-${abs(x):,.2f}" if x < 0 else f"${x:,.2f}"
+
+
 def validate(
     cand: DecisionCandidate,
     ctx: AuthoritativeContext,
     adapter: DomainAdapter,
     params: ValidatorParams,
+    scenarios: np.ndarray | None = None,
 ) -> ValidationReport:
+    """Validate a candidate. `scenarios` may be supplied (e.g. the browser parity fixtures); otherwise the
+    validator samples its own from the candidate's forecast with a decision-keyed seed."""
     gates: list[GateResult] = []
     reasons: list[str] = []
     metrics: dict[str, float | None] = {}
@@ -155,8 +167,10 @@ def validate(
     snap = cand.data_snapshot
     stale = snap.age_hours > ctx.freshness_max_age_hours
     hist_gap = snap.history_days_missing > 1
-    anom = adapter.anomaly(cand, ctx, params) if not missing else {"flag": False, "reasons": []}
-    g1_status = "fail" if (stale or hist_gap) else ("warn" if anom["flag"] else "pass")
+    anom: dict[str, Any] = (
+        adapter.anomaly(cand, ctx, params) if not missing else {"flag": False, "reasons": []}
+    )
+    g1_status: GateStatus = "fail" if (stale or hist_gap) else ("warn" if anom["flag"] else "pass")
     parts = []
     if stale:
         parts.append(f"snapshot is {snap.age_hours:.0f} h old (limit {ctx.freshness_max_age_hours:.0f} h)")
@@ -180,25 +194,38 @@ def validate(
         if r is None:
             continue
         if q < -TOL:
-            viol.append(f"{nm}: negative quantity")
+            viol.append(f"{nm} quantity is negative")
         if q > TOL and not (r.eligible and r.available):
-            viol.append(f"{nm}: supplier not {'eligible' if not r.eligible else 'available'}")
+            viol.append(f"{nm} supplier is not {'qualified' if not r.eligible else 'available'}")
         if q > r.capacity * (1 + 1e-6) + TOL:
-            viol.append(f"{nm}: {_fmt(q)} exceeds capacity {_fmt(r.capacity)}")
+            viol.append(f"{nm} order of {_fmt(q)} units exceeds current capacity of {_fmt(r.capacity)}")
         if TOL < q < r.min_quantity - TOL:
-            viol.append(f"{nm}: {_fmt(q)} below minimum {_fmt(r.min_quantity)}")
+            viol.append(f"{nm} order of {_fmt(q)} units is below the minimum of {_fmt(r.min_quantity)}")
         cr = cand.constraints.resources[i]
         if cr.lead_days != r.lead_days:
             warn2.append(f"{nm}: plan assumed lead {cr.lead_days} d, current terms say {r.lead_days} d")
         if abs(cr.unit_cost - r.unit_cost) > 1e-6 * max(1.0, r.unit_cost):
-            warn2.append(f"{nm}: plan priced at {_fmt(cr.unit_cost)}, current price {_fmt(r.unit_cost)}")
-    auth_costs = np.array([auth[n].unit_cost if n in auth else cand.constraints.resources[i].unit_cost
-                           for i, n in enumerate(names)])
-    spend = float(a @ auth_costs)
+            warn2.append(f"{nm}: plan priced at {_usd(cr.unit_cost)}, current price {_usd(r.unit_cost)}")
+    auth_costs = np.array(
+        [
+            auth[n].unit_cost if n in auth else cand.constraints.resources[i].unit_cost
+            for i, n in enumerate(names)
+        ]
+    )
+    # Only committed resources count toward spend (usage-priced limits, e.g. on-demand caps, do not).
+    committed = np.array(
+        [
+            bool((auth[n] if n in auth else cand.constraints.resources[i]).attributes.get("committed", True))
+            for i, n in enumerate(names)
+        ]
+    )
+    spend = float((a * committed) @ auth_costs)
     if spend > ctx.constraints.budget * (1 + 1e-6) + TOL:
-        viol.append(f"spend {_fmt(spend)} exceeds budget {_fmt(ctx.constraints.budget)}")
+        viol.append(f"spend of {_usd(spend)} exceeds the budget of {_usd(ctx.constraints.budget)}")
     if ctx.constraints.min_commitment > 0 and a[0] + TOL < ctx.constraints.min_commitment:
-        viol.append(f"{names[0]}: below contractual minimum {_fmt(ctx.constraints.min_commitment)}")
+        viol.append(
+            f"{names[0]} order is below the contractual minimum of {_fmt(ctx.constraints.min_commitment)}"
+        )
     metrics["spend"] = spend
     g2 = GateResult(
         gate="G2",
@@ -211,11 +238,14 @@ def validate(
     # ---- scenario-based gates
     g3 = g4 = g5 = None
     best_action = None
-    voi_info = None
+    voi_info: dict[str, Any] | None = None
     can_eval = cand.forecast is not None and not missing
     if can_eval:
-        rng = _rng(params, cand.decision_id)
-        S = adapter.scenarios(cand, params.n_scenarios, params.rho, rng)
+        S = (
+            scenarios
+            if scenarios is not None
+            else adapter.scenarios(cand, params.n_scenarios, params.rho, _rng(params, cand.decision_id))
+        )
         grid = adapter.grid(cand, ctx)
         C_grid = adapter.evaluate(cand, ctx, grid, S)
         C_c = adapter.evaluate(cand, ctx, a[None, :], S)[0]
@@ -250,30 +280,45 @@ def validate(
         notes3 = []
         if impact_rel > params.financial_tol_fail:
             st3 = "fail"
-            notes3.append(f"plan terms understate cost by {_fmt(impact)} versus current terms" if impact > 0
-                          else f"plan terms overstate cost by {_fmt(-impact)} versus current terms")
+            notes3.append(
+                f"plan terms understate cost by {_usd(impact)} versus current terms"
+                if impact > 0
+                else f"plan terms overstate cost by {_usd(-impact)} versus current terms"
+            )
         elif impact_rel > params.financial_tol_warn:
             st3 = "warn"
-            notes3.append(f"plan terms differ from current terms by {_fmt(impact)}")
+            notes3.append(f"plan terms differ from current terms by {_usd(impact)}")
         if claim_gap is None:
             st3 = "warn" if st3 == "pass" else st3
-            notes3.append(f"no claimed cost to reconcile; independent estimate {_fmt(e_c)}")
+            notes3.append(f"no claimed cost to reconcile; independent estimate {_usd(e_c)}")
         elif claim_gap > claim_tol_fail:
             st3 = "fail"
-            notes3.append(f"claimed expected cost {_fmt(claimed or 0)} does not reconcile with {_fmt(e_own)} "
-                          f"recomputed on its own terms (tolerance {_fmt(claim_tol_fail)})")
+            notes3.append(
+                f"claimed expected cost {_usd(claimed or 0)} does not reconcile with {_usd(e_own)} "
+                f"recomputed on its own terms (tolerance {_usd(claim_tol_fail)})"
+            )
         elif claim_gap > claim_tol_warn and st3 == "pass":
             st3 = "warn"
-            notes3.append(f"claimed {_fmt(claimed or 0)} vs recomputed {_fmt(e_own)}")
+            notes3.append(f"claimed {_usd(claimed or 0)} vs recomputed {_usd(e_own)}")
         g3 = GateResult(
             gate="G3",
             name="Financial consistency",
             status=st3,  # type: ignore[arg-type]
-            summary="; ".join(notes3) if notes3 else (
-                f"Claimed {_fmt(claimed or 0)} reconciles with {_fmt(e_own)} recomputed; current terms change cost by {_fmt(impact)}."),
-            evidence={"claimed": claimed, "recomputed_own_terms": e_own, "recomputed_current_terms": e_c,
-                      "assumption_impact": impact, "assumption_impact_relative": impact_rel,
-                      "claim_gap": claim_gap, "claim_tolerance": claim_tol_fail, "standard_error": se},
+            summary="; ".join(notes3)
+            if notes3
+            else (
+                f"Claimed {_usd(claimed or 0)} reconciles with {_usd(e_own)} recomputed; current terms change cost by {_usd(impact)}."
+            ),
+            evidence={
+                "claimed": claimed,
+                "recomputed_own_terms": e_own,
+                "recomputed_current_terms": e_c,
+                "assumption_impact": impact,
+                "assumption_impact_relative": impact_rel,
+                "claim_gap": claim_gap,
+                "claim_tolerance": claim_tol_fail,
+                "standard_error": se,
+            },
         )
         metrics["financial_relative_difference"] = impact_rel
         metrics["claim_gap"] = claim_gap
@@ -290,17 +335,33 @@ def validate(
         if 0.1 in lv and 0.9 in lv and 0.5 in lv:
             med = np.maximum(qarr[:, lv.index(0.5)], 1e-9)
             unc = float(np.mean((qarr[:, lv.index(0.9)] - qarr[:, lv.index(0.1)]) / med))
-        st4 = "fail" if tail_gain > tol4 else ("warn" if tail_gain > tol4 / 2 or (unc or 0) > params.uncertainty_ratio_warn else "pass")
+        st4: GateStatus = (
+            "fail"
+            if tail_gain > tol4
+            else ("warn" if tail_gain > tol4 / 2 or (unc or 0) > params.uncertainty_ratio_warn else "pass")
+        )
         ih = int(np.argmin(np.where(hedge, cv_g, np.inf))) if hedge.any() else ib
         g4 = GateResult(
             gate="G4",
             name="Uncertainty and downside risk",
             status=st4,
-            summary=(f"Expected {_fmt(e_c)}, CVaR{int(params.cvar_alpha * 100)} {_fmt(cv_c)}. "
-                     + (f"A hedge within {_fmt(params.hedge_cost_share * rev)} of expected cost lowers the tail by "
-                        f"{_fmt(tail_gain)} (tolerance {_fmt(tol4)})." if tail_gain > 1e-9 else "No cheaper-tail alternative found.")),
-            evidence={"expected_cost": e_c, "cvar": cv_c, "tail_gain": tail_gain, "tolerance": tol4,
-                      "uncertainty_ratio": unc, "hedge_action": {nm: float(grid[ih, i]) for i, nm in enumerate(names)}},
+            summary=(
+                f"Expected {_usd(e_c)}; worst-{100 - int(round(params.cvar_alpha * 100))}% average {_usd(cv_c)}. "
+                + (
+                    f"A hedge within {_usd(params.hedge_cost_share * rev)} of expected cost lowers it by "
+                    f"{_usd(tail_gain)} (tolerance {_usd(tol4)})."
+                    if tail_gain > 1e-9
+                    else "No cheaper-tail alternative found."
+                )
+            ),
+            evidence={
+                "expected_cost": e_c,
+                "cvar": cv_c,
+                "tail_gain": tail_gain,
+                "tolerance": tol4,
+                "uncertainty_ratio": unc,
+                "hedge_action": {nm: float(grid[ih, i]) for i, nm in enumerate(names)},
+            },
         )
         metrics["tail_gain"] = tail_gain
 
@@ -315,13 +376,15 @@ def validate(
         if np.isfinite(worst_c):
             robust_gain = float(worst_c - worst_g[hedge].min()) if hedge.any() else 0.0
             tol5 = params.stress_tolerance_mult * 0.25 * rev
-            st5 = "fail" if robust_gain > tol5 else ("warn" if robust_gain > tol5 / 2 else "pass")
+            st5: GateStatus = "fail" if robust_gain > tol5 else ("warn" if robust_gain > tol5 / 2 else "pass")
             g5 = GateResult(
                 gate="G5",
                 name="Stress-case resilience",
                 status=st5,
-                summary=(f"Worst stress cost {_fmt(worst_c)}; a cheap hedge would cap it "
-                         f"{_fmt(robust_gain)} lower (tolerance {_fmt(tol5)})."),
+                summary=(
+                    f"Worst stress-case cost {_usd(worst_c)}; a cheap hedge would cap it "
+                    f"{_usd(robust_gain)} lower (tolerance {_usd(tol5)})."
+                ),
                 evidence={"cases": details, "robust_gain": robust_gain, "tolerance": tol5},
             )
             metrics["stress_gain"] = robust_gain
@@ -333,8 +396,12 @@ def validate(
         if anom["flag"]:
             hyps = adapter.state_hypotheses(cand, params, anomalous=True)
             probs = np.array([p for _, p, _ in hyps])
-            costs = np.column_stack([adapter.evaluate(cand, ctx, grid, S, state=st).mean(axis=1) for _, _, st in hyps])
-            cand_by_state = np.array([float(adapter.evaluate(cand, ctx, a[None, :], S, state=st).mean()) for _, _, st in hyps])
+            costs = np.column_stack(
+                [adapter.evaluate(cand, ctx, grid, S, state=st).mean(axis=1) for _, _, st in hyps]
+            )
+            cand_by_state = np.array(
+                [float(adapter.evaluate(cand, ctx, a[None, :], S, state=st).mean()) for _, _, st in hyps]
+            )
             res = evpi(costs, probs, [lbl for lbl, _, _ in hyps])
             value_vs_candidate = max(0.0, float(probs @ cand_by_state) - res.perfect_information_cost)
             voi_info = res.to_dict() | {
@@ -347,9 +414,14 @@ def validate(
             metrics["evpi"] = res.evpi
             metrics["value_vs_candidate"] = value_vs_candidate
     else:
-        for gid, nm in (("G3", "Financial consistency"), ("G4", "Uncertainty and downside risk"),
-                        ("G5", "Stress-case resilience")):
-            placeholder = GateResult(gate=gid, name=nm, status="warn", summary="Not evaluated: no usable forecast.")
+        for gid, nm in (
+            ("G3", "Financial consistency"),
+            ("G4", "Uncertainty and downside risk"),
+            ("G5", "Stress-case resilience"),
+        ):
+            placeholder = GateResult(
+                gate=gid, name=nm, status="warn", summary="Not evaluated: no usable forecast."
+            )
             if gid == "G3":
                 g3 = placeholder
             elif gid == "G4":
@@ -360,13 +432,21 @@ def validate(
     # ---- G7 governance
     gov: list[str] = []
     if spend > ctx.approval_threshold + TOL:
-        gov.append(f"spend {_fmt(spend)} is above the approval threshold {_fmt(ctx.approval_threshold)}")
-    total_q = float(a.sum())
+        gov.append(
+            f"spend of {_usd(spend)} is above the approval threshold of {_usd(ctx.approval_threshold)}"
+        )
+    total_q = float(a[committed].sum()) if committed.any() else float(a.sum())
+    usable = {
+        n: (auth[n].eligible and auth[n].available and auth[n].capacity > TOL) for n in names if n in auth
+    }
     for nm, share in ctx.max_share.items():
-        if nm in names and total_q > TOL:
+        others_usable = any(v for k, v in usable.items() if k != nm)
+        if nm in names and total_q > TOL and others_usable:
             s = a[names.index(nm)] / total_q
             if s > share + 1e-9:
-                gov.append(f"{nm} share {100 * s:.0f}% exceeds policy {100 * share:.0f}%")
+                gov.append(
+                    f"{nm} share {100 * s:.0f}% exceeds policy {100 * share:.0f}% while standard supply is available"
+                )
     g7 = GateResult(
         gate="G7",
         name="Governance and approval",
@@ -396,16 +476,18 @@ def validate(
         if wait_cost is not None and wait_cost <= params.defer_cost_share * rev:
             outcome = "defer"
             lead_reason = by["G1"].summary if by["G1"].status == "fail" else by["G6"].summary
-            reasons.append(f"{lead_reason}. Waiting a day costs about {_fmt(wait_cost)}.")
+            reasons.append(f"{lead_reason.rstrip('.')}. Waiting a day costs about {_usd(wait_cost)}.")
         else:
             outcome = "escalate"
-            reasons.append((by["G1"].summary if by["G1"].status == "fail" else by["G6"].summary)
-                           + ". Waiting is expensive or cannot be priced, so a planner must decide.")
+            reasons.append(
+                (by["G1"].summary if by["G1"].status == "fail" else by["G6"].summary).rstrip(".")
+                + ". Waiting is expensive or cannot be priced, so a planner must decide."
+            )
     elif voi_info is not None and voi_info["worth_investigating"]:
         outcome = "investigate"
         reasons.append(
-            f"{by['G1'].summary}. Verifying it is worth about {_fmt(voi_info['value_vs_candidate'])} against a cost of "
-            f"{_fmt(ctx.investigation_cost)}."
+            f"{by['G1'].summary.rstrip('.')}. Verifying it is worth about {_usd(voi_info['value_vs_candidate'])} against a cost of "
+            f"{_usd(ctx.investigation_cost)}."
         )
     elif by["G4"].status == "fail" or by["G5"].status == "fail":
         outcome = "escalate"

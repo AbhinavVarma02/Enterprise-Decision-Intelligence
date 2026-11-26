@@ -162,4 +162,3 @@ class LGBMQuantile(BaseModel):
     def predict(self, d: Design) -> Prediction:
         q_n = np.sort(np.sort(self.quantiles_n(d), axis=1) + self.deltas[None, :], axis=1)
         return _finalize(q_n[:, self.levels.index(0.5)], q_n, d.scale)
-

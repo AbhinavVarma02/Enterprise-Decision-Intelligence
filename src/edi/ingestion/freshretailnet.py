@@ -58,7 +58,9 @@ def select_series(train: pd.DataFrame, n_series: int, seed: int) -> pd.DataFrame
     return pd.concat(picks)[["store_id", "product_id"]]
 
 
-def load(raw_dir: Path, n_series: int, seed: int, target_median_daily_units: float) -> tuple[pd.DataFrame, dict]:
+def load(
+    raw_dir: Path, n_series: int, seed: int, target_median_daily_units: float
+) -> tuple[pd.DataFrame, dict]:
     files = find_split_files(raw_dir)
     if not files["train"] or not files["eval"]:
         raise FileNotFoundError(f"FreshRetailNet-50K parquet files not found under {raw_dir}")

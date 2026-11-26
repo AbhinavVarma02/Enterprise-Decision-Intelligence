@@ -68,4 +68,12 @@ Metrics: MAE, WAPE (sum |e| / sum y, undefined when sum y = 0 and then reported 
 
 ## 9. Amendments
 
-None yet.
+**Amendment 1 (2026-11-25, after the first development run on the synthetic fixture, before any final run).**
+The first development run was used for debugging and is not reported as a result. Changes:
+
+1. *Approval rule artifact.* At the last day of the test window only same-day expedite can arrive, so every policy's final order tripped the expedite-share approval rule. The rule now applies only when a standard supplier is usable. It applies identically to all policies (the harness charges the review cost to every policy) and to the validator's G7 gate.
+2. *Validator threshold tuning.* Section 2 lists validator thresholds as tuned on the tuning window, but the first run used config defaults. The soft-tolerance scale for G4 and G5 is now chosen from {1, 2, 4, off} on days 77 to 90 (normal, unreliable and tuning-set disruptions), together with the base-stock safety factor and the CVaR weight, which now use the same three-condition objective. An untuned variant (`P5a_untuned`) is reported as an ablation.
+3. *Audit realism.* In the external-recommendation audit, the phantom-record fault now re-plans the action on the phantom record (as an upstream system that trusted the record would) instead of keeping the original action.
+4. *Validator internals changed during engineering, before any reported run:* G3 separates claim reconciliation (standard-error tolerance) from the cost impact of stale terms; investigation is triggered by the value of verification relative to the candidate (EVPI is also reported). See ADR-0009.
+
+Hypotheses, metrics, windows, conditions and the unsafe-decision definition are unchanged.

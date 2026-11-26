@@ -1,0 +1,285 @@
+{
+  "$defs": {
+    "FinancialAssumptions": {
+      "additionalProperties": false,
+      "properties": {
+        "currency": {
+          "default": "USD (assumed)",
+          "title": "Currency",
+          "type": "string"
+        },
+        "price": {
+          "exclusiveMinimum": 0,
+          "title": "Price",
+          "type": "number"
+        },
+        "unit_cost": {
+          "exclusiveMinimum": 0,
+          "title": "Unit Cost",
+          "type": "number"
+        },
+        "holding": {
+          "minimum": 0,
+          "title": "Holding",
+          "type": "number"
+        },
+        "disposal": {
+          "minimum": 0,
+          "title": "Disposal",
+          "type": "number"
+        },
+        "goodwill": {
+          "minimum": 0,
+          "title": "Goodwill",
+          "type": "number"
+        },
+        "shelf_life_days": {
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Shelf Life Days",
+          "type": "integer"
+        },
+        "terminal_waste_risk": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Terminal Waste Risk",
+          "type": "number"
+        }
+      },
+      "required": [
+        "price",
+        "unit_cost",
+        "holding",
+        "disposal",
+        "goodwill",
+        "shelf_life_days",
+        "terminal_waste_risk"
+      ],
+      "title": "FinancialAssumptions",
+      "type": "object"
+    },
+    "RequisitionLine": {
+      "additionalProperties": false,
+      "properties": {
+        "vendor_id": {
+          "pattern": "^[A-Z0-9\\-]{2,20}$",
+          "title": "Vendor Id",
+          "type": "string"
+        },
+        "quantity": {
+          "exclusiveMaximum": 10000000.0,
+          "minimum": 0,
+          "title": "Quantity",
+          "type": "number"
+        },
+        "unit_price": {
+          "exclusiveMaximum": 1000000.0,
+          "exclusiveMinimum": 0,
+          "title": "Unit Price",
+          "type": "number"
+        },
+        "delivery_days": {
+          "maximum": 3,
+          "minimum": 0,
+          "title": "Delivery Days",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "vendor_id",
+        "quantity",
+        "unit_price",
+        "delivery_days"
+      ],
+      "title": "RequisitionLine",
+      "type": "object"
+    },
+    "VendorTerms": {
+      "additionalProperties": false,
+      "properties": {
+        "vendor_id": {
+          "title": "Vendor Id",
+          "type": "string"
+        },
+        "role": {
+          "pattern": "^(primary|alternate|expedite)$",
+          "title": "Role",
+          "type": "string"
+        },
+        "unit_price": {
+          "exclusiveMinimum": 0,
+          "title": "Unit Price",
+          "type": "number"
+        },
+        "delivery_days": {
+          "maximum": 3,
+          "minimum": 0,
+          "title": "Delivery Days",
+          "type": "integer"
+        },
+        "capacity": {
+          "minimum": 0,
+          "title": "Capacity",
+          "type": "number"
+        },
+        "min_order_qty": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Min Order Qty",
+          "type": "number"
+        },
+        "approved": {
+          "default": true,
+          "title": "Approved",
+          "type": "boolean"
+        },
+        "active": {
+          "default": true,
+          "title": "Active",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "vendor_id",
+        "role",
+        "unit_price",
+        "delivery_days",
+        "capacity"
+      ],
+      "title": "VendorTerms",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "requisition_id": {
+      "pattern": "^[A-Za-z0-9\\-_.]{1,60}$",
+      "title": "Requisition Id",
+      "type": "string"
+    },
+    "plant": {
+      "maxLength": 40,
+      "title": "Plant",
+      "type": "string"
+    },
+    "material": {
+      "maxLength": 60,
+      "title": "Material",
+      "type": "string"
+    },
+    "category": {
+      "maxLength": 40,
+      "title": "Category",
+      "type": "string"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "snapshot_age_hours": {
+      "minimum": 0,
+      "title": "Snapshot Age Hours",
+      "type": "number"
+    },
+    "typical_daily_demand": {
+      "exclusiveMinimum": 0,
+      "title": "Typical Daily Demand",
+      "type": "number"
+    },
+    "on_hand_by_age": {
+      "items": {
+        "type": "number"
+      },
+      "maxItems": 60,
+      "minItems": 1,
+      "title": "On Hand By Age",
+      "type": "array"
+    },
+    "inbound_by_day": {
+      "items": {
+        "type": "number"
+      },
+      "maxItems": 8,
+      "title": "Inbound By Day",
+      "type": "array"
+    },
+    "lines": {
+      "items": {
+        "$ref": "#/$defs/RequisitionLine"
+      },
+      "maxItems": 10,
+      "minItems": 1,
+      "title": "Lines",
+      "type": "array"
+    },
+    "vendors_as_planned": {
+      "items": {
+        "$ref": "#/$defs/VendorTerms"
+      },
+      "maxItems": 8,
+      "minItems": 1,
+      "title": "Vendors As Planned",
+      "type": "array"
+    },
+    "budget": {
+      "minimum": 0,
+      "title": "Budget",
+      "type": "number"
+    },
+    "forecast_levels": {
+      "items": {
+        "type": "number"
+      },
+      "title": "Forecast Levels",
+      "type": "array"
+    },
+    "forecast_quantiles": {
+      "items": {
+        "items": {
+          "type": "number"
+        },
+        "type": "array"
+      },
+      "title": "Forecast Quantiles",
+      "type": "array"
+    },
+    "claimed_expected_cost": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Claimed Expected Cost"
+    },
+    "economics": {
+      "$ref": "#/$defs/FinancialAssumptions"
+    },
+    "source_system": {
+      "default": "mock-erp",
+      "title": "Source System",
+      "type": "string"
+    }
+  },
+  "required": [
+    "requisition_id",
+    "plant",
+    "material",
+    "category",
+    "created_at",
+    "snapshot_age_hours",
+    "typical_daily_demand",
+    "on_hand_by_age",
+    "lines",
+    "vendors_as_planned",
+    "budget",
+    "forecast_levels",
+    "forecast_quantiles",
+    "economics"
+  ],
+  "title": "PurchaseRequisition",
+  "type": "object"
+}

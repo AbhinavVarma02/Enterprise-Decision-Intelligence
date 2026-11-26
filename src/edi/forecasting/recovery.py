@@ -42,7 +42,9 @@ def hourly_profiles(
         cat_tot = series_tot[members].sum(axis=0)
         cat_prof = cat_tot / cat_tot.sum() if cat_tot.sum() > 0 else np.full(24, 1 / 24)
         s_sum = series_tot[members].sum(axis=1, keepdims=True)
-        s_prof = np.divide(series_tot[members], s_sum, out=np.tile(cat_prof, (members.sum(), 1)), where=s_sum > 0)
+        s_prof = np.divide(
+            series_tot[members], s_sum, out=np.tile(cat_prof, (members.sum(), 1)), where=s_sum > 0
+        )
         w = n_days[members][:, None]
         profiles[members] = (w * s_prof + shrinkage * cat_prof) / (w + shrinkage)
     return profiles / profiles.sum(axis=1, keepdims=True)
@@ -86,7 +88,9 @@ def recovered_target(panel: Panel, fit_end: int, cfg: dict[str, Any]) -> tuple[n
         "stockout_days": int((panel.stockout_hours > 0).sum()),
         "low_confidence_days": int((low & (panel.stockout_hours > 0)).sum()),
         "mean_uplift_on_stockout_days": float(
-            np.nanmean((rec - panel.sales)[panel.stockout_hours > 0]) if (panel.stockout_hours > 0).any() else 0.0
+            np.nanmean((rec - panel.sales)[panel.stockout_hours > 0])
+            if (panel.stockout_hours > 0).any()
+            else 0.0
         ),
     }
     return rec, info
@@ -131,7 +135,11 @@ def censoring_experiment(panel: Panel, fit_end: int, cfg: dict[str, Any]) -> dic
         }
 
     all_mask = np.ones(len(truth), dtype=bool)
-    buckets = {"cutoff_12_14": cutoffs <= 14, "cutoff_15_17": (cutoffs >= 15) & (cutoffs <= 17), "cutoff_18_20": cutoffs >= 18}
+    buckets = {
+        "cutoff_12_14": cutoffs <= 14,
+        "cutoff_15_17": (cutoffs >= 15) & (cutoffs <= 17),
+        "cutoff_18_20": cutoffs >= 18,
+    }
     out: dict[str, Any] = {
         "design": "in-stock days censored from a random hour in [12, 20]; truth is the observed full-day sales",
         "fit_end": fit_end,

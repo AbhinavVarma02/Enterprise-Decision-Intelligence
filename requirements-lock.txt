@@ -1,0 +1,32 @@
+# Resolved versions used to produce the committed artifacts (Python 3.13).
+# Generated from the installed environment: edi[dev,download] and its transitive dependencies.
+annotated-types==0.8.0
+ast-serialize==0.13.1
+duckdb==2.0.1
+hypothesis==6.170.17
+iniconfig==2.3.1
+librt==0.17.0
+lightgbm==4.7.0
+mypy==2.4.1
+mypy-extensions==1.2.0
+narwhals==2.29.0
+numpy==2.5.5
+packaging==26.4
+pandas==3.1.1
+pandas-stubs==3.1.0.261029
+pathspec==1.1.1
+pluggy==1.7.0
+pyarrow==26.0.1
+pydantic==2.14.4
+pydantic-core==2.50.5
+pygments==2.21.0
+pytest==9.2.0
+python-dateutil==4.0.0
+pyyaml==6.0.4
+ruff==0.17.6
+scipy==1.18.1
+sortedcontainers==2.4.0
+types-pyyaml==6.0.12.20261122
+typing-extensions==4.16.0
+typing-inspection==0.4.5
+tzdata==2026.6

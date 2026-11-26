@@ -43,7 +43,7 @@ def explain(cand: DecisionCandidate, rep: ValidationReport, unit: str = "units")
     fails = [g for g in rep.gates if g.status == "fail"]
     warns = [g for g in rep.gates if g.status == "warn"]
     for g in fails[:2]:
-        lines.append(f"{g.name} failed: {g.summary}")
+        lines.append(f"{g.name} failed: {g.summary.rstrip('.')}.")
     if rep.outcome == "investigate" and rep.value_of_information:
         v = rep.value_of_information
         lines.append(
@@ -53,5 +53,5 @@ def explain(cand: DecisionCandidate, rep: ValidationReport, unit: str = "units")
     if rep.recommended_action and rep.outcome in ("reject", "escalate"):
         lines.append(f"Suggested alternative: {describe_action(rep.recommended_action, unit)}.")
     if not fails and warns and rep.outcome == "recommend":
-        lines.append(f"Noted: {warns[0].summary}")
+        lines.append(f"Noted: {warns[0].summary.rstrip('.')}.")
     return " ".join(lines)

@@ -203,7 +203,8 @@ def _inject_defects(raw: pd.DataFrame, rng: np.random.Generator) -> pd.DataFrame
     raw.loc[null_idx, "discount"] = np.nan
     raw.loc[neg_idx, "sale_amount"] = -1.0
     for i in bad_idx:
-        raw.at[i, "hours_sale"] = list(raw.at[i, "hours_sale"])[:23]
+        # pandas-stubs cannot type list-valued object cells.
+        raw.at[i, "hours_sale"] = list(raw.at[i, "hours_sale"])[:23]  # type: ignore[assignment,arg-type]
     dup = raw.iloc[rng.choice(n, size=N_DUPLICATES, replace=False)]
     return pd.concat([raw, dup], ignore_index=True)
 
@@ -223,7 +224,7 @@ def write_fixture(out_dir: Path, n_series: int, n_stores: int, seed: int) -> dic
     write_parquet(train, paths["train"])
     write_parquet(eval_, paths["eval"])
     write_parquet(fx.latent, paths["latent"])
-    provenance = {
+    provenance: dict[str, object] = {
         "data_source": "synthetic_fixture",
         "description": "Deterministic synthetic fixture with FreshRetailNet-50K columns. Not real data.",
         "generated_at": utc_now(),
