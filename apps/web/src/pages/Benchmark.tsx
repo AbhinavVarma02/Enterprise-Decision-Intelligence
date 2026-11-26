@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useData, type Loose } from "../data/load";
 import { ErrorState, Loading, OutcomeChip, Panel } from "../components/ui";
 import { DotWhisker, LineSeries, Scatter, type DotRow } from "../components/charts";
@@ -41,7 +41,7 @@ function hypothesisLine(h: Loose): string {
       return `Best on observed-sales accuracy: ${SHORT_MODEL[e.best_accuracy_model] ?? e.best_accuracy_model}. Lowest decision cost: ${SHORT_MODEL[e.best_cost_model] ?? e.best_cost_model}${d ? ` (difference ${money(d.mean)} per day, 95% CI ${money(d.lo)} to ${money(d.hi)})` : ""}. Rank agreement (Kendall tau) ${e.kendall_tau_observed?.toFixed(2)} against observed sales${e.kendall_tau_latent !== null && e.kendall_tau_latent !== undefined ? `, ${e.kendall_tau_latent.toFixed(2)} against true demand` : ""}.`;
     }
     case "H2":
-      return `Unsafe executed orders ${pct(e.unsafe_P3, 2)} without validation, ${pct(e.unsafe_P5a, 2)} with it. Net cost change ${pct(e.paired?.relative_diff, 1, true)} (95% CI ${pct(e.paired?.relative_lo, 1, true)} to ${pct(e.paired?.relative_hi, 1, true)}).`;
+      return `Unsafe decisions ${pct(e.unsafe_P3, 2)} without validation, ${pct(e.unsafe_P5a, 2)} with it. Net cost change ${pct(e.paired?.relative_diff, 1, true)} (95% CI ${pct(e.paired?.relative_lo, 1, true)} to ${pct(e.paired?.relative_hi, 1, true)}).`;
     case "H3":
       return `Net cost change in normal operations ${pct(e.paired?.relative_diff, 1, true)} (95% CI ${pct(e.paired?.relative_lo, 1, true)} to ${pct(e.paired?.relative_hi, 1, true)}); the target band was plus or minus 2%.`;
     case "H4":
@@ -56,13 +56,17 @@ function hypothesisLine(h: Loose): string {
 export function Benchmark() {
   const b = useData<Loose>("benchmark");
   const sec = useData<Loose>("secondary");
+  const evidence = useData<Loose>("research_evidence");
+  const [params, setParams] = useSearchParams();
   const [cond, setCond] = useState("unreliable");
-  if (b.status === "loading") return <Loading label="Loading benchmark" />;
+  if (b.status === "loading" || evidence.status === "loading") return <Loading label="Loading benchmark" />;
   if (b.status === "error") return <ErrorState message={b.error} />;
-  const d = b.data;
+  const research = evidence.status === "ready" ? evidence.data : null;
+  const retail = Boolean(research && params.get("study") !== "synthetic");
+  const d = retail ? research.retail_benchmark : b.data;
   const meta = d.meta;
   const main = d.main[cond];
-  const synthetic = meta.data_source === "synthetic_fixture";
+  const economics = retail ? research.retail_economics : research?.synthetic_economics;
   const rows: DotRow[] = POLICIES.filter((p) => p !== "P3" && d.paired[cond][`${p}_vs_P3`]?.diff_cost_per_day).map((p) => {
     const ci = d.paired[cond][`${p}_vs_P3`].diff_cost_per_day;
     return { label: `${p} ${POLICY_LABEL[p]}`, mean: ci.mean, lo: ci.lo, hi: ci.hi, emphasis: p.startsWith("P5") ? "ours" : p === "ORACLE" ? "oracle" : undefined };
@@ -92,13 +96,21 @@ export function Benchmark() {
             Every policy faces identical demand, faults and disruptions. Intervals are 95% cluster-bootstrap intervals over store-products.
           </p>
         </div>
-        <a className="btn" href="/data/benchmark.json" download>Download results JSON</a>
+        <a className="btn" href={retail ? "/data/research_evidence.json" : "/data/benchmark.json"} download>Download results JSON</a>
       </div>
-      {synthetic && (
-        <div className="callout warn" style={{ marginBottom: 20 }}>
-          These results come from the synthetic fixture because the real dataset could not be downloaded in the build environment. They test the machinery, not the retail world. The real-data run is one command away (see Methodology).
-        </div>
-      )}
+      <div className="study-switch">
+        {research && <div className="segmented" role="group" aria-label="Retail study">
+          <button aria-pressed={retail} onClick={() => setParams({ study: "retail" }, { replace: true })}>FreshRetailNet pilot</button>
+          <button aria-pressed={!retail} onClick={() => setParams({ study: "synthetic" }, { replace: true })}>Synthetic benchmark</button>
+        </div>}
+        <p className="small muted">
+          {retail ? "Observed sales and stockout flags · Estimated demand during stockouts · Simulated suppliers and assumed costs"
+            : "Controlled synthetic fixture · Generated demand, supplier terms and faults · Assumed costs"}
+        </p>
+        {evidence.status === "error" && <p className="small muted">The FreshRetailNet pilot is unavailable in this build.</p>}
+      </div>
+
+      {economics && <ValidationTradeOff economics={economics} detection={d.detection.unreliable.P5a} />}
 
       <Panel title="Hypotheses and verdicts" hint="Rules fixed in the protocol before results were read" pad={false}>
         <div>
@@ -154,7 +166,7 @@ export function Benchmark() {
               <tr>
                 <th scope="col">Policy</th><th scope="col" className="r">Cost per day</th><th scope="col" className="r">Tail (CVaR90)</th>
                 <th scope="col" className="r">Fill rate</th><th scope="col" className="r">Waste</th><th scope="col" className="r">Governance per day</th>
-                <th scope="col" className="r">Unsafe executed</th><th scope="col" className="r">Hard breaches</th><th scope="col">Validator outcomes</th>
+                <th scope="col" className="r">Unsafe decisions</th><th scope="col" className="r">Constraint breaches</th><th scope="col">Validator outcomes</th>
               </tr>
             </thead>
             <tbody>
@@ -168,14 +180,14 @@ export function Benchmark() {
                     <td className="r num" data-label="Fill rate">{pct(m.fill_rate)}</td>
                     <td className="r num" data-label="Waste">{pct(m.waste_rate)}</td>
                     <td className="r num" data-label="Governance per day">{money(m.governance_cost_per_day)}</td>
-                    <td className="r num" data-label="Unsafe executed">{m.unsafe_executed_rate === null || m.unsafe_executed_rate === undefined ? "n/a" : pct(m.unsafe_executed_rate)}</td>
-                    <td className="r num" data-label="Hard breaches">{m.hard_violations ?? 0}</td>
+                    <td className="r num" data-label="Unsafe decisions">{m.unsafe_executed_rate == null ? "n/a" : pct(m.unsafe_executed_rate, 2)}</td>
+                    <td className="r num" data-label="Constraint breaches">{m.hard_violations ?? 0}</td>
                     <td className="full">{p.startsWith("P5") ? <div className="row" style={{ gap: 4 }}>{Object.entries(m.outcomes as Record<string, number>).map(([o, n]) => <span key={o} className="row" style={{ gap: 3 }}><OutcomeChip outcome={o} /><span className="xs num">{n}</span></span>)}</div> : <span className="xs faint">executes every order</span>}</td>
                   </tr>
                 );
               })}
             </tbody>
-            <caption>Unsafe executed: share of executed orders that break a hard constraint under true conditions or carry ex-ante regret above half a day of revenue (protocol section 5). The oracle sees realized demand and is a retrospective bound, not a policy.</caption>
+            <caption>Unsafe decisions use all store-product decision days, including days with no order. A decision is unsafe if it breaches a hard constraint or its expected regret exceeds half a day of revenue. A submission can breach more than one constraint. The oracle is a rolling hindsight reference.</caption>
           </table>
         </div>
       </Panel>
@@ -204,7 +216,7 @@ export function Benchmark() {
             ariaLabel="Forecast accuracy against decision cost by model" />
           <p className="xs faint">Observed sales are censored by stockouts, so accuracy measured against them rewards forecasts that under-predict demand.</p>
         </Panel>
-        <Panel title="External recommendation audit" hint="Faults injected into real benchmark candidates" pad={false}>
+        <Panel title="External recommendation audit" hint="Faults injected into benchmark candidates" pad={false}>
           <div className="table-wrap" style={{ padding: "4px 8px 8px" }}>
             <table className="data stack-sm">
               <thead><tr><th scope="col">Injected fault</th><th scope="col" className="r">Unsafe</th><th scope="col" className="r">Flagged</th><th scope="col" className="r">Unsafe caught</th></tr></thead>
@@ -218,6 +230,8 @@ export function Benchmark() {
           </div>
         </Panel>
       </div>
+
+      {retail && research.selective_validation && <SelectiveReview experiment={research.selective_validation} />}
 
       <div className="grid-2e section">
         <Panel title="Sensitivity: validation over P3 with unreliable data" pad={false}>
@@ -242,6 +256,50 @@ export function Benchmark() {
       </div>
     </>
   );
+}
+
+function ValidationTradeOff({ economics, detection }: { economics: Loose; detection: Loose }) {
+  const [breachCost, setBreachCost] = useState(10);
+  const avoided = economics.baseline_breached_submissions - economics.validated_breached_submissions;
+  const delta = economics.base_delta_per_day - breachCost * avoided / economics.decision_days_per_policy;
+  return <Panel title="The cost of safer decisions" hint="P5a versus P3 under unreliable data">
+    <div className="validation-economics">
+      <dl className="validation-ledger">
+        <div><dt>Unsafe proposals intercepted</dt><dd>{detection.n_unsafe_intercepted ?? detection.n_unsafe} of {detection.n_candidates.toLocaleString("en-US")}</dd></div>
+        <div><dt>Submissions with hard breaches</dt><dd>{economics.baseline_breached_submissions} → {economics.validated_breached_submissions}</dd></div>
+        <div><dt>Base cost change per day</dt><dd>{money(economics.base_delta_per_day, { signed: true })}</dd></div>
+      </dl>
+      <div className="breach-scenario">
+        <div className="row breach-label"><label htmlFor="breach-cost">Additional cost per breached submission</label><strong className="num">{money(breachCost)}</strong></div>
+        <input id="breach-cost" type="range" min={0} max={50} step={0.25} value={breachCost} onChange={(e) => setBreachCost(e.currentTarget.valueAsNumber)} aria-valuetext={money(breachCost)} />
+        <p className="breach-total" aria-live="polite"><strong className="num">{money(delta, { signed: true })}</strong> net validation cost per store-product day</p>
+        <p className="small muted">{economics.break_even_per_breached_submission === null ? "This comparison has no positive count of avoided submissions." : `Break-even is ${money(economics.break_even_per_breached_submission)} per breached submission.`} Apply only costs beyond procurement, expediting and shortages already charged by the simulator.</p>
+      </div>
+    </div>
+  </Panel>;
+}
+
+function SelectiveReview({ experiment }: { experiment: Loose }) {
+  return <Panel title="Selective review in fresh simulated scenarios" hint="Required checks and approvals stay active">
+    <div className="table-wrap">
+      <table className="data stack-sm">
+        <thead><tr><th scope="col">Condition</th><th scope="col" className="r">Governance per day</th><th scope="col" className="r">Unsafe decisions</th><th scope="col" className="r">Total cost change</th></tr></thead>
+        <tbody>{CONDITIONS.map(({ key, label }) => {
+          const result = experiment.conditions[key];
+          const a = result.policies.P5a;
+          const b = result.policies.P5a_selective;
+          const pair = result.paired_selective_vs_p5a;
+          return <tr key={key}>
+            <th scope="row">{label}</th>
+            <td className="r num" data-label="Governance per day">{money(a.governance_cost_per_day)} → {money(b.governance_cost_per_day)}</td>
+            <td className="r num" data-label="Unsafe decisions">{a.unsafe_executed_decisions} → {b.unsafe_executed_decisions}</td>
+            <td className="r num" data-label="Total cost change">{pct(pair.relative_diff, 2, true)}<div className="xs muted">{pct(pair.relative_lo, 2, true)} to {pct(pair.relative_hi, 2, true)}</div></td>
+          </tr>;
+        })}</tbody>
+        <caption>Full to selective validation on the same retail series and evaluation dates, with a fresh seed for simulated worlds.</caption>
+      </table>
+    </div>
+  </Panel>;
 }
 
 function Secondary({ s }: { s: Loose }) {

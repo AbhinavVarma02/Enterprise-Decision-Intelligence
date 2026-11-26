@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 const PAGES = [
   ["overview", "/"],
@@ -26,7 +26,7 @@ for (const [name, path] of PAGES) {
       await page.waitForLoadState("networkidle");
       await page.locator(".skeleton").first().waitFor({ state: "detached", timeout: 15_000 }).catch(() => undefined);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      if (overflow > 1) console.warn(`horizontal overflow ${overflow}px on ${name} at ${size}`);
+      expect(overflow, `horizontal overflow on ${name} at ${size}`).toBeLessThanOrEqual(1);
       await page.screenshot({ path: `../../docs/screenshots/${name}-${size}.png`, fullPage: true });
     });
   }

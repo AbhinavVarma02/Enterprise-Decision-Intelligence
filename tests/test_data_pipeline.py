@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -12,7 +13,7 @@ from edi import pipeline
 from edi.core import Manifest, read_json
 from edi.data_quality.checks import validate_raw
 from edi.ingestion import synthetic
-from edi.ingestion.freshretailnet import select_series
+from edi.ingestion.freshretailnet import load, select_series
 from edi.ingestion.schema import FRN_COLUMNS
 
 
@@ -84,11 +85,40 @@ def test_real_subset_selection_is_deterministic_and_stratified() -> None:
         share = s / 30
         for _ in range(10):
             rows.append({"store_id": s, "product_id": 1, "stock_hour6_22_cnt": int(rng.random() < share)})
-    df = pd.DataFrame(rows)
+    df = (
+        pd.DataFrame(rows)
+        .groupby(["store_id", "product_id"], as_index=False)["stock_hour6_22_cnt"]
+        .mean()
+        .rename(columns={"stock_hour6_22_cnt": "stockout"})
+    )
     a = select_series(df, 9, seed=7)
     b = select_series(df, 9, seed=7)
     pd.testing.assert_frame_equal(a.reset_index(drop=True), b.reset_index(drop=True))
     assert len(a) == 9
+
+
+def test_real_loader_fits_scale_before_tuning_and_preserves_official_splits(tmp_path: Path) -> None:
+    root = tmp_path / "unrelated-train-parent"
+    root.mkdir()
+    frame = synthetic.generate(n_series=6, n_stores=2, seed=42).raw
+    dates = sorted(frame["dt"].unique())
+    train = frame[frame["dt"].isin(dates[:90])].copy()
+    final = frame[frame["dt"].isin(dates[90:])].copy()
+    train.to_parquet(root / "train-00000-of-00001.parquet")
+    final.to_parquet(root / "eval.parquet")
+    first, info = load(root, n_series=6, seed=7, target_median_daily_units=20, selection_end_day=69)
+    train.loc[train["dt"].isin(dates[69:]), ["sale_amount", "stock_hour6_22_cnt"]] = 999
+    final["sale_amount"] = 999
+    train.to_parquet(root / "train-00000-of-00001.parquet")
+    final.to_parquet(root / "eval.parquet")
+    changed, changed_info = load(root, n_series=6, seed=7, target_median_daily_units=20, selection_end_day=69)
+    assert changed_info["volume_scale_factor"] == info["volume_scale_factor"]
+    assert set(first["source_split"]) == {"train", "eval"}
+    assert set(changed.loc[changed["source_split"] == "eval", "dt"]) == set(dates[90:])
+    final["dt"] = dates[89]
+    final.to_parquet(root / "eval.parquet")
+    with pytest.raises(ValueError, match="official partitions"):
+        load(root, n_series=6, seed=7, target_median_daily_units=20, selection_end_day=69)
 
 
 def test_source_resolution_prefers_real_data_only_when_present(pipeline_cfg) -> None:

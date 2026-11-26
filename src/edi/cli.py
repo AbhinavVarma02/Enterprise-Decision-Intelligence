@@ -49,9 +49,18 @@ def _secondary(cfg: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
     return {"path": r["path"], "runtime_seconds": r["runtime_seconds"]}
 
 
-def _export(cfg: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
-    from edi.export.web import export_all
+def _selective(cfg: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
+    from edi.benchmark.validation_economics import run_selective
 
+    r = run_selective(cfg, args.jobs)
+    return {k: r[k] for k in ("source_run", "seed", "decisions", "harness_invariants")}
+
+
+def _export(cfg: dict[str, Any], args: argparse.Namespace) -> dict[str, Any]:
+    from edi.export.web import export_all, export_research_evidence
+
+    if cfg["data"]["source"] == "freshretailnet":
+        return export_research_evidence(cfg)
     return export_all(cfg)
 
 
@@ -77,6 +86,7 @@ COMMANDS = {
     "benchmark": _benchmark,
     "report": _report,
     "secondary": _secondary,
+    "selective-validation": _selective,
     "export-web": _export,
     "run-all": _run_all,
 }

@@ -4,7 +4,8 @@ import { rankCases, useCases, useData, type Meta } from "../data/load";
 import { ErrorState, GateLedger, Loading, NotFound, OutcomeChip, Panel } from "../components/ui";
 import { AlternativesTable, caseLocation, ordersText } from "../components/decision";
 import { Heatmap } from "../components/charts";
-import { STUDIO_LIMITS, studioEvaluate } from "../engine/studio";
+import { STUDIO_LIMITS, modifiedSupply, studioEvaluate } from "../engine/studio";
+import { orderIsFeasible } from "../engine/grid";
 import type { DecisionCase, StudioMods, ValidatorParams } from "../engine/types";
 import { append } from "../state/history";
 import { money, pct, units } from "../lib/format";
@@ -83,8 +84,9 @@ function Slider({ id, label, value, min, max, step, format, onChange, help }: {
 function StudioBody({ c, all, params }: { c: DecisionCase; all: DecisionCase[]; params: ValidatorParams }) {
   const nav = useNavigate();
   const [sp, setSp] = useSearchParams();
-  const mods = parseMods(sp);
+  const mods = useMemo(() => parseMods(sp), [sp]);
   const deferred = useDeferredValue(mods);
+  const updating = mods !== deferred;
   const [saved, setSaved] = useState(false);
   const set = (k: keyof StudioMods, v: number | boolean) => {
     const next = new URLSearchParams(sp);
@@ -97,7 +99,7 @@ function StudioBody({ c, all, params }: { c: DecisionCase; all: DecisionCase[]; 
   const changed = JSON.stringify(mods) !== JSON.stringify(DEFAULTS);
 
   const save = async () => {
-    if (!result.ok) return;
+    if (!result.ok || updating) return;
     const r = result.r;
     await append({
       case_id: c.id,
@@ -129,7 +131,7 @@ function StudioBody({ c, all, params }: { c: DecisionCase; all: DecisionCase[]; 
         </label>
       </div>
 
-      <div className="grid-2" style={{ gridTemplateColumns: "minmax(0, 0.62fr) minmax(0, 1.38fr)" }}>
+      <div className="studio-layout">
         <Panel title="Assumptions" hint={changed ? "Changed from the base case" : "Base case"}>
           <div className="stack" style={{ gap: 18 }}>
             <Slider id="s-demand" label="Demand versus forecast" value={mods.demand_shift} min={STUDIO_LIMITS.demand_shift[0]} max={STUDIO_LIMITS.demand_shift[1]} step={0.05}
@@ -160,14 +162,14 @@ function StudioBody({ c, all, params }: { c: DecisionCase; all: DecisionCase[]; 
               </label>
             </fieldset>
             <div className="row">
-              <button className="btn" onClick={() => setSp(new URLSearchParams(), { replace: true })} disabled={!changed}>Reset assumptions</button>
-              <button className="btn primary" onClick={save} disabled={!result.ok}>{saved ? "Saved to history" : "Save scenario"}</button>
+              <button className="btn" onClick={() => { setSp(new URLSearchParams(), { replace: true }); setSaved(false); }} disabled={!changed}>Reset assumptions</button>
+              <button className="btn primary" onClick={save} disabled={!result.ok || updating || saved}>{saved ? "Saved to history" : "Save scenario"}</button>
             </div>
             <p className="xs faint">Bounds keep the browser calculation small. For wider sweeps or the full optimizer, run <code>edi benchmark</code> locally.</p>
           </div>
         </Panel>
 
-        {result.ok ? <Results c={c} r={result.r} ms={result.ms} /> : (
+        {result.ok ? <Results c={c} r={result.r} ms={result.ms} originalFeasible={orderIsFeasible(c.candidate.orders, modifiedSupply(c, deferred))} /> : (
           <div className="panel state" role="alert"><h2>This combination could not be evaluated</h2><p>{result.error}</p></div>
         )}
       </div>
@@ -175,12 +177,12 @@ function StudioBody({ c, all, params }: { c: DecisionCase; all: DecisionCase[]; 
   );
 }
 
-function Results({ c, r, ms }: { c: DecisionCase; r: ReturnType<typeof studioEvaluate>; ms: number }) {
+function Results({ c, r, ms, originalFeasible }: { c: DecisionCase; r: ReturnType<typeof studioEvaluate>; ms: number; originalFeasible: boolean }) {
   const [sel, setSel] = useState("act_now");
   const diff = r.original.score - r.recommended.score;
   return (
     <div className="stack" aria-live="polite">
-      <Panel title="Recommended under these assumptions" hint={`${r.grid_size} candidate orders x ${c.scenarios.length} scenarios, ${ms.toFixed(0)} ms in this browser`}>
+      <Panel title="Best-scoring order under these assumptions" hint={`${r.grid_size} feasible combinations × ${c.scenarios.length} scenarios · ${ms.toFixed(0)} ms in this browser`}>
         <div className="row" style={{ alignItems: "flex-start", gap: 24 }}>
           <div style={{ flex: "1 1 260px" }}>
             <div className="row" style={{ marginBottom: 6 }}><OutcomeChip outcome={r.validation.outcome} /><span className="small muted">validator verdict</span></div>
@@ -191,10 +193,11 @@ function Results({ c, r, ms }: { c: DecisionCase; r: ReturnType<typeof studioEva
           <table className="data stack-sm">
             <thead><tr><th scope="col">Order</th><th scope="col" className="r">Expected</th><th scope="col" className="r">Worst 10% avg</th><th scope="col" className="r">Risk-adjusted</th></tr></thead>
             <tbody>
-              <tr><td className="full" style={{ fontWeight: 500 }}>Recommended</td><td className="r num" data-label="Expected">{money(r.recommended.expected)}</td><td className="r num" data-label="Worst 10% avg">{money(r.recommended.cvar)}</td><td className="r num" data-label="Risk-adjusted">{money(r.recommended.score)}</td></tr>
-              <tr><td className="full" style={{ fontWeight: 500 }}>Original proposal</td><td className="r num" data-label="Expected">{money(r.original.expected)}</td><td className="r num" data-label="Worst 10% avg">{money(r.original.cvar)}</td><td className="r num" data-label="Risk-adjusted">{money(r.original.score)}</td></tr>
+              <tr><td className="full" style={{ fontWeight: 500 }}>Best-scoring order</td><td className="r num" data-label="Expected">{money(r.recommended.expected)}</td><td className="r num" data-label="Worst 10% avg">{money(r.recommended.cvar)}</td><td className="r num" data-label="Risk-adjusted">{money(r.recommended.score)}</td></tr>
+              {originalFeasible ? <tr><td className="full" style={{ fontWeight: 500 }}>Original proposal</td><td className="r num" data-label="Expected">{money(r.original.expected)}</td><td className="r num" data-label="Worst 10% avg">{money(r.original.cvar)}</td><td className="r num" data-label="Risk-adjusted">{money(r.original.score)}</td></tr>
+                : <tr><td className="full">Original proposal</td><td colSpan={3} className="full muted">Infeasible under these terms</td></tr>}
             </tbody>
-            <caption>Risk-adjusted cost is what the search minimizes. Re-planning {diff >= 0 ? "saves" : "costs"} {money(Math.abs(diff))} on that measure over {r.horizon} days.</caption>
+            <caption>{originalFeasible ? `Re-planning ${diff >= 0 ? "reduces" : "raises"} risk-adjusted cost by ${money(Math.abs(diff))} over ${r.horizon} days.` : "The search compares orders that meet the current supply and budget constraints."}</caption>
           </table>
           </div>
         </div>

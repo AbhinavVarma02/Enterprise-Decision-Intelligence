@@ -38,6 +38,7 @@ log = get_logger("edi.pipeline")
 @dataclass
 class Layout:
     root: Path
+    raw_real_override: Path | None = None
 
     @property
     def raw_synthetic(self) -> Path:
@@ -45,7 +46,7 @@ class Layout:
 
     @property
     def raw_real(self) -> Path:
-        return self.root / "raw" / "freshretailnet"
+        return self.raw_real_override or self.root / "raw" / "freshretailnet"
 
     @property
     def staged(self) -> Path:
@@ -77,7 +78,8 @@ class Layout:
 
 
 def layout(cfg: dict[str, Any]) -> Layout:
-    return Layout(repo_path(cfg["data"]["dir"]))
+    raw_real = cfg["data"].get("raw_freshretailnet_dir")
+    return Layout(repo_path(cfg["data"]["dir"]), repo_path(raw_real) if raw_real else None)
 
 
 def resolve_source(cfg: dict[str, Any]) -> str:
@@ -100,7 +102,8 @@ def _ensure_raw(cfg: dict[str, Any], lay: Layout, source: str, force: bool) -> l
             log_event(log, "synthetic fixture written", **want)
         return sorted(lay.raw_synthetic.glob("*.parquet"))
     files = freshretailnet.find_split_files(lay.raw_real)
-    return files["train"] + files["eval"]
+    provenance = lay.raw_real / "PROVENANCE.json"
+    return files["train"] + files["eval"] + ([provenance] if provenance.exists() else [])
 
 
 def run(cfg: dict[str, Any], force: bool = False) -> dict[str, Any]:
@@ -108,7 +111,12 @@ def run(cfg: dict[str, Any], force: bool = False) -> dict[str, Any]:
     source = resolve_source(cfg)
     raw_files = _ensure_raw(cfg, lay, source, force)
     manifest = Manifest(lay.manifest)
-    input_hash = hash_files(raw_files) + ":" + config_hash({"data": cfg["data"], "source": source})
+    fit_end = cfg["windows"]["a_fit_end"]
+    input_hash = (
+        hash_files(raw_files)
+        + ":"
+        + config_hash({"data": cfg["data"], "source": source, "real_selection_end_day": fit_end})
+    )
     if not force and manifest.is_current("pipeline", input_hash):
         log_event(log, "pipeline up to date, skipping", input_hash=input_hash)
         return dict(read_json(lay.dq_report))
@@ -122,22 +130,29 @@ def run(cfg: dict[str, Any], force: bool = False) -> dict[str, Any]:
         data_source = "synthetic_fixture"
     else:
         fc = cfg["data"]["freshretailnet"]
-        raw, info = freshretailnet.load(
-            lay.raw_real, fc["n_series"], fc["subset_seed"], fc["target_median_daily_units"]
-        )
         prov = lay.raw_real / "PROVENANCE.json"
-        if prov.exists():
-            info["download_provenance"] = read_json(prov)
+        download = read_json(prov) if prov.exists() else {}
+        if fc.get("revision") and download.get("revision") != fc["revision"]:
+            raise ValueError(f"expected FreshRetailNet revision {fc['revision']} in {prov}")
+        raw, info = freshretailnet.load(
+            lay.raw_real, fc["n_series"], fc["subset_seed"], fc["target_median_daily_units"], fit_end
+        )
+        if download:
+            info["download_provenance"] = download
         data_source = "freshretailnet_50k"
 
     clean, quarantine, results = validate_raw(raw)
-    lo, hi = stock_count_hours(results)
+    lo, hi = (6, 22) if source == "freshretailnet" else stock_count_hours(results)
     ingested_at = utc_now()
     dates = pd.to_datetime(clean["dt"])
     start = dates.min()
     clean["series_id"] = "s" + clean["store_id"].astype(str) + "_p" + clean["product_id"].astype(str)
     clean["day_index"] = ((dates - start).dt.days + 1).astype(int)
-    clean["split"] = np.where(clean["day_index"] <= 90, "train", "eval")
+    clean["split"] = (
+        clean.pop("source_split")
+        if source == "freshretailnet"
+        else np.where(clean["day_index"] <= 90, "train", "eval")
+    )
     clean["data_source"] = data_source
     clean["ingested_at"] = ingested_at
     clean = clean.sort_values(["series_id", "day_index"]).reset_index(drop=True)

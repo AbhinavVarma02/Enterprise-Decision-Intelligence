@@ -56,7 +56,8 @@ def main() -> None:
         "license": "CC BY 4.0",
         "attribution": "Dingdong-Inc, FreshRetailNet-50K; Wang et al., arXiv:2505.16319",
         "files": [
-            {"path": str(f.relative_to(OUT)), "bytes": f.stat().st_size, "sha256": sha256(f)} for f in files
+            {"path": f.relative_to(OUT).as_posix(), "bytes": f.stat().st_size, "sha256": sha256(f)}
+            for f in files
         ],
     }
     (OUT / "PROVENANCE.json").write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")

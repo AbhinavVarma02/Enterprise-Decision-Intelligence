@@ -1,0 +1,17 @@
+extends: base.yaml
+run_name: research-real
+artifacts_dir: artifacts/real
+data:
+  source: freshretailnet
+  dir: data_real
+  raw_freshretailnet_dir: data/raw/freshretailnet
+  freshretailnet:
+    n_series: 60
+    revision: c374e85975c82816c495acfa904cc55ab14a47d3
+forecast:
+  planned_promotions: false
+  lgbm: {n_estimators: 120}
+benchmark:
+  n_series: 60
+  realizations: 2
+  scenarios: 40

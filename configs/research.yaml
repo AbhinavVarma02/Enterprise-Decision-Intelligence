@@ -1,6 +1,7 @@
 extends: base.yaml
 run_name: research
 data:
+  source: synthetic
   synthetic: {n_series: 240}
   freshretailnet: {n_series: 300}
 benchmark:

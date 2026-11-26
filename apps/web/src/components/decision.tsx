@@ -28,10 +28,10 @@ export function OrderLines({ orders, deliverable, late }: { orders: number[]; de
 
 const USES_PROPOSAL = new Set(["act_now", "wait", "escalate"]);
 
-export function AlternativesTable({ alts, selected, onSelect, caption, proposed }: { alts: Alternative[]; selected: string; onSelect: (k: string) => void; caption?: string; proposed?: number[] }) {
+export function AlternativesTable({ alts, selected, onSelect, caption, proposed, isFeasible }: { alts: Alternative[]; selected: string; onSelect: (k: string) => void; caption?: string; proposed?: number[]; isFeasible?: (a: Alternative) => boolean }) {
   const lo = Math.min(...alts.map((a) => a.expected_cost));
   const hi = Math.max(...alts.map((a) => a.cvar));
-  const best = alts.reduce((b, a) => (a.expected_cost < b.expected_cost ? a : b), alts[0]);
+  const best = alts.filter((a) => isFeasible?.(a) ?? true).reduce<Alternative | undefined>((b, a) => (!b || a.expected_cost < b.expected_cost ? a : b), undefined);
   return (
     <div className="table-wrap">
       <table className="data stack-sm">
@@ -53,7 +53,8 @@ export function AlternativesTable({ alts, selected, onSelect, caption, proposed 
                 <button className="btn quiet sm" style={{ padding: 0 }} onClick={(e) => { e.stopPropagation(); onSelect(a.key); }}>
                   {a.label}
                 </button>
-                {a.key === best.key && <span className="tag" style={{ marginLeft: 6 }}>Lowest expected</span>}
+                {a.key === best?.key && <span className="tag" style={{ marginLeft: 6 }}>Lowest expected</span>}
+                {isFeasible && !isFeasible(a) && <span className="tag" style={{ marginLeft: 6 }}>Submission blocked</span>}
               </th>
               <td className="full" data-label="Order">
                 {proposed && USES_PROPOSAL.has(a.key)

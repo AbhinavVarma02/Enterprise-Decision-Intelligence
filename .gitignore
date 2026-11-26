@@ -42,3 +42,6 @@ data_dev/
 data_ci/
 artifacts_dev/
 artifacts_ci/
+data_real/
+artifacts/real/runs/
+.npm-cache/

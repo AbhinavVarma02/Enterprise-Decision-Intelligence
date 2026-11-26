@@ -229,15 +229,11 @@ def action_grid(
     """Bounded candidate grid used for brute-force checks, VOI and the browser evaluator."""
     caps = supply.capacities.copy()
     caps[supply.leads >= horizon] = 0.0
-    moq = supply.moqs[0]
-    pri = (
-        np.unique(np.concatenate([[0.0], np.linspace(max(moq, 0.0), caps[0], n_primary)]))
-        if caps[0] > 0
-        else np.array([0.0])
-    )
-    alt = np.linspace(0.0, caps[1], n_alt) if caps[1] > 0 else np.array([0.0])
-    exp = np.linspace(0.0, caps[2], n_exp) if caps[2] > 0 else np.array([0.0])
-    grid = np.array(np.meshgrid(pri, alt, exp, indexing="ij")).reshape(3, -1).T
+    quantities = []
+    for cap, moq, count in zip(caps, supply.moqs, (n_primary, n_alt, n_exp)):
+        choices = np.linspace(moq, cap, count) if cap > 0 and cap >= moq else np.array([0.0])
+        quantities.append(np.unique(np.r_[0.0, choices]))
+    grid = np.array(np.meshgrid(*quantities, indexing="ij")).reshape(3, -1).T
     spend = grid @ supply.unit_costs
     grid = grid[spend <= supply.budget + 1e-9]
     if supply.min_commitment > 0:

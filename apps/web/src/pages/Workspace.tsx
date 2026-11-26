@@ -7,7 +7,8 @@ import { FanChart, InventoryBars } from "../components/charts";
 import { alternatives as evalAlternatives } from "../engine/inaction";
 import { modifiedSupply } from "../engine/studio";
 import { append } from "../state/history";
-import type { DecisionCase } from "../engine/types";
+import type { Alternative, DecisionCase } from "../engine/types";
+import { orderIsFeasible } from "../engine/grid";
 import type { Entry } from "../state/history";
 import { CATEGORY_LABEL, EVENT_LABEL, OUTCOME_HEADLINE, money, pct, units } from "../lib/format";
 
@@ -49,12 +50,18 @@ function Dossier({ c, all }: { c: DecisionCase; all: DecisionCase[] }) {
   }, [c, suggested]);
   const alt = options.find((a) => a.key === selected) ?? options[0];
   const act = options[0];
+  const sup = modifiedSupply(c, {});
+  const canSubmit = (a: Alternative) => a.key === "act_now"
+    ? v.outcome !== "reject" && orderIsFeasible(c.candidate.orders, sup)
+    : orderIsFeasible(a.orders, sup);
+  const canApprove = canSubmit(alt);
+  const suggestion = options.find((a) => a.key === "suggested");
   const dates = c.fan.map((_, i) => (i === 0 ? "Today" : addDays(c.date, i)));
   const ageLabels = c.state.recorded_on_hand_by_age.map((_, i) => (i === 0 ? "arrived today" : `${i} d old`));
   const onHand = c.state.recorded_on_hand_by_age.reduce((s, x) => s + x, 0);
   const missing = v.gates.filter((g) => (g.gate === "G6" || g.gate === "G1") && g.status !== "pass");
 
-  const record = async (action: Entry["action"], orders: number[]) => {
+  const record = async (action: Entry["action"], orders: number[], assessment?: Alternative) => {
     await append({
       case_id: c.id,
       title: c.title,
@@ -62,12 +69,12 @@ function Dossier({ c, all }: { c: DecisionCase; all: DecisionCase[] }) {
       action,
       validator_outcome: v.outcome,
       orders,
-      expected_cost: action === "approved" ? alt.expected_cost : (v.metrics.expected_cost ?? null),
-      cvar: action === "approved" ? alt.cvar : (v.metrics.cvar ?? null),
+      expected_cost: assessment?.expected_cost ?? v.metrics.expected_cost ?? null,
+      cvar: assessment?.cvar ?? v.metrics.cvar ?? null,
       assumptions: {},
       note: note.slice(0, 500),
     });
-    setToast(`Recorded: ${action}. This is a simulated approval; no order was sent.`);
+    setToast(`Recorded: ${action}. This decision stays in this browser.`);
     setNote("");
     window.setTimeout(() => setToast(null), 4000);
   };
@@ -99,7 +106,7 @@ function Dossier({ c, all }: { c: DecisionCase; all: DecisionCase[] }) {
             <span className="small muted">{c.title}</span>
           </div>
           <h1 id="verdict-h">{OUTCOME_HEADLINE[v.outcome]}</h1>
-          <p className="why">{v.outcome === "reject" ? `The proposal breaks a hard constraint: ${v.reasons[0].replace(/\.$/, "")}.` : v.reasons[0]}</p>
+          <p className="why">{v.reasons[0]}</p>
           <p className="small faint" style={{ marginTop: 6, maxWidth: "88ch" }}>{v.explanation}</p>
         </div>
       </section>
@@ -108,7 +115,7 @@ function Dossier({ c, all }: { c: DecisionCase; all: DecisionCase[] }) {
         <div className="stack">
           <Panel title="Options and their consequences" hint={`${c.scenarios.length} demand scenarios over ${c.horizon_days} days`} pad={false} id="opts-h">
             <div style={{ padding: "4px 8px 6px" }}>
-              <AlternativesTable alts={options} selected={selected} onSelect={setSelected} proposed={c.candidate.orders}
+              <AlternativesTable alts={options} selected={selected} onSelect={setSelected} proposed={c.candidate.orders} isFeasible={canSubmit}
                 caption="Spread: blue dot is expected cost, grey tick the 90th percentile, red tick the average of the worst 10% of scenarios." />
             </div>
             <div className="panel-pad" style={{ borderTop: "1px solid var(--line-2)" }} aria-live="polite">
@@ -144,8 +151,7 @@ function Dossier({ c, all }: { c: DecisionCase; all: DecisionCase[] }) {
           <Panel title="What to verify before committing">
             {v.value_of_information ? (
               <div className="small">
-                <p>Verifying <strong>{v.value_of_information.input}</strong> is worth about <strong className="num">{money(v.value_of_information.value_vs_candidate)}</strong> against
-                  this order, and up to <span className="num">{money(v.value_of_information.evpi)}</span> against the best hedged order (EVPI). A cycle count costs <span className="num">{money(v.value_of_information.investigation_cost)}</span>.</p>
+              <p>Under the inventory prior, verification is worth about <strong className="num">{money(v.value_of_information.value_vs_candidate)}</strong> versus this proposal and <span className="num">{money(v.value_of_information.evpi)}</span> versus the best hedged order. A cycle count costs <span className="num">{money(v.value_of_information.investigation_cost)}</span>.</p>
                 <table className="data" style={{ marginTop: 10 }}>
                   <thead><tr><th scope="col">If the true state is</th><th scope="col" className="r">Prior</th></tr></thead>
                   <tbody>{v.value_of_information.labels.map((l, i) => <tr key={l}><td>{l}</td><td className="r num">{pct(v.value_of_information!.probabilities[i], 0)}</td></tr>)}</tbody>
@@ -164,17 +170,23 @@ function Dossier({ c, all }: { c: DecisionCase; all: DecisionCase[] }) {
                 <textarea className="text" rows={2} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} style={{ resize: "vertical", border: "1px solid var(--line)", borderRadius: 8, padding: 8 }} />
               </label>
               <div className="row">
-                <button className="btn primary" onClick={() => record("approved", alt.orders)} disabled={v.outcome === "reject" && selected === "act_now"}>
-                  Approve {selected === "act_now" ? "proposed order" : alt.label.toLowerCase()}
-                </button>
-                {suggested && (
-                  <button className="btn" onClick={() => record("approved", suggested)}>Approve suggested alternative</button>
+                {selected === "wait" || selected === "no_action" ? (
+                  <button className="btn primary" onClick={() => record("deferred", [0, 0, 0], alt)}>Record deferral</button>
+                ) : selected === "escalate" ? (
+                  <button className="btn primary" onClick={() => record("escalated", c.candidate.orders, alt)}>Request same-day review</button>
+                ) : (
+                  <button className="btn primary" onClick={() => record("approved", alt.orders, alt)} disabled={!canApprove}>
+                    Approve {selected === "act_now" ? "proposed order" : alt.label.toLowerCase()}
+                  </button>
+                )}
+                {suggestion && selected !== "suggested" && (
+                  <button className="btn" disabled={!orderIsFeasible(suggestion.orders, sup)} onClick={() => record("approved", suggestion.orders, suggestion)}>Approve suggested alternative</button>
                 )}
                 <button className="btn" onClick={() => record("count requested", [0, 0, 0])}>Request cycle count</button>
                 <button className="btn" onClick={() => record("escalated", c.candidate.orders)}>Escalate</button>
                 <button className="btn danger" onClick={() => record("rejected", [0, 0, 0])}>Reject</button>
               </div>
-              {v.outcome === "reject" && <p className="xs faint">The proposed order breaks a hard constraint, so it cannot be approved as is. Choose another option or the suggested alternative.</p>}
+              {(!canApprove && selected !== "wait" && selected !== "no_action" && selected !== "escalate") && <p className="xs faint">Approval is blocked for this option. Select a feasible alternative or escalate for review.</p>}
               <p className="xs faint">Approval threshold {money(c.approval_threshold)}. Decisions are written to the <Link to="/history">decision history</Link> in this browser only.</p>
             </div>
           </Panel>

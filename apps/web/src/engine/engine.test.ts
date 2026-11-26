@@ -7,7 +7,7 @@ import golden from "./__fixtures__/golden.json";
 import cases from "../../public/data/cases.json";
 import meta from "../../public/data/meta.json";
 import { cvar, evaluateActions, quantileFunction } from "./evaluator";
-import { actionGrid } from "./grid";
+import { actionGrid, orderIsFeasible } from "./grid";
 import { modifiedSupply, studioEvaluate } from "./studio";
 import type { DecisionCase, StudioMods, ValidatorParams } from "./types";
 
@@ -28,6 +28,14 @@ describe("evaluator parity", () => {
 });
 
 describe("action grid parity", () => {
+  it("excludes supplier quantities below their minimum order", () => {
+    const supply = modifiedSupply(allCases[0], {});
+    supply.moqs = [10, 5, 0];
+    supply.capacities = [2, 10, 5];
+    const grid = actionGrid(supply, 3);
+    expect(grid.length).toBeGreaterThan(0);
+    expect(grid.every((orders) => orders[0] === 0 && orderIsFeasible(orders, supply))).toBe(true);
+  });
   for (const g of golden.grids) {
     it(`matches Python grid for ${g.case}`, () => {
       const c = allCases.find((x) => x.id === g.case)!;

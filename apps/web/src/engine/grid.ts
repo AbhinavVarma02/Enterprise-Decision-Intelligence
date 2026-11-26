@@ -49,10 +49,8 @@ function uniqueSorted(xs: number[]): number[] {
 
 export function actionGrid(s: Supply, horizon: number, nPrimary = 12, nAlt = 6, nExp = 5): number[][] {
   const caps = s.capacities.map((c, i) => (s.leads[i] >= horizon ? 0 : c));
-  const moq = s.moqs[0];
-  const pri = caps[0] > 0 ? uniqueSorted([0, ...linspace(Math.max(moq, 0), caps[0], nPrimary)]) : [0];
-  const alt = caps[1] > 0 ? linspace(0, caps[1], nAlt) : [0];
-  const exp = caps[2] > 0 ? linspace(0, caps[2], nExp) : [0];
+  const [pri, alt, exp] = [nPrimary, nAlt, nExp].map((count, i) => caps[i] > 0 && caps[i] >= s.moqs[i]
+    ? uniqueSorted([0, ...linspace(s.moqs[i], caps[i], count)]) : [0]);
   const out: number[][] = [];
   for (const p of pri)
     for (const a of alt)
@@ -63,4 +61,10 @@ export function actionGrid(s: Supply, horizon: number, nPrimary = 12, nAlt = 6, 
         out.push([p, a, e]);
       }
   return out;
+}
+
+export function orderIsFeasible(orders: number[], supply: Supply): boolean {
+  return orders.every((q, i) => q >= 0 && q <= supply.capacities[i] + 1e-6 && (q <= 1e-6 || q >= supply.moqs[i] - 1e-6))
+    && orders[0] >= supply.minCommitment - 1e-6
+    && orders.reduce((spend, q, i) => spend + q * supply.unitCosts[i], 0) <= supply.budget + 1e-6;
 }

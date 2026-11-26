@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { useData, type Meta } from "../data/load";
 
 const FLOW = [
   { t: "Sales and stock flags", s: "observed" },
@@ -26,7 +25,6 @@ function FlowDiagram() {
 }
 
 export function Methodology() {
-  const meta = useData<Meta>("meta");
   return (
     <>
       <div className="page-head">
@@ -41,13 +39,13 @@ export function Methodology() {
         <p>A forecast can be accurate and still lead to a poor order when stock is perishable, shortages cost more than leftovers, suppliers fail or the data feeding the plan is wrong. This project scores decisions, not predictions, and asks when an independent check should approve, verify, wait, escalate or block a proposed order.</p>
 
         <h3>Data</h3>
-        <p>The primary dataset is FreshRetailNet-50K (Dingdong-Inc, CC BY 4.0): 50,000 store-product series of hourly sales with hourly stock-out flags over 90 days plus a 7-day evaluation split. Sales during stock-outs understate demand, so demand is recovered from each product's hourly sales profile on fully stocked days. Suppliers, prices, costs, disruptions and data faults are simulated and labeled as such. {meta.status === "ready" && meta.data.data_source === "synthetic_fixture" && "This build runs on a schema-identical synthetic fixture because the dataset host was unreachable during the build; real-data runs are not reported until executed."}</p>
+        <p>FreshRetailNet-50K (Dingdong-Inc, CC BY 4.0) contains 50,000 store-product series across 90 training days and seven evaluation days. The retail pilot samples 60 series. Observed hourly stockout flags identify censored sales. Hourly sales profiles estimate demand where stock ran out. Supplier terms, prices, costs, disruptions and data faults are modeled. Decision workspace cases use a separate synthetic fixture with known latent demand.</p>
 
         <h3>Forecasting</h3>
-        <p>Baselines (seasonal naive, weekday-adjusted moving average) are compared with LightGBM point and quantile models. Quantiles are calibrated with split conformal prediction on a held-out week and sorted to stay coherent. Weather enters only as trailing averages; promotions and holidays on the target day are treated as planned one day ahead (an ablation removes them). Training, calibration, tuning and final test windows never overlap.</p>
+        <p>We compare seasonal naive and weekday-adjusted moving averages with LightGBM point and quantile models. We calibrate prediction intervals on a separate week and enforce ordered quantiles. The retail pilot uses trailing weather and excludes published discount and activity values because their availability at decision time is unknown. Policy tuning ends before the official evaluation week.</p>
 
         <h3>Decisions and the simulator</h3>
-        <p>Each day a policy chooses quantities from a primary supplier (next day, minimum order), an alternate (next day, pricier) and expedited freight (same day, priciest), within capacity and budget. The scenario policies solve a mixed-integer program with HiGHS over 100 demand scenarios; the risk-aware policy adds Conditional Value at Risk (Rockafellar and Uryasev, 2000). The simulator ages stock first in, first out and wastes it at the end of its shelf life. Lost sales are charged at full price plus a goodwill penalty, because the purchase cost of units never bought is already absent from procurement; charging margin would understate shortages.</p>
+        <p>Each day a policy chooses quantities from a primary supplier, an alternate supplier and expedited freight. HiGHS solves a mixed-integer program over 100 paths in the synthetic benchmark or 40 in the retail pilot. The risk-aware policy also minimizes Conditional Value at Risk. The simulator consumes the oldest inventory first and removes expired units. Shortage costs include lost revenue and a separate goodwill penalty.</p>
 
         <h3>Validation</h3>
         <p>The validator receives a standardized decision record and the authoritative terms of record, never the policy itself. It runs seven gates: data integrity and freshness, constraint satisfaction, financial consistency, downside risk, stress resilience, missing evidence and governance. Hard failures are never averaged away. When an input looks wrong, it prices a cycle count with the value of verification against the proposed order and with the expected value of perfect information. Every investigation and review is charged in the benchmark.</p>
@@ -72,7 +70,7 @@ export function Methodology() {
         </ul>
 
         <h3>Reproduce</h3>
-        <p><code>pip install -e .</code>, then <code>edi run-all --config configs/research.yaml</code>. With the real dataset in <code>data/raw/freshretailnet/</code> (via <code>scripts/download_freshretailnet.py</code>) every number on this site is regenerated from it.</p>
+        <p>Install with <code>pip install -e ".[dev,download]"</code>. Use <code>configs/research.yaml</code> for a new synthetic run and <code>configs/research-real.yaml</code> for the pinned FreshRetailNet pilot. The downloader records source checksums. The pilot exports a separate evidence file.</p>
 
         <h3>References</h3>
         <ul>

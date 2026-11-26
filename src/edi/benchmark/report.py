@@ -13,11 +13,14 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from scipy.stats import kendalltau
 
 from edi.benchmark.runner import violations
 from edi.benchmark.stats import bootstrap_mean, excludes_zero
 from edi.core import artifact_path, config_hash, git_sha, read_json, require_same_run, utc_now, write_json
+from edi.forecasting.run import load_forecasts
 from edi.optimization.milp import action_grid
+from edi.pipeline import load_panel
 from edi.simulation.engine import cvar, evaluate_actions, horizon_for
 from edi.simulation.scenarios import sample_paths, stream
 from edi.validation.engine import ValidatorParams, validate
@@ -63,11 +66,21 @@ def policy_metrics(tot: pd.DataFrame, dec: pd.DataFrame, B: int, seed: int) -> d
         "n_episodes": int(len(t)),
     }
     if len(dec):
+        out["n_decision_days"] = int(len(dec))
         out["stockout_day_frequency"] = float((dec["lost"] > 1e-9).mean())
         out["hard_violations"] = int(dec["n_violations"].sum())
-        out["hard_violation_rate"] = float((dec["n_violations"] > 0).mean())
-        if "exec_unsafe" in dec:
-            out["unsafe_executed_rate"] = float(dec["exec_unsafe"].astype(float).mean())
+        out["hard_breach_decisions"] = int((dec["n_violations"] > 0).sum())
+        out["hard_violation_rate"] = out["hard_breach_decisions"] / len(dec)
+        out["candidate_solver_nonoptimal"] = int((~dec["status"].isin(["optimal", "rule"])).sum())
+        if "exec_unsafe" in dec and dec["exec_unsafe"].notna().any():
+            unsafe = dec["exec_unsafe"].astype(bool)
+            out["unsafe_executed_decisions"] = int(unsafe.sum())
+            out["unsafe_executed_rate"] = out["unsafe_executed_decisions"] / len(dec)
+            if "exec_has_order" in dec:
+                submitted = dec["exec_has_order"].astype(bool)
+                out["n_positive_submissions"] = int(submitted.sum())
+                out["n_unsafe_positive_submissions"] = int((unsafe & submitted).sum())
+                out["n_unsafe_no_order"] = int((unsafe & ~submitted).sum())
         out["decision_ms_mean"] = float(dec["decision_ms"].mean())
         out["outcomes"] = dec["outcome"].value_counts().to_dict()
         out["approval_reviews"] = int(
@@ -82,22 +95,60 @@ def paired(tot: pd.DataFrame, a: str, b: str, B: int, seed: int) -> dict[str, An
     t["cost_per_day"] = t["total"] / t["n_days"]
     pa = t[t["policy"] == a].set_index(["series_id", "realization"])["cost_per_day"]
     pb = t[t["policy"] == b].set_index(["series_id", "realization"])["cost_per_day"]
-    j = pd.concat([pa.rename("a"), pb.rename("b")], axis=1).dropna()
-    if j.empty:
+    if pa.empty or pb.empty:
         return {}
+    j = pd.concat([pa.rename("a"), pb.rename("b")], axis=1)
+    if j.isna().any().any() or j.index.has_duplicates:
+        raise ValueError(f"comparison {a} vs {b} requires exactly one row per matched series and realization")
     j["d"] = j["a"] - j["b"]
-    per_series = j.groupby(level=0)["d"].mean()
-    ci = bootstrap_mean(per_series.to_numpy(), B, seed)
-    base = float(j["b"].mean())
-    return {
+    per_series = j.groupby(level=0)[["d", "b"]].mean()
+    ci = bootstrap_mean(per_series["d"].to_numpy(), B, seed)
+    base = float(per_series["b"].mean())
+    rng = np.random.default_rng(seed)
+    indices = rng.integers(0, len(per_series), size=(B, len(per_series)))
+    delta, baseline = per_series[["d", "b"]].to_numpy().T
+    denom = baseline[indices].sum(axis=1)
+    ratios = delta[indices].sum(axis=1)[denom != 0] / denom[denom != 0]
+    out: dict[str, Any] = {
         "a": a,
         "b": b,
         "diff_cost_per_day": ci,
         "relative_diff": ci["mean"] / base if base else None,
-        "relative_lo": ci["lo"] / base if base else None,
-        "relative_hi": ci["hi"] / base if base else None,
+        "relative_lo": float(np.quantile(ratios, 0.025)) if len(ratios) else None,
+        "relative_hi": float(np.quantile(ratios, 0.975)) if len(ratios) else None,
         "excludes_zero": excludes_zero(ci),
         "b_mean": base,
+    }
+    ids = per_series.index.to_series().str.extract(r"^s(?P<store>\d+)_p(?P<product>\d+)$")
+    if ids.notna().all().all():
+        out["crossed_store_product"] = crossed_interval(delta, baseline, ids, B, seed)
+    return out
+
+
+def crossed_interval(
+    delta: np.ndarray, baseline: np.ndarray, ids: pd.DataFrame, resamples: int, seed: int
+) -> dict[str, float | int | None]:
+    """Pigeonhole sensitivity analysis on paired series averages, conditional on this week."""
+    rng = np.random.default_rng(seed)
+    weights = np.ones((resamples, len(ids)), dtype=int)
+    n_clusters = {}
+    for col in ("store", "product"):
+        groups, index = np.unique(ids[col].to_numpy(), return_inverse=True)
+        n = len(groups)
+        n_clusters[f"n_{col}"] = n
+        weights *= rng.multinomial(n, np.full(n, 1 / n), size=resamples)[:, index]
+    counts = weights.sum(axis=1)
+    numer = weights @ delta
+    denom = weights @ baseline
+    means = numer[counts > 0] / counts[counts > 0]
+    ratios = numer[denom != 0] / denom[denom != 0]
+    return {
+        **n_clusters,
+        "resamples": int(len(means)),
+        "lo": float(np.quantile(means, 0.025)),
+        "hi": float(np.quantile(means, 0.975)),
+        "relative_lo": float(np.quantile(ratios, 0.025)) if len(ratios) else None,
+        "relative_hi": float(np.quantile(ratios, 0.975)) if len(ratios) else None,
     }
 
 
@@ -110,6 +161,8 @@ def detection(dec: pd.DataFrame) -> dict[str, Any]:
     return {
         "n_candidates": int(len(d)),
         "n_unsafe": n_u,
+        "n_unsafe_intercepted": int((flagged & unsafe).sum()),
+        "n_safe_interventions": int((flagged & ~unsafe).sum()),
         "recall": float((flagged & unsafe).sum() / n_u) if n_u else None,
         "unnecessary_intervention_rate": float((flagged & ~unsafe).sum() / n_s) if n_s else None,
         "coverage": float(rec.mean()),
@@ -297,12 +350,25 @@ def audit(samples: list[dict[str, Any]], cfg: dict[str, Any], limit: int = 240) 
 
 
 def _kendall(a: list[float], b: list[float]) -> float:
-    n = len(a)
-    s = 0
-    for i in range(n):
-        for j in range(i + 1, n):
-            s += int(np.sign(a[i] - a[j]) * np.sign(b[i] - b[j]))
-    return s / (n * (n - 1) / 2) if n > 1 else float("nan")
+    return float(kendalltau(a, b).statistic)
+
+
+def _agreement_by_series(cfg: dict[str, Any], totals: pd.DataFrame, a: str, b: str) -> dict[str, Any]:
+    panel = load_panel(cfg)
+    forecasts = load_forecasts(cfg, "B")
+    forecasts = forecasts.loc[
+        forecasts["model"].isin([a, b]) & (forecasts["target_day"] >= cfg["windows"]["test_start"])
+    ].copy()
+    levels = np.array(cfg["forecast"]["quantiles"])
+    si = forecasts["series"].to_numpy(dtype=int)
+    day = forecasts["target_day"].to_numpy(dtype=int) - 1
+    error = panel.sales[si, day, None] - forecasts[[f"q{x}" for x in levels]].to_numpy()
+    forecasts["pinball"] = np.maximum(error * levels, error * (levels - 1)).mean(axis=1)
+    forecasts["series_id"] = np.asarray(panel.series_ids)[si]
+    loss = forecasts.groupby(["series_id", "model"])["pinball"].mean().unstack()
+    cost = totals.groupby(["series_id", "policy"])["cost_per_day"].mean().unstack()
+    differences = pd.concat([loss[a] - loss[b], cost[f"P3[{a}]"] - cost[f"P3[{b}]"]], axis=1).dropna()
+    return {"n_series": len(differences), "kendall_tau": _kendall(*differences.to_numpy().T.tolist())}
 
 
 def harness_invariants(dec: pd.DataFrame) -> dict[str, int]:
@@ -332,6 +398,8 @@ def harness_invariants(dec: pd.DataFrame) -> dict[str, int]:
 def build_report(cfg: dict[str, Any]) -> dict[str, Any]:
     run = latest_run(cfg)
     manifest = read_json(run / "manifest.json")
+    if manifest["config_hash"] != config_hash(cfg):
+        raise ValueError("benchmark manifest config does not match the requested configuration")
     tot = pd.read_parquet(run / "series_totals.parquet")
     dec = pd.read_parquet(run / "decisions.parquet")
     invariants = harness_invariants(dec)
@@ -340,18 +408,23 @@ def build_report(cfg: dict[str, Any]) -> dict[str, Any]:
     seed = 20261125
     fmetrics = read_json(artifact_path(cfg, "forecast", "metrics.json"))
     require_same_run(fmetrics, cfg, "artifacts/forecast/metrics.json")
+    if fmetrics["data_source"] != manifest["data_source"]:
+        raise ValueError("forecast and benchmark data sources differ")
 
     summary: dict[str, Any] = {
         "meta": {
             "run_id": manifest["run_id"],
+            "run_name": cfg["run_name"],
+            "config_hash": manifest["config_hash"],
             "data_source": manifest["data_source"],
+            "dataset_revision": manifest.get("dataset_revision"),
             "protocol_version": manifest["protocol_version"],
             "n_series": manifest["n_series"],
             "realizations": manifest["realizations"],
             "window": [cfg["windows"]["test_start"], cfg["windows"]["test_end"]],
             "tuning": manifest["tuning"],
             "generated_at": utc_now(),
-            "git_sha": git_sha(),
+            "git_sha": manifest.get("git_sha", git_sha()),
             "runtime_seconds": manifest["runtime_seconds"],
             "n_decisions": manifest["n_decisions"],
             "currency_note": "Assumed unit economics applied to (normalized) volumes; not real money.",
@@ -477,6 +550,9 @@ def build_report(cfg: dict[str, Any]) -> dict[str, Any]:
                 "kendall_tau_observed": tau_obs,
                 "kendall_tau_latent": tau_lat,
                 "paired_cost_difference": h1_pair,
+                "per_series_error_cost_agreement": _agreement_by_series(cfg, fv, best_acc, best_cost)
+                if best_acc != best_cost
+                else None,
             },
             "verdict": (
                 "supported"

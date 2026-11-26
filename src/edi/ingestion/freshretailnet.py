@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import duckdb
 import numpy as np
 import pandas as pd
 
@@ -24,10 +25,10 @@ def find_split_files(raw_dir: Path) -> dict[str, list[Path]]:
     files = sorted(raw_dir.rglob("*.parquet"))
     out: dict[str, list[Path]] = {"train": [], "eval": []}
     for f in files:
-        name = f.as_posix().lower()
-        if "eval" in name or "test" in name:
+        name = f.stem.lower()
+        if name == "eval" or name.startswith("eval-"):
             out["eval"].append(f)
-        elif "train" in name:
+        elif name == "train" or name.startswith("train-"):
             out["train"].append(f)
     return out
 
@@ -37,14 +38,8 @@ def available(raw_dir: Path) -> bool:
     return bool(files["train"]) and bool(files["eval"])
 
 
-def select_series(train: pd.DataFrame, n_series: int, seed: int) -> pd.DataFrame:
-    """Deterministic subset stratified by stockout-day share terciles (keeps censored series)."""
-    stats = (
-        train.assign(stockout=(train["stock_hour6_22_cnt"] > 0).astype(float))
-        .groupby(["store_id", "product_id"], as_index=False)["stockout"]
-        .mean()
-        .sort_values(["store_id", "product_id"])
-    )
+def select_series(stats: pd.DataFrame, n_series: int, seed: int) -> pd.DataFrame:
+    """Select deterministically within historical stockout-day share terciles."""
     if n_series >= len(stats):
         return stats[["store_id", "product_id"]]
     stats["tercile"] = pd.qcut(stats["stockout"].rank(method="first"), 3, labels=False)
@@ -59,32 +54,58 @@ def select_series(train: pd.DataFrame, n_series: int, seed: int) -> pd.DataFrame
 
 
 def load(
-    raw_dir: Path, n_series: int, seed: int, target_median_daily_units: float
+    raw_dir: Path, n_series: int, seed: int, target_median_daily_units: float, selection_end_day: int
 ) -> tuple[pd.DataFrame, dict]:
     files = find_split_files(raw_dir)
     if not files["train"] or not files["eval"]:
         raise FileNotFoundError(f"FreshRetailNet-50K parquet files not found under {raw_dir}")
-    cols = list(FRN_COLUMNS)
-    train = pd.concat([pd.read_parquet(f, columns=cols) for f in files["train"]], ignore_index=True)
-    eval_ = pd.concat([pd.read_parquet(f, columns=cols) for f in files["eval"]], ignore_index=True)
-    keep = select_series(train, n_series, seed)
-    train = train.merge(keep, on=["store_id", "product_id"])
-    eval_ = eval_.merge(keep, on=["store_id", "product_id"])
-    raw = pd.concat([train, eval_], ignore_index=True)
+    with duckdb.connect(config={"threads": 2}) as con:
+        for split, paths in files.items():
+            con.read_parquet([str(f) for f in paths]).create_view(split)
+        train_dates = con.sql("SELECT DISTINCT dt FROM train ORDER BY dt").df()["dt"]
+        eval_dates = con.sql("SELECT DISTINCT dt FROM eval ORDER BY dt").df()["dt"]
+        expected = pd.date_range(pd.Timestamp(train_dates.iloc[0]), periods=97).strftime("%Y-%m-%d")
+        if train_dates.tolist() != expected[:90].tolist() or eval_dates.tolist() != expected[90:].tolist():
+            raise ValueError("official partitions must cover consecutive days 1–90 (train) and 91–97 (eval)")
+        if not 1 <= selection_end_day <= len(train_dates):
+            raise ValueError("the subset and volume scale must be fitted within the training partition")
+        stats = con.execute(
+            """SELECT store_id, product_id, avg(CAST(stock_hour6_22_cnt > 0 AS INTEGER)) AS stockout,
+                      avg(sale_amount) AS mean_sales
+               FROM train WHERE dt <= ? GROUP BY store_id, product_id ORDER BY store_id, product_id""",
+            [train_dates.iloc[selection_end_day - 1]],
+        ).df()
+        keep = select_series(stats, n_series, seed)
+        con.register("selected_series", keep)
+        columns = ", ".join(f"raw.{name}" for name in FRN_COLUMNS)
+        raw = pd.concat(
+            [
+                con.sql(
+                    f"SELECT {columns}, '{split}' AS source_split "
+                    f"FROM {split} raw SEMI JOIN selected_series USING (store_id, product_id)"
+                ).df()
+                for split in ("train", "eval")
+            ],
+            ignore_index=True,
+        )
     # Global volume rescale. sale_amount is normalized by one global coefficient, so a single factor
     # preserves relative structure while giving unit economics a plausible scale (assumption).
-    series_mean = raw.groupby(["store_id", "product_id"])["sale_amount"].mean()
+    series_mean = stats.merge(keep, on=["store_id", "product_id"])["mean_sales"]
     median = float(series_mean.median()) if len(series_mean) else 1.0
     factor = target_median_daily_units / median if median > 0 else 1.0
     raw["sale_amount"] = raw["sale_amount"] * factor
-    raw["hours_sale"] = raw["hours_sale"].map(lambda xs: [float(x) * factor for x in xs])
+    raw["hours_sale"] = raw["hours_sale"].map(
+        lambda xs: np.asarray(xs, dtype=float) * factor, na_action="ignore"
+    )
     info = {
         "data_source": "freshretailnet_50k",
         "attribution": ATTRIBUTION,
-        "files": [str(p) for p in files["train"] + files["eval"]],
+        "files": [p.relative_to(raw_dir).as_posix() for p in files["train"] + files["eval"]],
         "n_series_selected": int(len(keep)),
         "subset_seed": seed,
         "volume_scale_factor": factor,
+        "selection_and_scale_days": [1, selection_end_day],
+        "official_split_dates": {"train": [expected[0], expected[89]], "eval": [expected[90], expected[96]]},
         "volume_scale_note": "assumed global rescale so the median series has the configured mean daily units",
     }
     return raw, info

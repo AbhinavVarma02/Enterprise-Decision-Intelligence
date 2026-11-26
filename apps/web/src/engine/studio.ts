@@ -66,8 +66,8 @@ export function studioEvaluate(c: DecisionCase, mods: StudioMods, params: Valida
     {
       decision_id: `studio.${c.id}`,
       typical_daily_volume: c.mu,
-      age_hours: 24,
-      history_days_missing: 0,
+      age_hours: c.data_age_hours,
+      history_days_missing: c.history_days_missing,
       on_hand_by_age: cohorts,
       pipeline_by_day: pipeline,
       action: { primary: rec[0], alternate: rec[1], expedite: rec[2] },

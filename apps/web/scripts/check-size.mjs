@@ -2,8 +2,9 @@
 // 20,000 files and 25 MiB per file on the Free plan).
 import { readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const DIST = new URL("../dist/", import.meta.url).pathname;
+const DIST = fileURLToPath(new URL("../dist/", import.meta.url));
 const LIMITS = { totalBytes: 3_000_000, fileBytes: 1_000_000, files: 100 };
 
 function walk(dir) {

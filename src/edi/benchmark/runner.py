@@ -54,6 +54,7 @@ class PolicySpec:
     use_voi: bool = True
     use_escalation: bool = True
     risk_review: bool = True
+    selective_review: bool = False
     label: str = ""
 
 
@@ -197,8 +198,19 @@ def violations(orders: np.ndarray, auth: SupplyContext) -> tuple[list[str], np.n
             deliver[i] = s.capacity
         if q < s.moq - 1e-6:
             out.append(f"{s.name}_moq")
+        if deliver[i] < s.moq - 1e-6:
+            deliver[i] = 0.0
     if orders @ auth.unit_costs > auth.budget * (1 + 1e-6) + 1e-9:
         out.append("budget")
+    # Allocate the authorized spend in supplier priority order (primary, alternate, expedite).
+    # A residual below the supplier's MOQ is refused and leaves budget for the next line.
+    remaining = auth.budget
+    for i, s in enumerate(auth.suppliers):
+        if s.unit_cost > 0:
+            deliver[i] = min(deliver[i], remaining / s.unit_cost)
+        if deliver[i] < s.moq - 1e-6:
+            deliver[i] = 0.0
+        remaining = max(0.0, remaining - deliver[i] * s.unit_cost)
     return out, deliver
 
 
@@ -383,6 +395,7 @@ def run_episode(
                 vparams,
                 cfg,
                 d,
+                world,
             )
             rec.update(vrec)
             totals.governance += rec["governance_cost"]
@@ -460,6 +473,8 @@ def run_episode(
             {
                 "orders_candidate": [round(float(x), 4) for x in candidate.orders],
                 "orders_executed": [round(float(x), 4) for x in executed],
+                "orders_delivered": [round(float(x), 4) for x in deliver],
+                "exec_has_order": bool(np.any(executed > 1e-9)),
                 "violations": "|".join(viol),
                 "n_violations": len(viol),
                 "spend": spend,
@@ -497,6 +512,7 @@ def _validated(
     vparams: ValidatorParams,
     cfg: dict[str, Any],
     d: int,
+    world: WorldScenario,
 ) -> tuple[PolicyDecision, np.ndarray, dict[str, Any], dict[str, Any] | None]:
     alpha = vparams.cvar_alpha
     obj = "cvar" if spec.wrapped == "cvar" else "expected"
@@ -542,7 +558,14 @@ def _validated(
         investigation_cost=inv_cost,
         review_cost=review_cost,
     )
-    rep = validate(cand, ctx, ADAPTER, vparams)
+    key = (vparams.seed, setup.series_id, d, world.condition, world.realization)
+    eval_paths = ADAPTER.scenarios(cand, vparams.n_scenarios, vparams.rho, stream(*key, "validator"))
+    routing = (
+        replace(vparams, loss_tolerance_mult=1e6, stress_tolerance_mult=1e6, verification_cost_multiplier=2.0)
+        if spec.selective_review
+        else vparams
+    )
+    rep = validate(cand, ctx, ADAPTER, routing, scenarios=eval_paths)
     outcome = rep.outcome
     gov = 0.0
     reviewed = False
@@ -566,7 +589,7 @@ def _validated(
         if spec.use_escalation:
             gov += review_cost
             reviewed = True
-            if stream(vparams.seed, "reviewer", decision_id).random() < reviewer_error:
+            if stream(*key, "reviewer").random() < reviewer_error:
                 note = "reviewer approved the original candidate"
             else:
                 executed = milp_policy(

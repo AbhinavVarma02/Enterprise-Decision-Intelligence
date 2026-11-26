@@ -22,11 +22,12 @@ from edi.core import (
     get_logger,
     git_sha,
     log_event,
+    read_json,
     utc_now,
     write_json,
     write_parquet,
 )
-from edi.forecasting.run import load_forecasts
+from edi.forecasting.run import load_forecasts, model_specs
 from edi.pipeline import Panel, layout, load_panel
 from edi.simulation.scenarios import make_world
 from edi.validation.engine import ValidatorParams
@@ -302,16 +303,6 @@ def ablation_specs() -> list[PolicySpec]:
     ]
 
 
-FORECAST_VARIANTS = [
-    "seasonal_naive",
-    "moving_average",
-    "lgbm_point",
-    "lgbm_quantile_observed",
-    "lgbm_quantile_recovered",
-    "lgbm_quantile_recovered_nopromo",
-]
-
-
 def run_all(cfg: dict[str, Any], n_jobs: int = 2) -> dict[str, Any]:
     t_start = time.perf_counter()
     panel = load_panel(cfg)
@@ -339,7 +330,7 @@ def run_all(cfg: dict[str, Any], n_jobs: int = 2) -> dict[str, Any]:
                 Cell("ablation", "test", cond, r, PolicySpec("P5a_untuned", "validated", wrapped="saa"))
             )
     for r in range(R):
-        for m in FORECAST_VARIANTS:
+        for m, _ in model_specs(cfg):
             cells.append(
                 Cell("forecast_variants", "test", "normal", r, PolicySpec(f"P3[{m}]", "saa", model=m))
             )
@@ -380,10 +371,11 @@ def run_all(cfg: dict[str, Any], n_jobs: int = 2) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     write_parquet(totals, out_dir / "series_totals.parquet")
     dec = decisions.copy()
-    for col in ("orders_candidate", "orders_executed"):
+    for col in ("orders_candidate", "orders_executed", "orders_delivered"):
         dec[col] = dec[col].map(lambda v: ",".join(f"{x:.4f}" for x in v))
     write_parquet(dec, out_dir / "decisions.parquet")
     write_json(out_dir / "samples.json", samples, compact=True)
+    quality = read_json(layout(cfg).dq_report)
     manifest = {
         "run_id": run_id,
         "created_at": utc_now(),
@@ -391,6 +383,8 @@ def run_all(cfg: dict[str, Any], n_jobs: int = 2) -> dict[str, Any]:
         "config_hash": config_hash(cfg),
         "config_path": cfg.get("_config_path"),
         "data_source": panel.data_source,
+        "dataset_revision": quality["source_info"].get("download_provenance", {}).get("revision"),
+        "benchmark_seed": bc["seed"],
         "n_series": int(len(series_idx)),
         "series_ids": [panel.series_ids[i] for i in series_idx],
         "realizations": R,
@@ -398,7 +392,7 @@ def run_all(cfg: dict[str, Any], n_jobs: int = 2) -> dict[str, Any]:
         "n_cells": len(cells),
         "n_decisions": int(len(decisions)),
         "runtime_seconds": round(time.perf_counter() - t_start, 1),
-        "protocol_version": "1.0",
+        "protocol_version": "1.0 + amendment 3",
     }
     write_json(out_dir / "manifest.json", manifest)
     log_event(

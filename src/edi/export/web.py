@@ -163,8 +163,8 @@ def studio_evaluate(case: dict[str, Any], mods: dict[str, Any], vp: ValidatorPar
         expected_cost=float(E[ir]),
         cvar_value=float(CV[ir]),
         n_scenarios=S.shape[0],
-        age_hours=24.0,
-        history_days_missing=0,
+        age_hours=case["data_age_hours"],
+        history_days_missing=case["history_days_missing"],
         snapshot_id=f"studio-{case['id']}",
         alpha=alpha,
     )
@@ -712,3 +712,35 @@ def write_schemas() -> list[Path]:
         write_json(p, model.model_json_schema())
         out.append(p)
     return out
+
+
+def export_research_evidence(cfg: dict[str, Any]) -> dict[str, Any]:
+    """Publish the retail pilot separately from the synthetic cases and parity fixtures."""
+    from edi.benchmark.validation_economics import breach_economics
+
+    real = read_json(artifact_path(cfg, "benchmark", "summary.json"))
+    if real["meta"]["data_source"] != "freshretailnet_50k":
+        raise ValueError("research evidence export requires the observed-data FreshRetailNet pilot")
+    require_same_run(real["meta"], cfg, "FreshRetailNet benchmark summary")
+    quality = read_json(layout(cfg).dq_report)
+    synthetic = read_json(repo_path("artifacts", "benchmark", "summary.json"))
+    selective_path = artifact_path(cfg, "benchmark", "selective_validation.json")
+    selective = read_json(selective_path) if selective_path.exists() else None
+    if selective is not None and selective["source_run"] != real["meta"]["run_id"]:
+        raise ValueError("selective validation and benchmark evidence have different run IDs")
+    payload = {
+        "retail_benchmark": real,
+        "retail_source": {
+            "dates": quality["source_info"]["official_split_dates"],
+            "rows_clean": quality["rows_clean"],
+            "rows_quarantined": quality["rows_quarantined"],
+            "stock_count_hours": quality["stock_count_hours"],
+            "provenance": quality["source_info"]["download_provenance"],
+        },
+        "retail_economics": breach_economics(real),
+        "synthetic_economics": breach_economics(synthetic),
+        "selective_validation": selective,
+    }
+    path = WEB_DATA / "research_evidence.json"
+    write_json(path, payload, compact=True)
+    return {"research_evidence": str(path), "bytes": path.stat().st_size}

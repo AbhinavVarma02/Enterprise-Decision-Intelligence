@@ -53,6 +53,16 @@ def test_milp_beats_or_ties_exhaustive_grid(base_cfg, profile) -> None:
     assert res.expected_cost >= g.min() - 0.05 * abs(g.min())  # and not implausibly far below it
 
 
+def test_grid_enforces_minimums_for_each_supplier(base_cfg) -> None:
+    econ, sup, demand, _, _ = _case(base_cfg, "fruit", 8)
+    sup = sup.with_supplier("primary", capacity=2.0).with_supplier("alternate", moq=5.0)
+    grid = action_grid(sup, demand.shape[1])
+    assert (grid[:, 0] == 0).all()
+    assert (grid[:, 1] > 0).any()
+    assert ((grid[:, 1] == 0) | (grid[:, 1] >= 5)).all()
+    assert (grid @ sup.unit_costs <= sup.budget + 1e-9).all()
+
+
 def test_newsvendor_critical_fractile(base_cfg) -> None:
     """Expedite-only single-period problem has the classic SAA solution."""
     econ = economics_for("fruit", base_cfg)

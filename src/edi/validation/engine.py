@@ -52,6 +52,7 @@ class ValidatorParams:
     anomaly_jump_ratio: float = 0.5
     prior_clean: float = 0.95
     prior_anomalous: float = 0.35
+    verification_cost_multiplier: float = 1.0
     error_multipliers: tuple[float, ...] = (1.0, 0.7, 0.45, 0.2, 0.0)
     n_scenarios: int = 100
     rho: float = 0.5
@@ -408,7 +409,9 @@ def validate(
                 "value_vs_candidate": value_vs_candidate,
                 "candidate_expected_cost_under_prior": float(probs @ cand_by_state),
                 "investigation_cost": ctx.investigation_cost,
-                "worth_investigating": bool(value_vs_candidate > ctx.investigation_cost),
+                "worth_investigating": bool(
+                    value_vs_candidate > params.verification_cost_multiplier * ctx.investigation_cost
+                ),
                 "input": anom.get("input", "state"),
             }
             metrics["evpi"] = res.evpi

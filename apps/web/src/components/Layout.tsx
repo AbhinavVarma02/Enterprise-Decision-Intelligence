@@ -88,6 +88,7 @@ export function Layout() {
     document.title = `${TITLES[seg] ?? "Not found"} | Enterprise Decision Intelligence`;
   }, [loc.pathname]);
   const synthetic = meta.status === "ready" && meta.data.data_source === "synthetic_fixture";
+  const evidencePage = ["/benchmark", "/data", "/methodology"].includes(loc.pathname);
   return (
     <div className="shell">
       <a href="#main" className="sr-only skip">Skip to content</a>
@@ -117,8 +118,7 @@ export function Layout() {
           {meta.status === "ready" ? (
             <>
               <div><strong>{meta.data.data_label}</strong></div>
-              <div>Run {meta.data.run_id}</div>
-              <div>Protocol v{meta.data.protocol_version}</div>
+              <div>Decision workspace demo</div>
             </>
           ) : (
             <div>Loading run details</div>
@@ -138,7 +138,7 @@ export function Layout() {
           <span className="spacer" />
           {meta.status === "ready" && (
             <span className={`provenance${synthetic ? "" : " real"}`} title={meta.data.currency_note}>
-              {synthetic ? "Synthetic data: illustrative results" : "FreshRetailNet-50K with simulated operations"}
+              {evidencePage ? "Research and modeled assumptions" : synthetic ? "Synthetic decision cases" : "FreshRetailNet-50K with simulated operations"}
             </span>
           )}
         </div>

@@ -13,7 +13,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from edi.core import artifact_path, get_logger, log_event, write_json, write_parquet
+from edi.core import artifact_path, config_hash, get_logger, log_event, write_json, write_parquet
 from edi.forecasting import features as F
 from edi.forecasting.metrics import evaluate
 from edi.forecasting.models import BaseModel, LGBMPoint, LGBMQuantile, MovingAverage, SeasonalNaive
@@ -34,21 +34,25 @@ MODEL_SPECS = [
 PRIMARY_MODEL = "lgbm_quantile_recovered"
 
 
-def _make(name: str, levels: list[float], params: dict[str, Any]) -> BaseModel:
+def _make(name: str, levels: list[float], params: dict[str, Any], planned_promotions: bool) -> BaseModel:
     if name == "seasonal_naive":
         return SeasonalNaive(levels)
     if name == "moving_average":
         return MovingAverage(levels)
+    features = list(F.FEATURES)
+    if not planned_promotions or name.endswith("_nopromo"):
+        features = [f for f in features if f not in F.PROMO_FEATURES]
     if name == "lgbm_point":
-        return LGBMPoint(levels, params)
-    if name == "lgbm_quantile_observed":
-        return LGBMQuantile(levels, params, name=name)
-    if name == "lgbm_quantile_recovered":
-        return LGBMQuantile(levels, params, name=name)
-    if name == "lgbm_quantile_recovered_nopromo":
-        feats = [f for f in F.FEATURES if f not in F.PROMO_FEATURES]
-        return LGBMQuantile(levels, params, features=feats, name=name)
+        return LGBMPoint(levels, params, features=features)
+    if name.startswith("lgbm_quantile_"):
+        return LGBMQuantile(levels, params, features=features, name=name)
     raise ValueError(name)
+
+
+def model_specs(cfg: dict[str, Any]) -> list[tuple[str, str]]:
+    if cfg["forecast"].get("planned_promotions", True):
+        return MODEL_SPECS
+    return [(name, target) for name, target in MODEL_SPECS if not name.endswith("_nopromo")]
 
 
 def forecast_path(cfg: dict[str, Any], stage: str) -> Any:
@@ -84,15 +88,18 @@ def run_stage(
     rows = []
     metrics: dict[str, Any] = {}
     pred_design = designs["observed"]["pred"]
-    obs_truth = pred_design.y
+    evaluate_target = pred_design.target_day >= ws
+    obs_truth = np.where(evaluate_target, pred_design.y, np.nan)
     instock = panel.stockout_hours[pred_design.series, pred_design.target_day - 1] == 0
     latent_truth = (
-        panel.latent[pred_design.series, pred_design.target_day - 1] if panel.latent is not None else None
+        np.where(evaluate_target, panel.latent[pred_design.series, pred_design.target_day - 1], np.nan)
+        if panel.latent is not None
+        else None
     )
     profiles = np.array(panel.profile)[pred_design.series]
-    for name, tname in MODEL_SPECS:
+    for name, tname in model_specs(cfg):
         t0 = time.perf_counter()
-        model = _make(name, levels, params)
+        model = _make(name, levels, params, bool(cfg["forecast"].get("planned_promotions", True)))
         d = designs[tname]
         model.fit(d["fit"]).calibrate(d["cal"])
         pr = model.predict(d["pred"])
@@ -160,8 +167,10 @@ def run(cfg: dict[str, Any], panel: Panel) -> dict[str, Any]:
     t0 = time.perf_counter()
     summary: dict[str, Any] = {
         "run_name": cfg["run_name"],
+        "config_hash": config_hash(cfg),
         "data_source": panel.data_source,
         "quantiles": cfg["forecast"]["quantiles"],
+        "planned_promotions": cfg["forecast"].get("planned_promotions", True),
     }
     for stage in ("A", "B"):
         df, info, targets = run_stage(panel, cfg, stage)

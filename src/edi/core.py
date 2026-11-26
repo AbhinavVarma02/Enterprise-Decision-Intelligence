@@ -79,7 +79,7 @@ def load_config(path: str | Path) -> dict[str, Any]:
     parent = cfg.pop("extends", None)
     if parent:
         cfg = _deep_merge(load_config(path.parent / parent), cfg)
-    cfg.setdefault("_config_path", str(path))
+    cfg["_config_path"] = str(path)
     return cfg
 
 
@@ -257,6 +257,10 @@ def require_same_run(doc: dict[str, Any], cfg: dict[str, Any], what: str) -> Non
         raise RuntimeError(
             f"{what} was written by run '{found}', not '{cfg['run_name']}'. "
             f"Re-run that stage with this config before building reports."
+        )
+    if doc.get("config_hash") not in (None, config_hash(cfg)):
+        raise RuntimeError(
+            f"{what} was written with different settings for run '{found}'. Re-run that stage."
         )
 
 

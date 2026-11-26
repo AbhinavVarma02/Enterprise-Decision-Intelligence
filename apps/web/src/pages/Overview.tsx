@@ -19,6 +19,7 @@ export function Overview() {
     <>
       <div className="page-head">
         <div>
+          <h1>Replenishment review</h1>
           <p className="briefing">
             <strong>{open.length} of {ranked.length}</strong> proposed replenishment orders need a decision before they are released.
             Leaving them unattended carries about <strong>{money(avoided)}</strong> of modeled cost over the next few days.
@@ -80,9 +81,9 @@ export function Overview() {
 
       <div className="grid-2e section">
         <section className="panel panel-pad" aria-labelledby="find-h">
-          <h2 id="find-h" style={{ fontSize: "var(--fs-md)", marginBottom: 10 }}>What the benchmark found</h2>
+          <h2 id="find-h" style={{ fontSize: "var(--fs-md)", marginBottom: 10 }}>Synthetic benchmark findings</h2>
           {bench.status === "ready" ? <Findings bench={bench.data} /> : bench.status === "error" ? <p className="muted">{bench.error}</p> : <div className="skeleton" style={{ height: 120 }} />}
-          <p style={{ marginTop: 12 }}><Link to="/benchmark">See the full benchmark</Link></p>
+          <p className="row" style={{ marginTop: 12, gap: 16 }}><Link to="/benchmark?study=synthetic">View synthetic results</Link><Link to="/benchmark?study=retail">View FreshRetailNet pilot</Link></p>
         </section>
         <section className="panel panel-pad" aria-labelledby="data-h">
           <h2 id="data-h" style={{ fontSize: "var(--fs-md)", marginBottom: 10 }}>Data behind these decisions</h2>
@@ -122,14 +123,14 @@ function Findings({ bench }: { bench: Loose }) {
     <ul className="small" style={{ paddingLeft: 18, margin: 0, display: "grid", gap: 8 }}>
       {mu && (
         <li>
-          With unreliable data, the validator cut unsafe executed orders from {pct(mu.P3.unsafe_executed_rate ?? 0, 2)} to {pct(mu.P5a.unsafe_executed_rate ?? 0, 2)} and hard-constraint
+          With unreliable data, the validator cut unsafe decisions from {pct(mu.P3.unsafe_executed_rate ?? 0, 2)} to {pct(mu.P5a.unsafe_executed_rate ?? 0, 2)} and hard-constraint
           breaches from {mu.P3.hard_violations} to {mu.P5a.hard_violations}.
         </li>
       )}
       {pu && pn && (
         <li>
           Counting review and stock-count costs, validation {effect(pu)} with unreliable data and {effect(pn)} in normal operations (paired comparison, 95% intervals).
-          The simulator does not charge for a breach itself, only for the shortage when a breached order is cut back, so this understates what breaches cost in practice.
+          The cost comparison includes simulated procurement, shortages and governance. The benchmark sensitivity adds a separate cost per breached submission.
         </li>
       )}
       {h1 && h1.evidence.best_accuracy_model !== h1.evidence.best_cost_model && <li>The most accurate forecast on observed sales ({MODEL_NAME[h1.evidence.best_accuracy_model] ?? h1.evidence.best_accuracy_model}) did not produce the cheapest decisions; {MODEL_NAME[h1.evidence.best_cost_model] ?? h1.evidence.best_cost_model} did.</li>}

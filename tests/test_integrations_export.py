@@ -165,6 +165,8 @@ def test_studio_reference_is_consistent_with_grid_search() -> None:
         "approval_threshold": 130.0,
         "max_expedite_share": 0.6,
         "freshness_max_age_hours": 30,
+        "data_age_hours": 24,
+        "history_days_missing": 0,
         "signals": {},
         "investigation_cost": 2.7,
         "review_cost": 5.4,

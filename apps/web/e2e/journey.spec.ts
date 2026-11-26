@@ -62,6 +62,21 @@ test.describe("signature decision journey", () => {
     await expect(page.getByText("Skip to content")).toBeFocused();
   });
 
+  test("retail evidence and synthetic findings use their own breach-cost inputs", async ({ page }) => {
+    await page.goto("/benchmark?study=retail");
+    await expect(page.getByRole("button", { name: "FreshRetailNet pilot" })).toHaveAttribute("aria-pressed", "true");
+    const cost = page.getByRole("slider", { name: "Additional cost per breached submission" });
+    const result = page.locator(".breach-total");
+    const initial = await result.innerText();
+    await cost.press("End");
+    await expect(cost).toHaveAttribute("aria-valuetext", "$50.00");
+    await expect(result).not.toHaveText(initial);
+    await page.getByRole("button", { name: "Synthetic benchmark" }).click();
+    await expect(page).toHaveURL(/study=synthetic/);
+    await expect(page.getByText("177 → 0", { exact: true })).toBeVisible();
+    await expect(page.getByText(/Break-even is \$10.65/)).toBeVisible();
+  });
+
   test("history import rejects a malformed file", async ({ page }) => {
     await page.goto("/history");
     const [chooser] = await Promise.all([page.waitForEvent("filechooser"), page.getByRole("button", { name: "Import log" }).click()]);

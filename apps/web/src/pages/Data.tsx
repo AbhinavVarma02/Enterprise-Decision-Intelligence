@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useData, type Loose } from "../data/load";
 import { ErrorState, Loading, Panel } from "../components/ui";
 import { DailySeries } from "../components/charts";
@@ -6,7 +7,7 @@ import { pct, titleCase, units } from "../lib/format";
 const REGISTER = [
   { item: "Daily and hourly sales", kind: "Observed", note: "Normalized by the publisher; rescaled by one global factor in this project." },
   { item: "Hourly stock-out flags", kind: "Observed", note: "Meaning of the flag inferred from consistency with the out-of-stock hour count; checked on load." },
-  { item: "Demand during stock-outs", kind: "Estimated", note: "Hourly-profile recovery. Real latent demand is unobservable; benchmark runs bound it from both sides." },
+  { item: "Demand during stock-outs", kind: "Estimated", note: "Hourly-profile recovery. Sensitivity uses observed sales and an uplift case for unobserved demand." },
   { item: "Forecast quantiles", kind: "Estimated", note: "LightGBM quantile models with split-conformal calibration; fitted on earlier days only." },
   { item: "Inventory on hand and in transit", kind: "Simulated", note: "Perishable FIFO simulator; starts each window at one day of typical demand." },
   { item: "Suppliers, lead times, capacities, budgets", kind: "Assumed", note: "Scaled to each item's typical demand; see configs/base.yaml." },
@@ -17,6 +18,7 @@ const REGISTER = [
 export function DataPage() {
   const dq = useData<Loose>("data_quality");
   const fc = useData<Loose>("forecast");
+  const evidence = useData<Loose>("research_evidence");
   if (dq.status === "loading") return <Loading label="Loading data checks" />;
   if (dq.status === "error") return <ErrorState message={dq.error} />;
   const d = dq.data;
@@ -31,8 +33,18 @@ export function DataPage() {
         </div>
       </div>
 
-      <div className="grid-2">
-        <Panel title="Provenance">
+      {evidence.status === "ready" && <Panel title="FreshRetailNet-50K pilot" hint="Observed data from Dingdong-Inc, CC BY 4.0">
+        <dl className="kv">
+          <dt>Official training split</dt><dd className="num">{evidence.data.retail_source.dates.train.join(" to ")}</dd>
+          <dt>Official evaluation split</dt><dd className="num">{evidence.data.retail_source.dates.eval.join(" to ")}</dd>
+          <dt>Pilot data checks</dt><dd>{evidence.data.retail_source.rows_clean.toLocaleString("en-US")} rows passed, {evidence.data.retail_source.rows_quarantined} quarantined</dd>
+          <dt>Publisher revision</dt><dd className="mono">{evidence.data.retail_source.provenance.revision.slice(0, 12)}</dd>
+        </dl>
+        <p className="small muted">Sales and stockout flags are observed. Demand during stockouts is estimated. Inventory, supplier conditions and costs are modeled.</p>
+        <Link to="/benchmark?study=retail">Explore pilot results</Link>
+      </Panel>}
+      <div className="grid-2 section">
+        <Panel title={synthetic ? "Synthetic fixture provenance" : "Provenance"}>
           <dl className="kv">
             <dt>Source</dt><dd>{synthetic ? "Synthetic fixture with the FreshRetailNet-50K schema" : "FreshRetailNet-50K (Dingdong-Inc, CC BY 4.0)"}</dd>
             <dt>Store-products</dt><dd className="num">{d.n_series}</dd>
@@ -44,7 +56,7 @@ export function DataPage() {
           </dl>
           {synthetic ? (
             <p className="callout warn" style={{ marginTop: 14 }}>
-              The real dataset host was unreachable from the build environment. This fixture has the same 19 columns, generated stock-outs and known true demand, which makes leakage and recovery checks exact. It says nothing about real stores.
+              The synthetic decision cases use the publisher's 19-column schema, generated stockouts and known latent demand. The controlled fixture supports direct tests of leakage and demand recovery.
             </p>
           ) : (
             <p className="small muted" style={{ marginTop: 14 }}>Attribution: FreshRetailNet-50K by Dingdong-Inc, CC BY 4.0. Wang et al., arXiv:2505.16319.</p>
@@ -52,7 +64,7 @@ export function DataPage() {
         </Panel>
         <Panel title="Share of store-products with a stock-out, by day">
           <DailySeries points={daily} split={91} yFormat={(v) => pct(v, 0)} ariaLabel="Daily share of store-products with any out-of-stock hour" />
-          <p className="xs faint">Days 91 to 97 are the official evaluation split, used once for the final benchmark.</p>
+          <p className="xs faint">Days 91 to 97 mirror the official evaluation partition for the synthetic fixture.</p>
         </Panel>
       </div>
 
