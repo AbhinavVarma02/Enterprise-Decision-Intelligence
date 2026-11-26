@@ -10,4 +10,4 @@ The original and replayed real runs match for 31,500 forecast rows, 58,800 decis
 
 ## Publication status
 
-The Pages site serves source commit `6638da5ce64f5567d5c7358a3a0c91ec52d55248`. The release review prepares the authorized GitHub publication and verifies hosted CI and production. The local `Claude outputs/` folder is ignored. [Production](https://enterprise-decision-intelligence.pages.dev/)
+The public GitHub repository tracks `main`. Hosted CI passed on Python 3.10, Python 3.13 and the web job for source commit `6bad18062584abd1b5b3f6d6ddadbcaac00daebc`. That commit is deployed on the existing Pages project. The final audit checked tracked paths, publishable Git history and all 29 served files. The local `Claude outputs/` folder is ignored. Release evidence and reproduction commands are linked from the README. [Repository](https://github.com/AbhinavVarma02/Enterprise-Decision-Intelligence) · [Hosted CI run](https://github.com/AbhinavVarma02/Enterprise-Decision-Intelligence/actions/runs/45876351092) · [Production](https://enterprise-decision-intelligence.pages.dev/)

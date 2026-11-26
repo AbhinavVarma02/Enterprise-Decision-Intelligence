@@ -2,7 +2,7 @@
 
 An independent decision validator and reliability benchmark for fresh-food replenishment.
 
-[Open the live workspace](https://enterprise-decision-intelligence.pages.dev/) · [Explore the benchmark](https://enterprise-decision-intelligence.pages.dev/benchmark)
+[Open the live workspace](https://enterprise-decision-intelligence.pages.dev/) · [Explore the benchmark](https://enterprise-decision-intelligence.pages.dev/benchmark) · [GitHub Actions](https://github.com/AbhinavVarma02/Enterprise-Decision-Intelligence/actions/workflows/ci.yml)
 
 ## Business use case
 

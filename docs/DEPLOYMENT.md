@@ -4,7 +4,7 @@ The product is a static site. Hosting it costs nothing on Cloudflare Pages' free
 
 The release uses the dedicated `enterprise-decision-intelligence` Pages project. The commands below reproduce the static deployment from an authorized Wrangler session.
 
-The production deployment was verified on 2026-11-26. It serves the build from source commit `6638da5ce64f5567d5c7358a3a0c91ec52d55248`. [Production](https://enterprise-decision-intelligence.pages.dev/) · [Immutable deployment](https://3db57a48.enterprise-decision-intelligence.pages.dev/)
+The production deployment was verified on 2026-11-26. It serves the build from source commit `6bad18062584abd1b5b3f6d6ddadbcaac00daebc`, which passed the hosted CI matrix. [Production](https://enterprise-decision-intelligence.pages.dev/) · [Deployment snapshot](https://ac1e6bae.enterprise-decision-intelligence.pages.dev/) · [Hosted CI run](https://github.com/AbhinavVarma02/Enterprise-Decision-Intelligence/actions/runs/45876351092)
 
 ## Prerequisites
 

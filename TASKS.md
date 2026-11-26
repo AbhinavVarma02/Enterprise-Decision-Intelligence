@@ -21,4 +21,4 @@ Status values: todo, doing, done, blocked. Priority follows MASTER_PROMPT.md sec
 | T14 | Cloudflare Pages deployment | T12, credentials | Verified pages.dev URL | done |
 | T15 | Research rerun after harness fix (amendment 2), refresh findings, screenshots and docs | T7 | Invariant passes; docs match artifacts | done |
 | T16 | Independent trade-off, inference and engineering audit | T13 | Paired safety and cost reconciliation, breach sensitivity, fresh selective replay, regression suites and documentation | done |
-| T17 | GitHub publication and hosted Actions | authorization | Public repository and passing hosted workflow | doing |
+| T17 | GitHub publication and hosted Actions | authorization | Public repository and passing hosted workflow | done ([verified source run](https://github.com/AbhinavVarma02/Enterprise-Decision-Intelligence/actions/runs/45876351092)) |
