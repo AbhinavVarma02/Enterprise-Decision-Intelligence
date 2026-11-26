@@ -97,7 +97,9 @@ def tables(root: Path) -> str:
     out.append("")
     out.append(
         "Cost per store-product day includes procurement, holding, waste, lost sales with goodwill, and review and "
-        "stock-count costs. Brackets: 95% cluster-bootstrap interval over store-products. Tail: average of the worst "
+        "stock-count costs (every policy pays for an approval review when an order's spend exceeds the approval "
+        "threshold; the validator adds its own counts and reviews). Brackets: 95% cluster-bootstrap interval over "
+        "store-products. Tail: average of the worst "
         "10% of store-product daily costs. Unsafe: share of executed orders that were unsafe by the protocol's definition."
     )
     for cond, label in COND.items():

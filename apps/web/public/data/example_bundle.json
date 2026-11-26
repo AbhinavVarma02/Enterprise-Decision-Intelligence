@@ -1,0 +1,201 @@
+{
+  "format": "edi-decision-bundle",
+  "version": 1,
+  "candidate": {
+    "schema_version": "1.0",
+    "decision_id": "s1_p10002.d91.plan-s1_p10002-d91.P5a",
+    "domain": "inventory_replenishment",
+    "decision_day": 91,
+    "decision_time": "day-91T06:00",
+    "entity": {
+      "entity_id": "s1_p10002",
+      "label": "s1_p10002",
+      "category": "fruit",
+      "typical_daily_volume": 15.072727272727272
+    },
+    "data_snapshot": {
+      "snapshot_id": "plan-s1_p10002-d91",
+      "as_of": "day-91T06:00",
+      "age_hours": 24.0,
+      "history_days_missing": 0,
+      "state": {
+        "on_hand_by_age": [
+          15.072727272727272,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pipeline_by_day": [
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "action": {
+      "primary": 21.99987718498558,
+      "alternate": 0.0,
+      "expedite": 0.0
+    },
+    "alternatives": [],
+    "objective": {
+      "type": "expected",
+      "alpha": null,
+      "lam": null
+    },
+    "constraints": {
+      "resources": [
+        {
+          "name": "primary",
+          "lead_days": 1,
+          "unit_cost": 2.7,
+          "capacity": 37.68181818181818,
+          "min_quantity": 6.029090909090909,
+          "eligible": true,
+          "available": true,
+          "attributes": {}
+        },
+        {
+          "name": "alternate",
+          "lead_days": 1,
+          "unit_cost": 3.0240000000000005,
+          "capacity": 18.087272727272726,
+          "min_quantity": 0.0,
+          "eligible": true,
+          "available": true,
+          "attributes": {}
+        },
+        {
+          "name": "expedite",
+          "lead_days": 0,
+          "unit_cost": 3.6450000000000005,
+          "capacity": 9.043636363636363,
+          "min_quantity": 0.0,
+          "eligible": true,
+          "available": true,
+          "attributes": {}
+        }
+      ],
+      "budget": 122.08909090909091,
+      "min_commitment": 0.0,
+      "extra": {}
+    },
+    "forecast": {
+      "model_version": "lgbm_quantile_recovered",
+      "levels": [
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        0.95
+      ],
+      "quantiles": [
+        [
+          6.1564352025696945,
+          7.1836520073880195,
+          10.209668998451537,
+          13.681828822181076,
+          18.3867109842546,
+          24.984432681574315,
+          28.784990734960083
+        ],
+        [
+          5.593605725223344,
+          5.8993861378566095,
+          11.496631580334135,
+          16.119852080074217,
+          22.267491668629937,
+          26.098605342244444,
+          32.70527077814838
+        ]
+      ]
+    },
+    "financial_assumptions": {
+      "currency": "USD (assumed)",
+      "price": 4.5,
+      "unit_cost": 2.7,
+      "holding": 0.05,
+      "disposal": 0.1,
+      "goodwill": 0.6,
+      "shelf_life_days": 4,
+      "terminal_waste_risk": 0.25
+    },
+    "scenario_results": {
+      "expected_cost": 63.92203435787641,
+      "cvar": 158.33251514047328,
+      "n_scenarios": 100
+    },
+    "model_version": "lgbm_quantile_recovered",
+    "policy_version": "saa-milp-1.0",
+    "risk_tolerance": {
+      "cvar_alpha": 0.9,
+      "loss_tolerance": null
+    },
+    "decision_status": "proposed",
+    "approval_requirements": []
+  },
+  "context": {
+    "constraints": {
+      "resources": [
+        {
+          "name": "primary",
+          "lead_days": 1,
+          "unit_cost": 3.5100000000000002,
+          "capacity": 37.68181818181818,
+          "min_quantity": 6.029090909090909,
+          "eligible": true,
+          "available": true,
+          "attributes": {}
+        },
+        {
+          "name": "alternate",
+          "lead_days": 1,
+          "unit_cost": 3.931200000000001,
+          "capacity": 18.087272727272726,
+          "min_quantity": 0.0,
+          "eligible": true,
+          "available": true,
+          "attributes": {}
+        },
+        {
+          "name": "expedite",
+          "lead_days": 0,
+          "unit_cost": 3.6450000000000005,
+          "capacity": 9.043636363636363,
+          "min_quantity": 0.0,
+          "eligible": true,
+          "available": true,
+          "attributes": {}
+        }
+      ],
+      "budget": 122.08909090909091,
+      "min_commitment": 0.0,
+      "extra": {}
+    },
+    "financial_assumptions": {
+      "currency": "USD (assumed)",
+      "price": 4.5,
+      "unit_cost": 2.7,
+      "holding": 0.05,
+      "disposal": 0.1,
+      "goodwill": 0.6,
+      "shelf_life_days": 4,
+      "terminal_waste_risk": 0.25
+    },
+    "approval_threshold": 97.67127272727272,
+    "max_share": {
+      "expedite": 0.6
+    },
+    "freshness_max_age_hours": 30.0,
+    "signals": {
+      "stockout_hours_yesterday": 0.0,
+      "record_jump_ratio": 0.0
+    },
+    "investigation_cost": 2.6999999999999997,
+    "review_cost": 5.3999999999999995
+  },
+  "note": "Example exported from the benchmark. Simulated data."
+}

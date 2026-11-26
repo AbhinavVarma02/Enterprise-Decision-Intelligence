@@ -13,7 +13,29 @@ A static web app lets a planner work through the decisions the benchmark produce
 
 > **Data status.** Every number in this repository and on the site comes from a **synthetic fixture** with the exact schema of FreshRetailNet-50K, because the dataset host was unreachable from the build environment. The fixture has generated stock-outs and known true demand, which makes leakage and recovery checks exact, but it says nothing about real stores. Suppliers, costs, disruptions and faults are simulated in every configuration. Running `scripts/download_freshretailnet.py` and the pipeline on a machine that can reach Hugging Face regenerates everything from the real data.
 
-<!-- FINDINGS -->
+## What the benchmark found
+
+Synthetic fixture, 200 store-products, three conditions, three demand realizations each, 298,200 simulated decisions. Full tables, intervals and negative results: `docs/BENCHMARK_FINDINGS.md`.
+
+| | Normal operations | Unreliable data | Held-out disruptions |
+|---|---|---|---|
+| Validation (P5a vs P3), total cost incl. reviews | 0.01% lower (no clear effect) | **0.67% higher** (0.33% to 0.99%) | 0.05% higher (0.01% to 0.09%) |
+| Unsafe executed orders, P3 → P5a | 0% → 0% | **4.21% → 0.02%** | 0% → 0% |
+| Hard-constraint breaches, P3 → P5a | 0 → 0 | **177 → 0** | 0 → 0 |
+| Mean-CVaR vs expected-cost MILP (P4 vs P3) | 1.30% cheaper | 3.46% cheaper | no clear difference |
+| Observed-sales instead of stockout-aware forecasts (P3) | 1.26% more expensive | 1.68% more expensive | 0.73% more expensive |
+
+- **The validator made decisions safer, not cheaper.** With unreliable data it caught all 174 unsafe proposals (every one caused by a stale supplier snapshot). Before review and stock-count costs, P5a and P3 cost the same; the 0.67% increase is the cost of the reviews and counts themselves.
+- **The cost metric does not price a breach.** The simulator cuts a breached order back to what the supplier can deliver and charges only for the resulting shortage. Real breaches cost more (rejected orders, emergency sourcing, penalties), so the comparison above understates the validator's value by an amount this project cannot measure.
+- **Better forecast accuracy did not mean cheaper decisions.** The model with the best accuracy against observed sales produced costlier orders than the stockout-aware model, which looks worse on that metric because sales on stock-out days understate demand.
+- **Risk-aware optimization was the best policy** in every condition and also cut tail cost (CVaR90) by about 4% in normal operations and with unreliable data.
+- **Several mechanisms did not pay off:** the soft risk gates (all unsafe proposals were caught by hard rules), escalation (removing it lowered cost), value-of-information stock counts (no measurable effect), and validation on top of the risk-aware policy (1.66% more expensive). A tuned base-stock rule matched the expected-cost MILP outside disruptions.
+- **In the second domain, cloud capacity, validation lowered cost** by 2.1% with unreliable data and 1.3% under disruptions.
+
+Hypotheses fixed in advance: H1 (accuracy is not decision quality) supported; H2 (validation lowers unsafe decisions **and** total cost under unreliable data) partially supported; H3 (validation costs within ±2% in normal operations) supported; H4 (mean-CVaR lowers tail cost for under 5% more expected cost) supported; H5 (hourly-profile recovery reduces stock-out bias) supported, from −50.9% to +0.3% on artificially censored days.
+
+**Performance** (this build machine, 2 CPU cores): validator p50 14 ms and p95 19 ms per decision with 100 scenarios (400 saved decisions, one process); scenario MILP p50 20 ms (P3) to 31 ms (P4) as measured inside the benchmark run; browser re-plan in the Scenario studio about 130 ms; static site 0.95 MB in 29 files, main script 83 KB gzipped.
+
 
 ## Screenshots
 
@@ -79,7 +101,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"                     # exact versions used: requirements-lock.txt (Python 3.11+)
 pytest -q                                   # 58 tests
 edi run-all --config configs/dev.yaml       # synthetic, 40 store-products, about 20 minutes on 2 cores
-edi run-all --config configs/research.yaml  # synthetic, 200 store-products: the committed results
+edi run-all --config configs/research.yaml  # synthetic, 200 store-products: the committed results (about 105 minutes)
 edi export-web --config configs/research.yaml
 
 cd apps/web

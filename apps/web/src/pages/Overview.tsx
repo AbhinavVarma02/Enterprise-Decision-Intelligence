@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { rankCases, useCases, useData, type Loose } from "../data/load";
 import { ErrorState, Loading, OutcomeChip } from "../components/ui";
 import { caseLocation } from "../components/decision";
-import { CATEGORY_LABEL, EVENT_LABEL, money, units } from "../lib/format";
+import { CATEGORY_LABEL, EVENT_LABEL, money, pct, units } from "../lib/format";
 
 export function Overview() {
   const cases = useCases();
@@ -122,13 +122,14 @@ function Findings({ bench }: { bench: Loose }) {
     <ul className="small" style={{ paddingLeft: 18, margin: 0, display: "grid", gap: 8 }}>
       {mu && (
         <li>
-          With unreliable data, the validator cut unsafe executed orders from {(100 * (mu.P3.unsafe_executed_rate ?? 0)).toFixed(1)}% to {(100 * (mu.P5a.unsafe_executed_rate ?? 0)).toFixed(1)}% and hard-constraint
+          With unreliable data, the validator cut unsafe executed orders from {pct(mu.P3.unsafe_executed_rate ?? 0, 2)} to {pct(mu.P5a.unsafe_executed_rate ?? 0, 2)} and hard-constraint
           breaches from {mu.P3.hard_violations} to {mu.P5a.hard_violations}.
         </li>
       )}
       {pu && pn && (
         <li>
           Counting review and stock-count costs, validation {effect(pu)} with unreliable data and {effect(pn)} in normal operations (paired comparison, 95% intervals).
+          The simulator does not charge for a breach itself, only for the shortage when a breached order is cut back, so this understates what breaches cost in practice.
         </li>
       )}
       {h1 && h1.evidence.best_accuracy_model !== h1.evidence.best_cost_model && <li>The most accurate forecast on observed sales ({MODEL_NAME[h1.evidence.best_accuracy_model] ?? h1.evidence.best_accuracy_model}) did not produce the cheapest decisions; {MODEL_NAME[h1.evidence.best_cost_model] ?? h1.evidence.best_cost_model} did.</li>}

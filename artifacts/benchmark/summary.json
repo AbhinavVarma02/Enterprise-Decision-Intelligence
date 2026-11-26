@@ -1,0 +1,2433 @@
+{
+  "meta": {
+    "run_id": "research-76b4b4db2c95d63e",
+    "data_source": "synthetic_fixture",
+    "protocol_version": "1.0",
+    "n_series": 200,
+    "realizations": 3,
+    "window": [
+      91,
+      97
+    ],
+    "tuning": {
+      "z": 1.0,
+      "lambda": 0.25,
+      "validator_soft_scale": 4.0,
+      "grid": {
+        "P1_z0.0": 65.6626,
+        "P1_z0.5": 63.692,
+        "P1_z1.0": 63.1844,
+        "P1_z1.5": 63.7732,
+        "P1_z2.0": 64.8788,
+        "P4_l0.25": 61.0371,
+        "P4_l0.5": 62.4193,
+        "P5a_v1": 62.9804,
+        "P5a_v1e+06": 62.5501,
+        "P5a_v2": 62.5382,
+        "P5a_v4": 62.5251
+      },
+      "objective": "mean total cost per series-day over normal, unreliable and tuning-set disruptions, days 77-90"
+    },
+    "generated_at": "2026-11-26T17:02:35+00:00",
+    "git_sha": "2558d98",
+    "runtime_seconds": 6220.8,
+    "n_decisions": 298200,
+    "currency_note": "Assumed unit economics applied to (normalized) volumes; not real money.",
+    "harness_invariants": {
+      "replanned_orders_checked": 13179,
+      "hard_breaches_after_replan": 0
+    }
+  },
+  "main": {
+    "normal": {
+      "P1": {
+        "cost_per_series_day": {
+          "mean": 57.04082413952523,
+          "lo": 50.908749268411654,
+          "hi": 64.0822022575796,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 173.8551931451864,
+        "expected_procurement_per_day": 55.181388425499684,
+        "fill_rate": 0.9652920847476087,
+        "waste_rate": 0.02092554740914583,
+        "working_capital_avg": 33.2938117823765,
+        "governance_cost_per_day": 0.3758571428571428,
+        "profit_per_day": 36.89560443190334,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.1442857142857143,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.0016666666666666668,
+        "decision_ms_mean": 0.04485998119012687,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 276
+      },
+      "P2": {
+        "cost_per_series_day": {
+          "mean": 59.67964978117423,
+          "lo": 53.04397923058266,
+          "hi": 67.01115744278836,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 185.06576059755957,
+        "expected_procurement_per_day": 49.61546791077012,
+        "fill_rate": 0.8876915814289191,
+        "waste_rate": 0.0006490444276030166,
+        "working_capital_avg": 11.761568101277414,
+        "governance_cost_per_day": 0.022542857142857142,
+        "profit_per_day": 34.256778790254344,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.41714285714285715,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.0,
+        "decision_ms_mean": 14.220639889763333,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 18
+      },
+      "P3": {
+        "cost_per_series_day": {
+          "mean": 56.608488471095846,
+          "lo": 50.211629639874964,
+          "hi": 63.73411534312396,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 177.2793686837085,
+        "expected_procurement_per_day": 53.1372970905405,
+        "fill_rate": 0.9422033889756966,
+        "waste_rate": 0.002933353638550526,
+        "working_capital_avg": 21.304277306520778,
+        "governance_cost_per_day": 0.02194285714285714,
+        "profit_per_day": 37.32794010033273,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.23214285714285715,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.0,
+        "decision_ms_mean": 19.946845357142735,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 18
+      },
+      "P4": {
+        "cost_per_series_day": {
+          "mean": 55.87513715173125,
+          "lo": 49.841559560503356,
+          "hi": 62.80409579544455,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 170.44833293427865,
+        "expected_procurement_per_day": 58.01186087812663,
+        "fill_rate": 0.9791076958231978,
+        "waste_rate": 0.013723129525484268,
+        "working_capital_avg": 39.37688184173889,
+        "governance_cost_per_day": 0.07397142857142856,
+        "profit_per_day": 38.061291419697326,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.10571428571428572,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.0,
+        "decision_ms_mean": 32.37663290524194,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 60
+      },
+      "P5a": {
+        "cost_per_series_day": {
+          "mean": 56.60165255386546,
+          "lo": 50.206242265118554,
+          "hi": 63.725998087513155,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 177.2448525602944,
+        "expected_procurement_per_day": 53.14640860069616,
+        "fill_rate": 0.9423592283833038,
+        "waste_rate": 0.002932851168113327,
+        "working_capital_avg": 21.323214425779803,
+        "governance_cost_per_day": 0.02194285714285714,
+        "profit_per_day": 37.334776017563115,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.23214285714285715,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.0,
+        "decision_ms_mean": 34.40866008309448,
+        "outcomes": {
+          "recommend": 4182,
+          "escalate": 18
+        },
+        "approval_reviews": 0
+      },
+      "P5b": {
+        "cost_per_series_day": {
+          "mean": 55.904905281408354,
+          "lo": 49.856435762976496,
+          "hi": 62.82161682066159,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 170.45098849512675,
+        "expected_procurement_per_day": 58.05568043847367,
+        "fill_rate": 0.9792263756869919,
+        "waste_rate": 0.014113983103663902,
+        "working_capital_avg": 39.491619132638846,
+        "governance_cost_per_day": 0.07397142857142856,
+        "profit_per_day": 38.03152329002021,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.10357142857142858,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.0,
+        "decision_ms_mean": 48.11485991022729,
+        "outcomes": {
+          "recommend": 4134,
+          "escalate": 60,
+          "reject": 6
+        },
+        "approval_reviews": 0
+      },
+      "ORACLE": {
+        "cost_per_series_day": {
+          "mean": 50.42446824540473,
+          "lo": 44.756873296690756,
+          "hi": 56.85718202945141,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 155.985932330705,
+        "expected_procurement_per_day": 49.994679844387754,
+        "fill_rate": 0.9966727277033693,
+        "waste_rate": 6.363526208064544e-05,
+        "working_capital_avg": 1.1874722077922077,
+        "governance_cost_per_day": 0.0995142857142857,
+        "profit_per_day": 43.511960326023846,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.012142857142857143,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": null,
+        "decision_ms_mean": 12.529771389283832,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 69
+      }
+    },
+    "unreliable": {
+      "P1": {
+        "cost_per_series_day": {
+          "mean": 66.80786000103006,
+          "lo": 59.134892604576216,
+          "hi": 75.51953026692301,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 207.48056402831998,
+        "expected_procurement_per_day": 57.59619575548985,
+        "fill_rate": 0.9157766064502834,
+        "waste_rate": 0.015354159393242884,
+        "working_capital_avg": 26.387916836764877,
+        "governance_cost_per_day": 0.5032,
+        "profit_per_day": 36.39125190373185,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.25333333333333335,
+        "hard_violations": 185,
+        "hard_violation_rate": 0.04404761904761905,
+        "unsafe_executed_rate": 0.04833333333333333,
+        "decision_ms_mean": 0.04597139642756008,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 381
+      },
+      "P2": {
+        "cost_per_series_day": {
+          "mean": 71.23337309088798,
+          "lo": 62.958537240562485,
+          "hi": 80.5851958204573,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 224.6245798266828,
+        "expected_procurement_per_day": 49.68820774077913,
+        "fill_rate": 0.8101587272284233,
+        "waste_rate": 0.0005935151097641036,
+        "working_capital_avg": 8.827845206796065,
+        "governance_cost_per_day": 0.033628571428571424,
+        "profit_per_day": 31.965738813873923,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.5321428571428571,
+        "hard_violations": 169,
+        "hard_violation_rate": 0.04023809523809524,
+        "unsafe_executed_rate": 0.0419047619047619,
+        "decision_ms_mean": 15.02298758881325,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 27
+      },
+      "P3": {
+        "cost_per_series_day": {
+          "mean": 67.35751914729855,
+          "lo": 59.24073875885903,
+          "hi": 76.49836600092709,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 215.3333268676156,
+        "expected_procurement_per_day": 54.10982881308616,
+        "fill_rate": 0.8780394181290488,
+        "waste_rate": 0.0018568886025159758,
+        "working_capital_avg": 15.734858569564032,
+        "governance_cost_per_day": 0.03911428571428571,
+        "profit_per_day": 35.84159275746337,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.36952380952380953,
+        "hard_violations": 177,
+        "hard_violation_rate": 0.04214285714285714,
+        "unsafe_executed_rate": 0.04214285714285714,
+        "decision_ms_mean": 20.35127090714452,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 31
+      },
+      "P4": {
+        "cost_per_series_day": {
+          "mean": 65.0289398551058,
+          "lo": 57.19424945706565,
+          "hi": 73.75455307251103,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 205.65643858166936,
+        "expected_procurement_per_day": 60.02048587940809,
+        "fill_rate": 0.9371704397929431,
+        "waste_rate": 0.007755219831739427,
+        "working_capital_avg": 29.58905807630947,
+        "governance_cost_per_day": 0.11871428571428572,
+        "profit_per_day": 38.17017204965612,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.2092857142857143,
+        "hard_violations": 190,
+        "hard_violation_rate": 0.04523809523809524,
+        "unsafe_executed_rate": 0.04523809523809524,
+        "decision_ms_mean": 34.2666443323815,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 97
+      },
+      "P5a": {
+        "cost_per_series_day": {
+          "mean": 67.80630721372539,
+          "lo": 59.64859196042447,
+          "hi": 76.89019004789003,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 215.39366520661756,
+        "expected_procurement_per_day": 54.711748666509244,
+        "fill_rate": 0.8853952260587997,
+        "waste_rate": 0.00392564805445417,
+        "working_capital_avg": 17.05985058586582,
+        "governance_cost_per_day": 0.5111142857142856,
+        "profit_per_day": 35.392804691036524,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.3516666666666667,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.0002380952380952381,
+        "decision_ms_mean": 38.980576327144966,
+        "outcomes": {
+          "recommend": 3056,
+          "reject": 388,
+          "escalate": 350,
+          "defer": 335,
+          "investigate": 71
+        },
+        "approval_reviews": 6
+      },
+      "P5b": {
+        "cost_per_series_day": {
+          "mean": 66.1076940248901,
+          "lo": 58.18223940520249,
+          "hi": 74.83328153980382,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 209.12687507226858,
+        "expected_procurement_per_day": 59.28825915692842,
+        "fill_rate": 0.92815180273408,
+        "waste_rate": 0.007227262439324894,
+        "working_capital_avg": 27.40410166608212,
+        "governance_cost_per_day": 0.4894428571428571,
+        "profit_per_day": 37.09141787987181,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.2280952380952381,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.0002380952380952381,
+        "decision_ms_mean": 52.403185185952076,
+        "outcomes": {
+          "recommend": 2998,
+          "reject": 420,
+          "defer": 391,
+          "escalate": 343,
+          "investigate": 48
+        },
+        "approval_reviews": 10
+      },
+      "ORACLE": {
+        "cost_per_series_day": {
+          "mean": 58.13734781398849,
+          "lo": 51.36970692901666,
+          "hi": 65.7998090588743,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 182.28630101626243,
+        "expected_procurement_per_day": 57.29584026012559,
+        "fill_rate": 0.9952851003068452,
+        "waste_rate": 5.7671706762345016e-05,
+        "working_capital_avg": 1.2643928787878789,
+        "governance_cost_per_day": 0.28597142857142854,
+        "profit_per_day": 45.061764090773416,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.018095238095238095,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": null,
+        "decision_ms_mean": 11.984846372860474,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 200
+      }
+    },
+    "disruption": {
+      "P1": {
+        "cost_per_series_day": {
+          "mean": 61.22427089771096,
+          "lo": 54.61268692388825,
+          "hi": 69.17673865301431,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 192.985969629271,
+        "expected_procurement_per_day": 55.21883196913166,
+        "fill_rate": 0.9214505058240546,
+        "waste_rate": 0.03284736568799367,
+        "working_capital_avg": 32.491591029184136,
+        "governance_cost_per_day": 0.3483714285714285,
+        "profit_per_day": 32.64168624514619,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.19142857142857142,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.008809523809523809,
+        "decision_ms_mean": 0.04184484142320971,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 253
+      },
+      "P2": {
+        "cost_per_series_day": {
+          "mean": 62.49409884354117,
+          "lo": 55.44607936421822,
+          "hi": 70.60969731460742,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 199.30043238572392,
+        "expected_procurement_per_day": 49.137420989191426,
+        "fill_rate": 0.8571648643740251,
+        "waste_rate": 0.008368892796429847,
+        "working_capital_avg": 16.319834472280885,
+        "governance_cost_per_day": 0.08585714285714285,
+        "profit_per_day": 31.371858299315978,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.3819047619047619,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.0,
+        "decision_ms_mean": 11.247203916196192,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 62
+      },
+      "P3": {
+        "cost_per_series_day": {
+          "mean": 60.423828943538865,
+          "lo": 53.61039828827056,
+          "hi": 68.27788630463134,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 193.92822866033768,
+        "expected_procurement_per_day": 52.576017427019956,
+        "fill_rate": 0.9019316366034181,
+        "waste_rate": 0.011210024938527238,
+        "working_capital_avg": 26.147694106531702,
+        "governance_cost_per_day": 0.15445714285714285,
+        "profit_per_day": 33.44212819931828,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.24857142857142858,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.0,
+        "decision_ms_mean": 19.213806146187295,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 116
+      },
+      "P4": {
+        "cost_per_series_day": {
+          "mean": 60.40112349894513,
+          "lo": 53.692098361727744,
+          "hi": 67.99000812436422,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 189.85805045601356,
+        "expected_procurement_per_day": 57.558616554808516,
+        "fill_rate": 0.9339890011270493,
+        "waste_rate": 0.023429934082160972,
+        "working_capital_avg": 42.18652972570366,
+        "governance_cost_per_day": 0.285,
+        "profit_per_day": 33.464833643912016,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.15119047619047618,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.0,
+        "decision_ms_mean": 29.318145819763032,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 216
+      },
+      "P5a": {
+        "cost_per_series_day": {
+          "mean": 60.45393580137538,
+          "lo": 53.63699839144199,
+          "hi": 68.28972893322101,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 193.92529753301417,
+        "expected_procurement_per_day": 52.69138701358561,
+        "fill_rate": 0.9024689380365996,
+        "waste_rate": 0.011387866819454773,
+        "working_capital_avg": 26.435359905139112,
+        "governance_cost_per_day": 0.15554285714285712,
+        "profit_per_day": 33.41202134148177,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.24642857142857144,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.0,
+        "decision_ms_mean": 31.518076568576944,
+        "outcomes": {
+          "recommend": 4081,
+          "escalate": 117,
+          "reject": 2
+        },
+        "approval_reviews": 0
+      },
+      "P5b": {
+        "cost_per_series_day": {
+          "mean": 60.43915538166913,
+          "lo": 53.71816388296957,
+          "hi": 68.03746320436895,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 189.89086673666276,
+        "expected_procurement_per_day": 57.688177595656235,
+        "fill_rate": 0.934806215829069,
+        "waste_rate": 0.024040991064570326,
+        "working_capital_avg": 42.54040956284399,
+        "governance_cost_per_day": 0.2813428571428571,
+        "profit_per_day": 33.426801761188,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.1473809523809524,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": 0.0,
+        "decision_ms_mean": 42.147875988337745,
+        "outcomes": {
+          "recommend": 3982,
+          "escalate": 213,
+          "reject": 5
+        },
+        "approval_reviews": 0
+      },
+      "ORACLE": {
+        "cost_per_series_day": {
+          "mean": 55.09931045903728,
+          "lo": 48.79007493496247,
+          "hi": 62.35109733812833,
+          "n": 200
+        },
+        "cvar90_series_cost_per_day": 177.1290085646774,
+        "expected_procurement_per_day": 48.35189288477119,
+        "fill_rate": 0.9402775687618494,
+        "waste_rate": 0.0006234510487815474,
+        "working_capital_avg": 6.236112253120777,
+        "governance_cost_per_day": 0.22888571428571425,
+        "profit_per_day": 38.766646683819864,
+        "n_series": 200,
+        "n_episodes": 600,
+        "stockout_day_frequency": 0.08238095238095237,
+        "hard_violations": 0,
+        "hard_violation_rate": 0.0,
+        "unsafe_executed_rate": null,
+        "decision_ms_mean": 9.6121735871438,
+        "outcomes": {
+          "execute": 4200
+        },
+        "approval_reviews": 166
+      }
+    }
+  },
+  "paired": {
+    "normal": {
+      "P5a_vs_P3": {
+        "a": "P5a",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": -0.006835917230382789,
+          "lo": -0.01924241055778078,
+          "hi": 0.002173224429903273,
+          "n": 200
+        },
+        "relative_diff": -0.0001207578123883875,
+        "relative_lo": -0.00033992093902323337,
+        "relative_hi": 3.8390433812994604e-05,
+        "excludes_zero": false,
+        "b_mean": 56.608488471095846
+      },
+      "P5b_vs_P4": {
+        "a": "P5b",
+        "b": "P4",
+        "diff_cost_per_day": {
+          "mean": 0.029768129677108048,
+          "lo": 0.004389507644956274,
+          "hi": 0.07226569979535676,
+          "n": 200
+        },
+        "relative_diff": 0.0005327616395154692,
+        "relative_lo": 7.855922810598896e-05,
+        "relative_hi": 0.0012933426829739361,
+        "excludes_zero": true,
+        "b_mean": 55.87513715173125
+      },
+      "P4_vs_P3": {
+        "a": "P4",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": -0.7333513193645947,
+          "lo": -1.2003807515905565,
+          "hi": -0.2849642171841768,
+          "n": 200
+        },
+        "relative_diff": -0.012954794222054563,
+        "relative_lo": -0.021204960316215965,
+        "relative_hi": -0.005033948527519487,
+        "excludes_zero": true,
+        "b_mean": 56.608488471095846
+      },
+      "P3_vs_P2": {
+        "a": "P3",
+        "b": "P2",
+        "diff_cost_per_day": {
+          "mean": -3.071161310078386,
+          "lo": -3.4867904730825594,
+          "hi": -2.6573664424257517,
+          "n": 200
+        },
+        "relative_diff": -0.0514607797019475,
+        "relative_lo": -0.058425116197355055,
+        "relative_hi": -0.044527178898828096,
+        "excludes_zero": true,
+        "b_mean": 59.67964978117423
+      },
+      "P3_vs_P1": {
+        "a": "P3",
+        "b": "P1",
+        "diff_cost_per_day": {
+          "mean": -0.43233566842939214,
+          "lo": -1.0209632995115596,
+          "hi": 0.19461371205351563,
+          "n": 200
+        },
+        "relative_diff": -0.007579407818019485,
+        "relative_lo": -0.017898817468243847,
+        "relative_hi": 0.003411832051680722,
+        "excludes_zero": false,
+        "b_mean": 57.040824139525235
+      },
+      "P2_vs_P1": {
+        "a": "P2",
+        "b": "P1",
+        "diff_cost_per_day": {
+          "mean": 2.638825641648994,
+          "lo": 1.816308420442282,
+          "hi": 3.425097335541516,
+          "n": 200
+        },
+        "relative_diff": 0.046262053212875576,
+        "relative_lo": 0.03184225417219576,
+        "relative_hi": 0.06004642091361662,
+        "excludes_zero": true,
+        "b_mean": 57.040824139525235
+      },
+      "P1_vs_ORACLE": {
+        "a": "P1",
+        "b": "ORACLE",
+        "diff_cost_per_day": {
+          "mean": 6.616355894120506,
+          "lo": 5.837177678403241,
+          "hi": 7.475625857926611,
+          "n": 200
+        },
+        "relative_diff": 0.13121320113719726,
+        "relative_lo": 0.1157608177441751,
+        "relative_hi": 0.1482539354018449,
+        "excludes_zero": true,
+        "b_mean": 50.424468245404725
+      },
+      "P3_vs_ORACLE": {
+        "a": "P3",
+        "b": "ORACLE",
+        "diff_cost_per_day": {
+          "mean": 6.184020225691113,
+          "lo": 5.310660268119551,
+          "hi": 7.115097797781512,
+          "n": 200
+        },
+        "relative_diff": 0.12263927495665111,
+        "relative_lo": 0.1053191129805027,
+        "relative_hi": 0.14110407199841765,
+        "excludes_zero": true,
+        "b_mean": 50.424468245404725
+      },
+      "P1_vs_P3": {
+        "a": "P1",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.43233566842939214,
+          "lo": -0.19461371205351596,
+          "hi": 1.0209632995115596,
+          "n": 200
+        },
+        "relative_diff": 0.00763729398374842,
+        "relative_lo": -0.003437889216082589,
+        "relative_hi": 0.018035515999210276,
+        "excludes_zero": false,
+        "b_mean": 56.608488471095846
+      },
+      "P2_vs_P3": {
+        "a": "P2",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 3.071161310078386,
+          "lo": 2.6573664424257517,
+          "hi": 3.4867904730825594,
+          "n": 200
+        },
+        "relative_diff": 0.05425266409730253,
+        "relative_lo": 0.046942896978826705,
+        "relative_hi": 0.06159483440125602,
+        "excludes_zero": true,
+        "b_mean": 56.608488471095846
+      },
+      "P5b_vs_P3": {
+        "a": "P5b",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": -0.7035831896874867,
+          "lo": -1.1550406261887787,
+          "hi": -0.2539349513093143,
+          "n": 200
+        },
+        "relative_diff": -0.012428934399948419,
+        "relative_lo": -0.020404018149655055,
+        "relative_hi": -0.004485810488279914,
+        "excludes_zero": true,
+        "b_mean": 56.608488471095846
+      },
+      "ORACLE_vs_P3": {
+        "a": "ORACLE",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": -6.184020225691113,
+          "lo": -7.115097797781513,
+          "hi": -5.310660268119551,
+          "n": 200
+        },
+        "relative_diff": -0.10924192453661183,
+        "relative_lo": -0.12568959161335785,
+        "relative_hi": -0.09381385038802371,
+        "excludes_zero": true,
+        "b_mean": 56.608488471095846
+      }
+    },
+    "unreliable": {
+      "P5a_vs_P3": {
+        "a": "P5a",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.4487880664268403,
+          "lo": 0.21982626895471008,
+          "hi": 0.6656258478702328,
+          "n": 200
+        },
+        "relative_diff": 0.00666277606580823,
+        "relative_lo": 0.003263574308222224,
+        "relative_hi": 0.009881982832749988,
+        "excludes_zero": true,
+        "b_mean": 67.35751914729855
+      },
+      "P5b_vs_P4": {
+        "a": "P5b",
+        "b": "P4",
+        "diff_cost_per_day": {
+          "mean": 1.0787541697842975,
+          "lo": 0.7572341423725883,
+          "hi": 1.4348830986622356,
+          "n": 200
+        },
+        "relative_diff": 0.01658883217515037,
+        "relative_lo": 0.011644571540914233,
+        "relative_hi": 0.022065300493278373,
+        "excludes_zero": true,
+        "b_mean": 65.0289398551058
+      },
+      "P4_vs_P3": {
+        "a": "P4",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": -2.3285792921927464,
+          "lo": -2.873134643582057,
+          "hi": -1.820665858345758,
+          "n": 200
+        },
+        "relative_diff": -0.034570443235900215,
+        "relative_lo": -0.04265499501694886,
+        "relative_hi": -0.027029882949879663,
+        "excludes_zero": true,
+        "b_mean": 67.35751914729855
+      },
+      "P3_vs_P2": {
+        "a": "P3",
+        "b": "P2",
+        "diff_cost_per_day": {
+          "mean": -3.875853943589442,
+          "lo": -4.297325529841082,
+          "hi": -3.458531249179039,
+          "n": 200
+        },
+        "relative_diff": -0.054410647361092496,
+        "relative_lo": -0.06032741878386194,
+        "relative_hi": -0.04855211959099893,
+        "excludes_zero": true,
+        "b_mean": 71.233373090888
+      },
+      "P3_vs_P1": {
+        "a": "P3",
+        "b": "P1",
+        "diff_cost_per_day": {
+          "mean": 0.5496591462684893,
+          "lo": -0.2167298205474884,
+          "hi": 1.4259685913474425,
+          "n": 200
+        },
+        "relative_diff": 0.008227462251597558,
+        "relative_lo": -0.0032440766781655153,
+        "relative_hi": 0.02134432372666115,
+        "excludes_zero": false,
+        "b_mean": 66.80786000103006
+      },
+      "P2_vs_P1": {
+        "a": "P2",
+        "b": "P1",
+        "diff_cost_per_day": {
+          "mean": 4.425513089857932,
+          "lo": 3.465712426913035,
+          "hi": 5.445029187457068,
+          "n": 200
+        },
+        "relative_diff": 0.06624240156457187,
+        "relative_lo": 0.051875818606666936,
+        "relative_hi": 0.08150282298180357,
+        "excludes_zero": true,
+        "b_mean": 66.80786000103006
+      },
+      "P1_vs_ORACLE": {
+        "a": "P1",
+        "b": "ORACLE",
+        "diff_cost_per_day": {
+          "mean": 8.67051218704157,
+          "lo": 7.599704339501766,
+          "hi": 9.924818163170302,
+          "n": 200
+        },
+        "relative_diff": 0.14913841984644763,
+        "relative_lo": 0.13071983200570414,
+        "relative_hi": 0.17071329423084347,
+        "excludes_zero": true,
+        "b_mean": 58.13734781398849
+      },
+      "P3_vs_ORACLE": {
+        "a": "P3",
+        "b": "ORACLE",
+        "diff_cost_per_day": {
+          "mean": 9.22017133331006,
+          "lo": 7.715593228000684,
+          "hi": 10.898212416331996,
+          "n": 200
+        },
+        "relative_diff": 0.15859291281759474,
+        "relative_lo": 0.13271319587344896,
+        "relative_hi": 0.1874563052171046,
+        "excludes_zero": true,
+        "b_mean": 58.13734781398849
+      },
+      "P1_vs_P3": {
+        "a": "P1",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": -0.5496591462684893,
+          "lo": -1.425968591347443,
+          "hi": 0.21672982054748832,
+          "n": 200
+        },
+        "relative_diff": -0.008160323498056475,
+        "relative_lo": -0.021170147140204362,
+        "relative_hi": 0.0032176039630191834,
+        "excludes_zero": false,
+        "b_mean": 67.35751914729855
+      },
+      "P2_vs_P3": {
+        "a": "P2",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 3.875853943589442,
+          "lo": 3.458531249179039,
+          "hi": 4.297325529841082,
+          "n": 200
+        },
+        "relative_diff": 0.05754151864046032,
+        "relative_lo": 0.051345882285478255,
+        "relative_hi": 0.06379875007634439,
+        "excludes_zero": true,
+        "b_mean": 67.35751914729855
+      },
+      "P5b_vs_P3": {
+        "a": "P5b",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": -1.2498251224084493,
+          "lo": -1.7970110941202735,
+          "hi": -0.7459254616554937,
+          "n": 200
+        },
+        "relative_diff": -0.01855509434181076,
+        "relative_lo": -0.026678700713286957,
+        "relative_hi": -0.011074123143168196,
+        "excludes_zero": true,
+        "b_mean": 67.35751914729855
+      },
+      "ORACLE_vs_P3": {
+        "a": "ORACLE",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": -9.22017133331006,
+          "lo": -10.898212416331996,
+          "hi": -7.715593228000684,
+          "n": 200
+        },
+        "relative_diff": -0.13688406951490056,
+        "relative_lo": -0.16179652330276004,
+        "relative_hi": -0.11454687354396316,
+        "excludes_zero": true,
+        "b_mean": 67.35751914729855
+      }
+    },
+    "disruption": {
+      "P5a_vs_P3": {
+        "a": "P5a",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.03010685783652224,
+          "lo": 0.006667401212867994,
+          "hi": 0.05223053915131608,
+          "n": 200
+        },
+        "relative_diff": 0.0004982613376695252,
+        "relative_lo": 0.00011034390453968314,
+        "relative_hi": 0.0008644030023340836,
+        "excludes_zero": true,
+        "b_mean": 60.42382894353885
+      },
+      "P5b_vs_P4": {
+        "a": "P5b",
+        "b": "P4",
+        "diff_cost_per_day": {
+          "mean": 0.038031882723999086,
+          "lo": 0.01461736602133669,
+          "hi": 0.06398065765142091,
+          "n": 200
+        },
+        "relative_diff": 0.0006296552203149547,
+        "relative_lo": 0.00024200486968743175,
+        "relative_hi": 0.0010592627081272468,
+        "excludes_zero": true,
+        "b_mean": 60.40112349894514
+      },
+      "P4_vs_P3": {
+        "a": "P4",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": -0.02270544459372128,
+          "lo": -0.3712276838384069,
+          "hi": 0.30971750484766214,
+          "n": 200
+        },
+        "relative_diff": -0.0003757697085852945,
+        "relative_lo": -0.006143729888175225,
+        "relative_hi": 0.005125751053232127,
+        "excludes_zero": false,
+        "b_mean": 60.42382894353885
+      },
+      "P3_vs_P2": {
+        "a": "P3",
+        "b": "P2",
+        "diff_cost_per_day": {
+          "mean": -2.0702699000023075,
+          "lo": -2.3727475816240937,
+          "hi": -1.763353263212953,
+          "n": 200
+        },
+        "relative_diff": -0.03312744624393079,
+        "relative_lo": -0.03796754614486804,
+        "relative_hi": -0.028216316353767174,
+        "excludes_zero": true,
+        "b_mean": 62.49409884354117
+      },
+      "P3_vs_P1": {
+        "a": "P3",
+        "b": "P1",
+        "diff_cost_per_day": {
+          "mean": -0.8004419541720899,
+          "lo": -1.291779861655732,
+          "hi": -0.3231741208905305,
+          "n": 200
+        },
+        "relative_diff": -0.013073931995195336,
+        "relative_lo": -0.021099146510277663,
+        "relative_hi": -0.0052785295137359215,
+        "excludes_zero": true,
+        "b_mean": 61.224270897710944
+      },
+      "P2_vs_P1": {
+        "a": "P2",
+        "b": "P1",
+        "diff_cost_per_day": {
+          "mean": 1.2698279458302175,
+          "lo": 0.6429028230810047,
+          "hi": 1.890156029495293,
+          "n": 200
+        },
+        "relative_diff": 0.020740597269859752,
+        "relative_lo": 0.010500783654167477,
+        "relative_hi": 0.030872658861927946,
+        "excludes_zero": true,
+        "b_mean": 61.224270897710944
+      },
+      "P1_vs_ORACLE": {
+        "a": "P1",
+        "b": "ORACLE",
+        "diff_cost_per_day": {
+          "mean": 6.124960438673672,
+          "lo": 5.282317041311843,
+          "hi": 7.055477531891329,
+          "n": 200
+        },
+        "relative_diff": 0.11116219763271229,
+        "relative_lo": 0.0958690226303086,
+        "relative_hi": 0.12805019651083682,
+        "excludes_zero": true,
+        "b_mean": 55.09931045903727
+      },
+      "P3_vs_ORACLE": {
+        "a": "P3",
+        "b": "ORACLE",
+        "diff_cost_per_day": {
+          "mean": 5.324518484501583,
+          "lo": 4.605444079080696,
+          "hi": 6.1356580360415345,
+          "n": 200
+        },
+        "relative_diff": 0.09663493862523043,
+        "relative_lo": 0.0835844231209489,
+        "relative_hi": 0.11135634883494584,
+        "excludes_zero": true,
+        "b_mean": 55.09931045903727
+      },
+      "P1_vs_P3": {
+        "a": "P1",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.8004419541720899,
+          "lo": 0.3231741208905305,
+          "hi": 1.2917798616557319,
+          "n": 200
+        },
+        "relative_diff": 0.013247123993417195,
+        "relative_lo": 0.0053484548487072936,
+        "relative_hi": 0.021378649520254582,
+        "excludes_zero": true,
+        "b_mean": 60.42382894353885
+      },
+      "P2_vs_P3": {
+        "a": "P2",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 2.0702699000023075,
+          "lo": 1.763353263212953,
+          "hi": 2.3727475816240937,
+          "n": 200
+        },
+        "relative_diff": 0.03426247452700831,
+        "relative_lo": 0.029183077174084134,
+        "relative_hi": 0.0392684082275096,
+        "excludes_zero": true,
+        "b_mean": 60.42382894353885
+      },
+      "P5b_vs_P3": {
+        "a": "P5b",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.015326438130277792,
+          "lo": -0.33567526183513796,
+          "hi": 0.34730839148083975,
+          "n": 200
+        },
+        "relative_diff": 0.000253648906371013,
+        "relative_lo": -0.005555345758521843,
+        "relative_hi": 0.0057478712877558815,
+        "excludes_zero": false,
+        "b_mean": 60.42382894353885
+      },
+      "ORACLE_vs_P3": {
+        "a": "ORACLE",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": -5.324518484501583,
+          "lo": -6.1356580360415345,
+          "hi": -4.605444079080696,
+          "n": 200
+        },
+        "relative_diff": -0.08811951472782223,
+        "relative_lo": -0.10154368141374834,
+        "relative_hi": -0.07621900431672592,
+        "excludes_zero": true,
+        "b_mean": 60.42382894353885
+      }
+    }
+  },
+  "detection": {
+    "normal": {
+      "P5a": {
+        "n_candidates": 4200,
+        "n_unsafe": 0,
+        "recall": null,
+        "unnecessary_intervention_rate": 0.004285714285714286,
+        "coverage": 0.9957142857142857,
+        "unsafe_rate_among_recommended": 0.0,
+        "unsafe_rate_without_validation": 0.0,
+        "outcomes": {
+          "recommend": 4182,
+          "escalate": 18
+        },
+        "outcomes_unsafe": {},
+        "by_event": {
+          "none": {
+            "n": 4200,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 18
+          }
+        }
+      },
+      "P5b": {
+        "n_candidates": 4200,
+        "n_unsafe": 0,
+        "recall": null,
+        "unnecessary_intervention_rate": 0.015714285714285715,
+        "coverage": 0.9842857142857143,
+        "unsafe_rate_among_recommended": 0.0,
+        "unsafe_rate_without_validation": 0.0,
+        "outcomes": {
+          "recommend": 4134,
+          "escalate": 60,
+          "reject": 6
+        },
+        "outcomes_unsafe": {},
+        "by_event": {
+          "none": {
+            "n": 4200,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 66
+          }
+        }
+      }
+    },
+    "unreliable": {
+      "P5a": {
+        "n_candidates": 4200,
+        "n_unsafe": 174,
+        "recall": 1.0,
+        "unnecessary_intervention_rate": 0.24093392945851963,
+        "coverage": 0.7276190476190476,
+        "unsafe_rate_among_recommended": 0.0,
+        "unsafe_rate_without_validation": 0.041428571428571426,
+        "outcomes": {
+          "recommend": 3056,
+          "reject": 388,
+          "escalate": 350,
+          "defer": 335,
+          "investigate": 71
+        },
+        "outcomes_unsafe": {
+          "reject": 174
+        },
+        "by_event": {
+          "forecast_shift": {
+            "n": 770,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 6
+          },
+          "inventory_record_error": {
+            "n": 371,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 29
+          },
+          "inventory_record_error|forecast_shift": {
+            "n": 105,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 12
+          },
+          "inventory_record_error|stale_sales_history": {
+            "n": 147,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 66
+          },
+          "inventory_record_error|stale_sales_history|forecast_shift": {
+            "n": 84,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 41
+          },
+          "inventory_record_error|stale_supplier_snapshot": {
+            "n": 182,
+            "unsafe": 18,
+            "flagged_unsafe": 18,
+            "flagged_safe": 31
+          },
+          "inventory_record_error|stale_supplier_snapshot|forecast_shift": {
+            "n": 98,
+            "unsafe": 4,
+            "flagged_unsafe": 4,
+            "flagged_safe": 26
+          },
+          "inventory_record_error|stale_supplier_snapshot|stale_sales_history": {
+            "n": 56,
+            "unsafe": 6,
+            "flagged_unsafe": 6,
+            "flagged_safe": 31
+          },
+          "inventory_record_error|stale_supplier_snapshot|stale_sales_history|forecast_shift": {
+            "n": 35,
+            "unsafe": 4,
+            "flagged_unsafe": 4,
+            "flagged_safe": 13
+          },
+          "stale_sales_history": {
+            "n": 791,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 342
+          },
+          "stale_sales_history|forecast_shift": {
+            "n": 224,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 97
+          },
+          "stale_supplier_snapshot": {
+            "n": 791,
+            "unsafe": 80,
+            "flagged_unsafe": 80,
+            "flagged_safe": 108
+          },
+          "stale_supplier_snapshot|forecast_shift": {
+            "n": 245,
+            "unsafe": 31,
+            "flagged_unsafe": 31,
+            "flagged_safe": 24
+          },
+          "stale_supplier_snapshot|stale_sales_history": {
+            "n": 189,
+            "unsafe": 12,
+            "flagged_unsafe": 12,
+            "flagged_safe": 98
+          },
+          "stale_supplier_snapshot|stale_sales_history|forecast_shift": {
+            "n": 112,
+            "unsafe": 19,
+            "flagged_unsafe": 19,
+            "flagged_safe": 46
+          }
+        }
+      },
+      "P5b": {
+        "n_candidates": 4200,
+        "n_unsafe": 190,
+        "recall": 1.0,
+        "unnecessary_intervention_rate": 0.2523690773067332,
+        "coverage": 0.7138095238095238,
+        "unsafe_rate_among_recommended": 0.0,
+        "unsafe_rate_without_validation": 0.04523809523809524,
+        "outcomes": {
+          "recommend": 2998,
+          "reject": 420,
+          "defer": 391,
+          "escalate": 343,
+          "investigate": 48
+        },
+        "outcomes_unsafe": {
+          "reject": 190
+        },
+        "by_event": {
+          "forecast_shift": {
+            "n": 770,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 16
+          },
+          "inventory_record_error": {
+            "n": 371,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 31
+          },
+          "inventory_record_error|forecast_shift": {
+            "n": 105,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 7
+          },
+          "inventory_record_error|stale_sales_history": {
+            "n": 147,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 67
+          },
+          "inventory_record_error|stale_sales_history|forecast_shift": {
+            "n": 84,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 40
+          },
+          "inventory_record_error|stale_supplier_snapshot": {
+            "n": 182,
+            "unsafe": 21,
+            "flagged_unsafe": 21,
+            "flagged_safe": 32
+          },
+          "inventory_record_error|stale_supplier_snapshot|forecast_shift": {
+            "n": 98,
+            "unsafe": 5,
+            "flagged_unsafe": 5,
+            "flagged_safe": 20
+          },
+          "inventory_record_error|stale_supplier_snapshot|stale_sales_history": {
+            "n": 56,
+            "unsafe": 6,
+            "flagged_unsafe": 6,
+            "flagged_safe": 31
+          },
+          "inventory_record_error|stale_supplier_snapshot|stale_sales_history|forecast_shift": {
+            "n": 35,
+            "unsafe": 4,
+            "flagged_unsafe": 4,
+            "flagged_safe": 13
+          },
+          "stale_sales_history": {
+            "n": 791,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 354
+          },
+          "stale_sales_history|forecast_shift": {
+            "n": 224,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 102
+          },
+          "stale_supplier_snapshot": {
+            "n": 791,
+            "unsafe": 88,
+            "flagged_unsafe": 88,
+            "flagged_safe": 122
+          },
+          "stale_supplier_snapshot|forecast_shift": {
+            "n": 245,
+            "unsafe": 33,
+            "flagged_unsafe": 33,
+            "flagged_safe": 31
+          },
+          "stale_supplier_snapshot|stale_sales_history": {
+            "n": 189,
+            "unsafe": 13,
+            "flagged_unsafe": 13,
+            "flagged_safe": 100
+          },
+          "stale_supplier_snapshot|stale_sales_history|forecast_shift": {
+            "n": 112,
+            "unsafe": 20,
+            "flagged_unsafe": 20,
+            "flagged_safe": 46
+          }
+        }
+      }
+    },
+    "disruption": {
+      "P5a": {
+        "n_candidates": 4200,
+        "n_unsafe": 0,
+        "recall": null,
+        "unnecessary_intervention_rate": 0.028333333333333332,
+        "coverage": 0.9716666666666667,
+        "unsafe_rate_among_recommended": 0.0,
+        "unsafe_rate_without_validation": 0.0,
+        "outcomes": {
+          "recommend": 4081,
+          "escalate": 117,
+          "reject": 2
+        },
+        "outcomes_unsafe": {},
+        "by_event": {
+          "budget_reduction": {
+            "n": 574,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 1
+          },
+          "demand_collapse": {
+            "n": 672,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 2
+          },
+          "lead_time_increase": {
+            "n": 763,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 58
+          },
+          "supplier_failure": {
+            "n": 742,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 0
+          },
+          "supplier_failure|demand_spike|budget_reduction": {
+            "n": 679,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 1
+          },
+          "transport_disruption": {
+            "n": 770,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 57
+          }
+        }
+      },
+      "P5b": {
+        "n_candidates": 4200,
+        "n_unsafe": 0,
+        "recall": null,
+        "unnecessary_intervention_rate": 0.051904761904761905,
+        "coverage": 0.9480952380952381,
+        "unsafe_rate_among_recommended": 0.0,
+        "unsafe_rate_without_validation": 0.0,
+        "outcomes": {
+          "recommend": 3982,
+          "escalate": 213,
+          "reject": 5
+        },
+        "outcomes_unsafe": {},
+        "by_event": {
+          "budget_reduction": {
+            "n": 574,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 5
+          },
+          "demand_collapse": {
+            "n": 672,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 10
+          },
+          "lead_time_increase": {
+            "n": 763,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 82
+          },
+          "supplier_failure": {
+            "n": 742,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 8
+          },
+          "supplier_failure|demand_spike|budget_reduction": {
+            "n": 679,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 10
+          },
+          "transport_disruption": {
+            "n": 770,
+            "unsafe": 0,
+            "flagged_unsafe": 0,
+            "flagged_safe": 103
+          }
+        }
+      }
+    }
+  },
+  "risk_coverage": [
+    {
+      "threshold_scale": 0.25,
+      "include_approval_routing": true,
+      "coverage": 0.1465079365079365,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    },
+    {
+      "threshold_scale": 0.25,
+      "include_approval_routing": false,
+      "coverage": 0.15246031746031746,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    },
+    {
+      "threshold_scale": 0.5,
+      "include_approval_routing": true,
+      "coverage": 0.3585714285714286,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    },
+    {
+      "threshold_scale": 0.5,
+      "include_approval_routing": false,
+      "coverage": 0.37,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    },
+    {
+      "threshold_scale": 1.0,
+      "include_approval_routing": true,
+      "coverage": 0.8174603174603174,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    },
+    {
+      "threshold_scale": 1.0,
+      "include_approval_routing": false,
+      "coverage": 0.8298412698412698,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    },
+    {
+      "threshold_scale": 2.0,
+      "include_approval_routing": true,
+      "coverage": 0.900079365079365,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    },
+    {
+      "threshold_scale": 2.0,
+      "include_approval_routing": false,
+      "coverage": 0.9124603174603174,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    },
+    {
+      "threshold_scale": 4.0,
+      "include_approval_routing": true,
+      "coverage": 0.903015873015873,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    },
+    {
+      "threshold_scale": 4.0,
+      "include_approval_routing": false,
+      "coverage": 0.9153968253968254,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    },
+    {
+      "threshold_scale": 8.0,
+      "include_approval_routing": true,
+      "coverage": 0.9035714285714286,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    },
+    {
+      "threshold_scale": 8.0,
+      "include_approval_routing": false,
+      "coverage": 0.915952380952381,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    },
+    {
+      "threshold_scale": "hard rules only",
+      "include_approval_routing": true,
+      "coverage": 0.903968253968254,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    },
+    {
+      "threshold_scale": "hard rules only",
+      "include_approval_routing": false,
+      "coverage": 0.9163492063492064,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_caught": 1.0
+    }
+  ],
+  "risk_coverage_tuned_scale": 4.0,
+  "ablations": {
+    "normal": {
+      "P5a_no_stockout_aware": {
+        "a": "P5a_no_stockout_aware",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": 0.7125318103418705,
+          "lo": 0.4962155073383108,
+          "hi": 0.9211375440407832,
+          "n": 200
+        },
+        "relative_diff": 0.012588533694555707,
+        "relative_lo": 0.008766802468639638,
+        "relative_hi": 0.01627403975818859,
+        "excludes_zero": true,
+        "b_mean": 56.60165255386546
+      },
+      "P5a_no_voi": {
+        "a": "P5a_no_voi",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": 0.004460018995805415,
+          "lo": 0.0,
+          "hi": 0.013380056987416244,
+          "n": 200
+        },
+        "relative_diff": 7.879662155731229e-05,
+        "relative_lo": 0.0,
+        "relative_hi": 0.00023638986467193682,
+        "excludes_zero": false,
+        "b_mean": 56.60165255386546
+      },
+      "P5a_no_escalation": {
+        "a": "P5a_no_escalation",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": 0.006835917230382789,
+          "lo": -0.002173224429903273,
+          "hi": 0.01924241055778078,
+          "n": 200
+        },
+        "relative_diff": 0.00012077239659879767,
+        "relative_lo": -3.839507031769267e-05,
+        "relative_hi": 0.00033996199208969334,
+        "excludes_zero": false,
+        "b_mean": 56.60165255386546
+      },
+      "P5a_no_risk_review": {
+        "a": "P5a_no_risk_review",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": 0.006835917230382789,
+          "lo": -0.002173224429903273,
+          "hi": 0.01924241055778078,
+          "n": 200
+        },
+        "relative_diff": 0.00012077239659879767,
+        "relative_lo": -3.839507031769267e-05,
+        "relative_hi": 0.00033996199208969334,
+        "excludes_zero": false,
+        "b_mean": 56.60165255386546
+      },
+      "P5a_untuned": {
+        "a": "P5a_untuned",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": 0.7739673786357301,
+          "lo": 0.5664284985484438,
+          "hi": 0.994393990520999,
+          "n": 200
+        },
+        "relative_diff": 0.013673936072788283,
+        "relative_lo": 0.01000727846257487,
+        "relative_hi": 0.01756828547673012,
+        "excludes_zero": true,
+        "b_mean": 56.60165255386546
+      },
+      "P3_obs_vs_P3": {
+        "a": "P3_obs",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.7125528547422717,
+          "lo": 0.5054598814015323,
+          "hi": 0.9196444886429765,
+          "n": 200
+        },
+        "relative_diff": 0.012587385284206968,
+        "relative_lo": 0.008929047481273393,
+        "relative_hi": 0.016245699425670848,
+        "excludes_zero": true,
+        "b_mean": 56.608488471095846
+      },
+      "no_validation_P3_vs_P5a": {
+        "a": "P3",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": 0.006835917230382789,
+          "lo": -0.002173224429903273,
+          "hi": 0.01924241055778078,
+          "n": 200
+        },
+        "relative_diff": 0.00012077239659879767,
+        "relative_lo": -3.839507031769267e-05,
+        "relative_hi": 0.00033996199208969334,
+        "excludes_zero": false,
+        "b_mean": 56.60165255386546
+      }
+    },
+    "unreliable": {
+      "P5a_no_stockout_aware": {
+        "a": "P5a_no_stockout_aware",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": 1.138823380297384,
+          "lo": 0.9017181922636773,
+          "hi": 1.3853787375655793,
+          "n": 200
+        },
+        "relative_diff": 0.016795242612281103,
+        "relative_lo": 0.013298441241188124,
+        "relative_hi": 0.020431414045287376,
+        "excludes_zero": true,
+        "b_mean": 67.80630721372538
+      },
+      "P5a_no_voi": {
+        "a": "P5a_no_voi",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": -0.035844434016727426,
+          "lo": -0.1673445838472973,
+          "hi": 0.10182333348738311,
+          "n": 200
+        },
+        "relative_diff": -0.000528629791086334,
+        "relative_lo": -0.0024679796131623485,
+        "relative_hi": 0.001501679381630917,
+        "excludes_zero": false,
+        "b_mean": 67.80630721372538
+      },
+      "P5a_no_escalation": {
+        "a": "P5a_no_escalation",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": -0.3718159736990448,
+          "lo": -0.548074020862886,
+          "hi": -0.17970023692100945,
+          "n": 200
+        },
+        "relative_diff": -0.0054835012991797565,
+        "relative_lo": -0.008082935694099335,
+        "relative_hi": -0.0026501994328432393,
+        "excludes_zero": true,
+        "b_mean": 67.80630721372538
+      },
+      "P5a_no_risk_review": {
+        "a": "P5a_no_risk_review",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": 0.1790494109824423,
+          "lo": 0.006737515766310082,
+          "hi": 0.37510907471471516,
+          "n": 200
+        },
+        "relative_diff": 0.002640601123109076,
+        "relative_lo": 9.93641453600097e-05,
+        "relative_hi": 0.005532067592655827,
+        "excludes_zero": true,
+        "b_mean": 67.80630721372538
+      },
+      "P5a_untuned": {
+        "a": "P5a_untuned",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": 0.2081527969584519,
+          "lo": 0.04063229594131847,
+          "hi": 0.392537440633818,
+          "n": 200
+        },
+        "relative_diff": 0.0030698146752389066,
+        "relative_lo": 0.0005992406549031721,
+        "relative_hi": 0.00578909922636755,
+        "excludes_zero": true,
+        "b_mean": 67.80630721372538
+      },
+      "P3_obs_vs_P3": {
+        "a": "P3_obs",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 1.1306107010537705,
+          "lo": 0.9091193255830183,
+          "hi": 1.3575335002048041,
+          "n": 200
+        },
+        "relative_diff": 0.016785218864449745,
+        "relative_lo": 0.013496924130993319,
+        "relative_hi": 0.020154149342052327,
+        "excludes_zero": true,
+        "b_mean": 67.35751914729855
+      },
+      "no_validation_P3_vs_P5a": {
+        "a": "P3",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": -0.4487880664268403,
+          "lo": -0.6656258478702328,
+          "hi": -0.2198262689547101,
+          "n": 200
+        },
+        "relative_diff": -0.006618677301099159,
+        "relative_lo": -0.009816577177285015,
+        "relative_hi": -0.003241973763027944,
+        "excludes_zero": true,
+        "b_mean": 67.80630721372538
+      }
+    },
+    "disruption": {
+      "P5a_no_stockout_aware": {
+        "a": "P5a_no_stockout_aware",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": 0.39330030523105125,
+          "lo": 0.24567583185198572,
+          "hi": 0.5587833283132858,
+          "n": 200
+        },
+        "relative_diff": 0.006505784942162579,
+        "relative_lo": 0.004063851734305054,
+        "relative_hi": 0.00924312571061044,
+        "excludes_zero": true,
+        "b_mean": 60.45393580137539
+      },
+      "P5a_no_voi": {
+        "a": "P5a_no_voi",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": -0.00037506673915290833,
+          "lo": -0.015693092223350483,
+          "hi": 0.017057421751132406,
+          "n": 200
+        },
+        "relative_diff": -6.2041740406316965e-06,
+        "relative_lo": -0.00025958760195384087,
+        "relative_hi": 0.0002821556863919575,
+        "excludes_zero": false,
+        "b_mean": 60.45393580137539
+      },
+      "P5a_no_escalation": {
+        "a": "P5a_no_escalation",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": -0.03010685783652224,
+          "lo": -0.05223053915131608,
+          "hi": -0.0066674012128679966,
+          "n": 200
+        },
+        "relative_diff": -0.0004980131969478368,
+        "relative_lo": -0.0008639725182314396,
+        "relative_hi": -0.00011028895181901964,
+        "excludes_zero": true,
+        "b_mean": 60.45393580137539
+      },
+      "P5a_no_risk_review": {
+        "a": "P5a_no_risk_review",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": -0.03010685783652224,
+          "lo": -0.05223053915131608,
+          "hi": -0.0066674012128679966,
+          "n": 200
+        },
+        "relative_diff": -0.0004980131969478368,
+        "relative_lo": -0.0008639725182314396,
+        "relative_hi": -0.00011028895181901964,
+        "excludes_zero": true,
+        "b_mean": 60.45393580137539
+      },
+      "P5a_untuned": {
+        "a": "P5a_untuned",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": 0.86830200093964,
+          "lo": 0.6805713884726827,
+          "hi": 1.0637705900975811,
+          "n": 200
+        },
+        "relative_diff": 0.014363035084969361,
+        "relative_lo": 0.011257685367396693,
+        "relative_hi": 0.01759638270025389,
+        "excludes_zero": true,
+        "b_mean": 60.45393580137539
+      },
+      "P3_obs_vs_P3": {
+        "a": "P3_obs",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.4408167523036544,
+          "lo": 0.2916727031175852,
+          "hi": 0.6141161305100745,
+          "n": 200
+        },
+        "relative_diff": 0.007295412422730804,
+        "relative_lo": 0.004827113875721606,
+        "relative_hi": 0.010163475920798002,
+        "excludes_zero": true,
+        "b_mean": 60.42382894353885
+      },
+      "no_validation_P3_vs_P5a": {
+        "a": "P3",
+        "b": "P5a",
+        "diff_cost_per_day": {
+          "mean": -0.03010685783652224,
+          "lo": -0.05223053915131608,
+          "hi": -0.0066674012128679966,
+          "n": 200
+        },
+        "relative_diff": -0.0004980131969478368,
+        "relative_lo": -0.0008639725182314396,
+        "relative_hi": -0.00011028895181901964,
+        "excludes_zero": true,
+        "b_mean": 60.45393580137539
+      }
+    }
+  },
+  "forecast_variants": [
+    {
+      "model": "lgbm_quantile_recovered",
+      "decision_cost_per_day": {
+        "mean": 56.608488471095846,
+        "lo": 50.211629639874964,
+        "hi": 63.73411534312396,
+        "n": 200
+      },
+      "pinball_vs_observed": 1.3645149858324492,
+      "wape_vs_observed": 0.23978512962189197,
+      "bias_vs_observed": 0.04351043339855341,
+      "pinball_vs_latent": 1.468284746436778,
+      "bias_vs_latent": -0.022051128297031725,
+      "coverage80_vs_latent": 0.8192857142857143
+    },
+    {
+      "model": "lgbm_quantile_recovered_nopromo",
+      "decision_cost_per_day": {
+        "mean": 56.84702324525645,
+        "lo": 50.39721508946905,
+        "hi": 64.05522298239188,
+        "n": 200
+      },
+      "pinball_vs_observed": 1.5108039929639283,
+      "wape_vs_observed": 0.2570618714462015,
+      "bias_vs_observed": 0.03231383150284435,
+      "pinball_vs_latent": 1.6142483695985985,
+      "bias_vs_latent": -0.03254427128857277,
+      "coverage80_vs_latent": 0.8275
+    },
+    {
+      "model": "lgbm_point",
+      "decision_cost_per_day": {
+        "mean": 57.23035107411406,
+        "lo": 50.822168372597744,
+        "hi": 64.35633696747237,
+        "n": 200
+      },
+      "pinball_vs_observed": 1.3244197303410017,
+      "wape_vs_observed": 0.23497185380971647,
+      "bias_vs_observed": -0.005948692937599845,
+      "pinball_vs_latent": 1.5073112723626576,
+      "bias_vs_latent": -0.06840284194336956,
+      "coverage80_vs_latent": 0.7463095238095238
+    },
+    {
+      "model": "lgbm_quantile_observed",
+      "decision_cost_per_day": {
+        "mean": 57.32104132583812,
+        "lo": 50.88003017514215,
+        "hi": 64.46493289497181,
+        "n": 200
+      },
+      "pinball_vs_observed": 1.2969096692945152,
+      "wape_vs_observed": 0.23512602495913926,
+      "bias_vs_observed": -0.0011816328340855935,
+      "pinball_vs_latent": 1.4887647672405941,
+      "bias_vs_latent": -0.06393528618124002,
+      "coverage80_vs_latent": 0.7386904761904762
+    },
+    {
+      "model": "moving_average",
+      "decision_cost_per_day": {
+        "mean": 57.923369527052444,
+        "lo": 51.485811794384276,
+        "hi": 65.16423125587106,
+        "n": 200
+      },
+      "pinball_vs_observed": 1.7035851026047786,
+      "wape_vs_observed": 0.2980422233404341,
+      "bias_vs_observed": 0.01612258600582318,
+      "pinball_vs_latent": 1.844959982371008,
+      "bias_vs_latent": -0.04771825494842754,
+      "coverage80_vs_latent": 0.7739285714285714
+    },
+    {
+      "model": "seasonal_naive",
+      "decision_cost_per_day": {
+        "mean": 58.25125116083064,
+        "lo": 51.78755627713425,
+        "hi": 65.63437548394502,
+        "n": 200
+      },
+      "pinball_vs_observed": 2.05773010795239,
+      "wape_vs_observed": 0.35647171620325985,
+      "bias_vs_observed": 0.016138310704234063,
+      "pinball_vs_latent": 2.1595933468815987,
+      "bias_vs_latent": -0.047703518199683485,
+      "coverage80_vs_latent": 0.7825
+    }
+  ],
+  "sensitivity": [
+    {
+      "setting": "goodwill_x0.5",
+      "P5a_vs_P3": {
+        "a": "P5a",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.6617515128560789,
+          "lo": 0.4279499642308059,
+          "hi": 0.9079073111997494,
+          "n": 200
+        },
+        "relative_diff": 0.00992211341050531,
+        "relative_lo": 0.006416559685362177,
+        "relative_hi": 0.013612903231715066,
+        "excludes_zero": true,
+        "b_mean": 66.69461287908999
+      }
+    },
+    {
+      "setting": "goodwill_x2",
+      "P5a_vs_P3": {
+        "a": "P5a",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.30748965463366384,
+          "lo": 0.0346080727163425,
+          "hi": 0.5571837467999228,
+          "n": 200
+        },
+        "relative_diff": 0.004494713236864027,
+        "relative_lo": 0.0005058816132393792,
+        "relative_hi": 0.008144602995150421,
+        "excludes_zero": true,
+        "b_mean": 68.41140656354757
+      }
+    },
+    {
+      "setting": "holding_x2",
+      "P5a_vs_P3": {
+        "a": "P5a",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.41973660342320585,
+          "lo": 0.17481676932706974,
+          "hi": 0.6383828501576074,
+          "n": 200
+        },
+        "relative_diff": 0.0061745311893029635,
+        "relative_lo": 0.002571640371175445,
+        "relative_hi": 0.009390924658147988,
+        "excludes_zero": true,
+        "b_mean": 67.97870001051683
+      }
+    },
+    {
+      "setting": "review_x0.5",
+      "P5a_vs_P3": {
+        "a": "P5a",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.20098252095217004,
+          "lo": -0.036379037721433055,
+          "hi": 0.42192514806181186,
+          "n": 200
+        },
+        "relative_diff": 0.002984683749991035,
+        "relative_lo": -0.0005402456005281776,
+        "relative_hi": 0.0062657843436661025,
+        "excludes_zero": false,
+        "b_mean": 67.33796200444141
+      }
+    },
+    {
+      "setting": "review_x2",
+      "P5a_vs_P3": {
+        "a": "P5a",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.9438945373742849,
+          "lo": 0.7014834785064599,
+          "hi": 1.179926018007516,
+          "n": 200
+        },
+        "relative_diff": 0.014005069530846001,
+        "relative_lo": 0.010408286627605541,
+        "relative_hi": 0.01750719520998439,
+        "excludes_zero": true,
+        "b_mean": 67.39663343301282
+      }
+    },
+    {
+      "setting": "review_x4",
+      "P5a_vs_P3": {
+        "a": "P5a",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 1.9001694301865983,
+          "lo": 1.5746296118635859,
+          "hi": 2.2418004767726116,
+          "n": 200
+        },
+        "relative_diff": 0.02816114585105077,
+        "relative_lo": 0.023336536972242177,
+        "relative_hi": 0.033224232109212014,
+        "excludes_zero": true,
+        "b_mean": 67.4748620044414
+      }
+    },
+    {
+      "setting": "reviewer_error_0",
+      "P5a_vs_P3": {
+        "a": "P5a",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.49179929303544123,
+          "lo": 0.2545053817922439,
+          "hi": 0.7171534991954177,
+          "n": 200
+        },
+        "relative_diff": 0.007301327294432658,
+        "relative_lo": 0.003778425705312681,
+        "relative_hi": 0.01064697020130944,
+        "excludes_zero": true,
+        "b_mean": 67.35751914729855
+      }
+    },
+    {
+      "setting": "reviewer_error_0.3",
+      "P5a_vs_P3": {
+        "a": "P5a",
+        "b": "P3",
+        "diff_cost_per_day": {
+          "mean": 0.4816403716431916,
+          "lo": 0.26757795480412283,
+          "hi": 0.6965102721545644,
+          "n": 200
+        },
+        "relative_diff": 0.0071505063984012305,
+        "relative_lo": 0.003972503117565522,
+        "relative_hi": 0.010340497704961848,
+        "excludes_zero": true,
+        "b_mean": 67.35751914729855
+      }
+    }
+  ],
+  "demand_bounds": {
+    "note": "Reference demand on stockout days replaced by observed sales (lower) or recovery x 1.25 (upper).",
+    "cost_per_day": {
+      "lower": {
+        "P1": 53.09010504610611,
+        "P2": 54.375384942371156,
+        "P3": 52.09185796030565,
+        "P4": 52.34750819424753,
+        "P5a": 52.09017031947851
+      },
+      "upper": {
+        "P1": 63.54833519466334,
+        "P2": 67.3470851488143,
+        "P3": 63.69453415690783,
+        "P4": 61.76939504638429,
+        "P5a": 63.68459760025088
+      }
+    }
+  },
+  "audit": {
+    "n_base_candidates": 240,
+    "n_evaluations": 1920,
+    "by_fault": {
+      "ineligible_supplier": {
+        "n": 240,
+        "unsafe_share": 1.0,
+        "flagged_share": 1.0,
+        "recall_on_unsafe": 1.0,
+        "outcomes": {
+          "reject": 240
+        }
+      },
+      "misreported_cost": {
+        "n": 240,
+        "unsafe_share": 0.0,
+        "flagged_share": 0.5333333333333333,
+        "recall_on_unsafe": 0.0,
+        "outcomes": {
+          "recommend": 112,
+          "reject": 111,
+          "escalate": 17
+        }
+      },
+      "missing_forecast": {
+        "n": 240,
+        "unsafe_share": 0.0,
+        "flagged_share": 1.0,
+        "recall_on_unsafe": 0.0,
+        "outcomes": {
+          "escalate": 240
+        }
+      },
+      "no_order": {
+        "n": 240,
+        "unsafe_share": 0.041666666666666664,
+        "flagged_share": 0.8583333333333333,
+        "recall_on_unsafe": 1.0,
+        "outcomes": {
+          "escalate": 206,
+          "recommend": 34
+        }
+      },
+      "phantom_record": {
+        "n": 240,
+        "unsafe_share": 0.0,
+        "flagged_share": 0.8125,
+        "recall_on_unsafe": 0.0,
+        "outcomes": {
+          "investigate": 185,
+          "recommend": 45,
+          "escalate": 10
+        }
+      },
+      "quantity_x3": {
+        "n": 240,
+        "unsafe_share": 0.7875,
+        "flagged_share": 0.8291666666666667,
+        "recall_on_unsafe": 1.0,
+        "outcomes": {
+          "reject": 189,
+          "recommend": 41,
+          "escalate": 10
+        }
+      },
+      "stale_snapshot": {
+        "n": 240,
+        "unsafe_share": 0.0,
+        "flagged_share": 1.0,
+        "recall_on_unsafe": 0.0,
+        "outcomes": {
+          "defer": 122,
+          "escalate": 118
+        }
+      },
+      "unchanged": {
+        "n": 240,
+        "unsafe_share": 0.0,
+        "flagged_share": 0.10833333333333334,
+        "recall_on_unsafe": 0.0,
+        "outcomes": {
+          "recommend": 214,
+          "escalate": 26
+        }
+      }
+    },
+    "overall_recall_on_unsafe": 1.0,
+    "false_alarm_rate_on_safe": 0.6988521269412559,
+    "note": "Faults are injected into real benchmark candidates; truth uses the simulator state at that decision."
+  },
+  "hypotheses": [
+    {
+      "id": "H1",
+      "statement": "Better forecast accuracy does not necessarily produce lower decision cost.",
+      "rule": "supported if the most accurate model on observed sales is not the lowest-cost model and their paired cost difference CI excludes zero; partially supported if the models differ but the CI includes zero",
+      "evidence": {
+        "best_accuracy_model": "lgbm_quantile_observed",
+        "best_cost_model": "lgbm_quantile_recovered",
+        "kendall_tau_observed": 0.3333333333333333,
+        "kendall_tau_latent": 0.6,
+        "paired_cost_difference": {
+          "a": "P3[lgbm_quantile_observed]",
+          "b": "P3[lgbm_quantile_recovered]",
+          "diff_cost_per_day": {
+            "mean": 0.7125528547422717,
+            "lo": 0.5054598814015323,
+            "hi": 0.9196444886429765,
+            "n": 200
+          },
+          "relative_diff": 0.012587385284206968,
+          "relative_lo": 0.008929047481273393,
+          "relative_hi": 0.016245699425670848,
+          "excludes_zero": true,
+          "b_mean": 56.608488471095846
+        }
+      },
+      "verdict": "supported"
+    },
+    {
+      "id": "H2",
+      "statement": "Under unreliable data, validation lowers unsafe decisions and total cost including governance.",
+      "rule": "supported if P5a executes fewer unsafe decisions than P3 and the paired cost CI is below zero; partially supported if only one holds",
+      "evidence": {
+        "unsafe_P3": 0.04214285714285714,
+        "unsafe_P5a": 0.0002380952380952381,
+        "paired": {
+          "a": "P5a",
+          "b": "P3",
+          "diff_cost_per_day": {
+            "mean": 0.4487880664268403,
+            "lo": 0.21982626895471008,
+            "hi": 0.6656258478702328,
+            "n": 200
+          },
+          "relative_diff": 0.00666277606580823,
+          "relative_lo": 0.003263574308222224,
+          "relative_hi": 0.009881982832749988,
+          "excludes_zero": true,
+          "b_mean": 67.35751914729855
+        }
+      },
+      "verdict": "partially supported"
+    },
+    {
+      "id": "H3",
+      "statement": "Under normal operations the validation layer's net cost change is within +/-2%.",
+      "rule": "supported if the relative paired difference CI lies within [-2%, +2%]; not supported otherwise",
+      "evidence": {
+        "paired": {
+          "a": "P5a",
+          "b": "P3",
+          "diff_cost_per_day": {
+            "mean": -0.006835917230382789,
+            "lo": -0.01924241055778078,
+            "hi": 0.002173224429903273,
+            "n": 200
+          },
+          "relative_diff": -0.0001207578123883875,
+          "relative_lo": -0.00033992093902323337,
+          "relative_hi": 3.8390433812994604e-05,
+          "excludes_zero": false,
+          "b_mean": 56.608488471095846
+        }
+      },
+      "verdict": "supported"
+    },
+    {
+      "id": "H4",
+      "statement": "Mean-CVaR optimization lowers CVaR90 at an expected-cost increase below 5%.",
+      "rule": "supported if it holds in all three conditions; partially if in some",
+      "evidence": {
+        "normal": {
+          "cvar90_P4": 170.44833293427865,
+          "cvar90_P3": 177.2793686837085,
+          "mean_P4": 55.87513715173125,
+          "mean_P3": 56.608488471095846
+        },
+        "unreliable": {
+          "cvar90_P4": 205.65643858166936,
+          "cvar90_P3": 215.3333268676156,
+          "mean_P4": 65.0289398551058,
+          "mean_P3": 67.35751914729855
+        },
+        "disruption": {
+          "cvar90_P4": 189.85805045601356,
+          "cvar90_P3": 193.92822866033768,
+          "mean_P4": 60.40112349894513,
+          "mean_P3": 60.423828943538865
+        }
+      },
+      "verdict": "supported"
+    },
+    {
+      "id": "H5",
+      "statement": "Hourly-profile recovery reduces error and bias on artificially censored days.",
+      "rule": "supported if both MAE and absolute bias are lower than treating observed sales as demand",
+      "evidence": {
+        "observed_as_demand": {
+          "n": 2944,
+          "mae": 10.306725543478262,
+          "bias_pct": -50.86413544547817,
+          "wape_pct": 50.86413544547817
+        },
+        "profile_recovery": {
+          "n": 2944,
+          "mae": 3.961676274758148,
+          "bias_pct": 0.2670535871467102,
+          "wape_pct": 19.5510434211516
+        }
+      },
+      "verdict": "supported"
+    }
+  ]
+}

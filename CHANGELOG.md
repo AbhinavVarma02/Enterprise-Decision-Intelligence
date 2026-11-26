@@ -15,6 +15,7 @@ All notable changes. Dates are America/New_York.
 - 2026-11-25: Static web app (React 19, TypeScript, Vite): overview, decision workspace, scenario studio, benchmark, data and reliability, decision history, methodology. Browser evaluator and validator parity-tested against Python golden fixtures. Hash-chained local decision log with schema-validated import and export.
 - 2026-11-26: Responsive tables and charts for phones, methodology flow as an ordered list, skip link and off-canvas focus handling, contrast fix, UI review log.
 - 2026-11-26: Security and threat model, data model, deployment guide, third-party notices, pinned dependency lock, CI workflow, findings digest script.
+- 2026-11-26: Research results (run `research-76b4b4db2c95d63e`), generated findings tables, README findings, axe accessibility scans at three widths, validator latency script.
 
 ### Fixed
 - 2026-11-25: Feature leakage (lags read the target day); found by the leakage test before any reported run.

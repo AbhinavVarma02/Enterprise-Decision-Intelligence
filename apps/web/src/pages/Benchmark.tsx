@@ -38,10 +38,10 @@ function hypothesisLine(h: Loose): string {
   switch (h.id) {
     case "H1": {
       const d = e.paired_cost_difference?.diff_cost_per_day;
-      return `Best on observed-sales accuracy: ${e.best_accuracy_model.replace(/_/g, " ")}. Lowest decision cost: ${e.best_cost_model.replace(/_/g, " ")}${d ? ` (difference ${money(d.mean)} per day, 95% CI ${money(d.lo)} to ${money(d.hi)})` : ""}. Rank agreement (Kendall tau) ${e.kendall_tau_observed?.toFixed(2)} against observed sales${e.kendall_tau_latent !== null && e.kendall_tau_latent !== undefined ? `, ${e.kendall_tau_latent.toFixed(2)} against true demand` : ""}.`;
+      return `Best on observed-sales accuracy: ${SHORT_MODEL[e.best_accuracy_model] ?? e.best_accuracy_model}. Lowest decision cost: ${SHORT_MODEL[e.best_cost_model] ?? e.best_cost_model}${d ? ` (difference ${money(d.mean)} per day, 95% CI ${money(d.lo)} to ${money(d.hi)})` : ""}. Rank agreement (Kendall tau) ${e.kendall_tau_observed?.toFixed(2)} against observed sales${e.kendall_tau_latent !== null && e.kendall_tau_latent !== undefined ? `, ${e.kendall_tau_latent.toFixed(2)} against true demand` : ""}.`;
     }
     case "H2":
-      return `Unsafe executed orders ${pct(e.unsafe_P3)} without validation, ${pct(e.unsafe_P5a)} with it. Net cost change ${pct(e.paired?.relative_diff, 1, true)} (95% CI ${pct(e.paired?.relative_lo, 1, true)} to ${pct(e.paired?.relative_hi, 1, true)}).`;
+      return `Unsafe executed orders ${pct(e.unsafe_P3, 2)} without validation, ${pct(e.unsafe_P5a, 2)} with it. Net cost change ${pct(e.paired?.relative_diff, 1, true)} (95% CI ${pct(e.paired?.relative_lo, 1, true)} to ${pct(e.paired?.relative_hi, 1, true)}).`;
     case "H3":
       return `Net cost change in normal operations ${pct(e.paired?.relative_diff, 1, true)} (95% CI ${pct(e.paired?.relative_lo, 1, true)} to ${pct(e.paired?.relative_hi, 1, true)}); the target band was plus or minus 2%.`;
     case "H4":

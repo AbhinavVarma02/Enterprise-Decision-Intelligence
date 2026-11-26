@@ -1,53 +1,38 @@
 # PROGRESS
 
-Last updated: 2026-11-25 22:55 America/New_York
-Current phase: 1 complete, starting 2 (data engineering)
+Last updated: 2026-11-26 12:40 America/New_York
 
-## Completed (with evidence)
+## Status
 
-- Phase 0: continuity files (`MASTER_PROMPT.md` sha256 3a0b15a7..., `AGENTS.md`, `CLAUDE.md`, `TASKS.md`, `HANDOFF.md`, `CHANGELOG.md`), git repository initialized.
-- Environment inspected: build shell Linux x86_64, 2 CPU, 7.8 GB RAM, Python 3.13, Node 22; user machine shell Linux VM, 2 CPU, 3.8 GB RAM, Python 3.10, Node 22.
-- Phase 1: `docs/RESEARCH.md`, `docs/COMPETITIVE_ANALYSIS.md`, `docs/ARCHITECTURE.md` (includes five-perspective review), ADR 0001-0008, `docs/EXPERIMENT_PROTOCOL.md` v1.0 frozen.
+All build phases are complete on synthetic data. Two items are blocked by the environment, not by the code: running on the real FreshRetailNet-50K dataset (Hugging Face unreachable from the build machine) and deploying to Cloudflare Pages (no credentials). Both have exact commands in the README and `docs/DEPLOYMENT.md`.
 
-## In progress
+| Area | State | Evidence |
+|---|---|---|
+| Data pipeline | Done | Schema-identical fixture, quality checks with quarantine, DuckDB curated layer; `tests/test_data_pipeline.py` |
+| Forecasting | Done | Baselines, LightGBM point and quantile, stockout-aware target, conformal calibration, leakage test; `artifacts/forecast/metrics.json` |
+| Simulation and optimization | Done | FIFO perishable simulator; cohort MILP (HiGHS) matches the simulator for shelf life of 3 days or more; brute-force tests |
+| Validation engine | Done | G1 to G7, five outcomes, VOI, cost of inaction, prioritization, JSON Schemas |
+| Benchmark | Done | Research run `research-76b4b4db2c95d63e`, 298,200 decisions, harness invariant passes; `docs/BENCHMARK_FINDINGS.md` |
+| Second domain | Done | Cloud capacity on the same contract; `artifacts/benchmark/secondary_cloud.json` |
+| Web app | Done | 7 pages, browser engine parity-tested (40 Vitest tests), 10 journey tests, 21 axe scans, 21 screenshots |
+| Docs | Done | README, findings, architecture, protocol with 2 amendments, data model, security, deployment, design system, UI review, ADR 0001-0009, notices |
+| CI | Written, not run on GitHub | `.github/workflows/ci.yml`; every step was run locally |
+| Real data run | Blocked | huggingface.co unreachable here |
+| Deployment | Blocked | No Cloudflare credentials; commands documented |
 
-- Phase 2: ingestion and data quality.
+## Verification run on 2026-11-26
 
-## Remaining
+- `pytest -q`: 58 passed on Python 3.13 (pandas 3.1) and Python 3.10 (pandas 2.3).
+- `ruff check`, `ruff format --check`, `mypy src`: clean.
+- `npm run lint`, `npm run typecheck`, `npx vitest run` (40), `npm run build` (29 files, 0.95 MB), Playwright journeys (10), axe scans (21): all pass.
+- `npm audit --omit=dev` and `pip-audit` on the installed environment: no known vulnerabilities.
+- `edi run-all --config configs/ci.yaml`: completes in about 100 seconds.
 
-See `TASKS.md` T2 to T14.
+## Headline results (synthetic)
 
-## Latest test results
+Validation removed all hard-constraint breaches under unreliable data (177 to 0) and cut unsafe executed orders from 4.21% to 0.02%, but raised total cost by 0.67% (0.33% to 0.99%) because of review and stock-count costs; operating cost was unchanged. Mean-CVaR optimization was the cheapest policy. Stockout-aware forecasts beat the more "accurate" observed-sales model on decision cost. Details and negative results in `docs/BENCHMARK_FINDINGS.md`.
 
-None yet.
+## Environment notes
 
-## Dataset status
-
-- FreshRetailNet-50K: **not downloaded**. huggingface.co, cdn-lfs.huggingface.co and hf-mirror.com refused by the network allowlist (HTTP 403 at proxy) from both shells on 2026-11-25.
-- Synthetic fixture: planned (ADR-0002).
-
-## Experiment results
-
-None yet.
-
-## Current implementation decisions
-
-See ADR 0001-0008 in `docs/decisions/`.
-
-## Known bugs and limitations
-
-- Real-data experiments cannot run in this environment.
-- Cloudflare API refused by the network allowlist; deployment must run from the developer's machine.
-
-## Deployment status
-
-Not deployed.
-
-## Latest verified commit
-
-See `git log -1`.
-
-## Immediate next actions
-
-1. Implement `edi.ingestion` (real downloader, synthetic fixture) and `edi.data_quality`.
-2. Curated tables and hourly-profile demand recovery.
+- Build machine: Linux, 2 CPU cores, Python 3.13, Node 22. Research run takes about 105 minutes.
+- The linked Windows machine has a Linux shell with Python 3.10; its copy of the repository is synced from here.

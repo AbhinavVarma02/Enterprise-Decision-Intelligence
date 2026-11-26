@@ -19,4 +19,4 @@ Status values: todo, doing, done, blocked. Priority follows MASTER_PROMPT.md sec
 | T12 | Docs, README, security review, CI workflow, deployment commands | T11 | Docs match implementation; build verified | done |
 | T13 | Real-data run on FreshRetailNet-50K | dataset access | Real artifacts replace synthetic in research config | blocked (host refused by network allowlist) |
 | T14 | Cloudflare Pages deployment | T12, credentials | Verified pages.dev URL | blocked (no Cloudflare credentials in the build environment; commands in docs/DEPLOYMENT.md) |
-| T15 | Research rerun after harness fix (amendment 2), refresh findings, screenshots and docs | T7 | Invariant passes; docs match artifacts | doing |
+| T15 | Research rerun after harness fix (amendment 2), refresh findings, screenshots and docs | T7 | Invariant passes; docs match artifacts | done |

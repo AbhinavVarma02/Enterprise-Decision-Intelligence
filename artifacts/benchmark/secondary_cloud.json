@@ -1,0 +1,445 @@
+{
+  "meta": {
+    "run_name": "research",
+    "data_source": "synthetic",
+    "n_services": 40,
+    "weeks": [
+      8,
+      13
+    ],
+    "generated_at": "2026-11-26T17:04:33+00:00",
+    "prices": {
+      "reserved": 0.6,
+      "on_demand": 1.0,
+      "spot": 0.3,
+      "sla_penalty": 4.0,
+      "delay_penalty": 0.5
+    },
+    "note": "Synthetic cloud capacity scenario. Costs are illustrative.",
+    "runtime_seconds": 87.9
+  },
+  "results": {
+    "normal": {
+      "C1_reserve_mean": {
+        "cost_per_service_day": {
+          "mean": 119.41566833226098,
+          "lo": 100.27458550085245,
+          "hi": 140.1509573633617,
+          "n": 40
+        },
+        "cvar90": 283.52672218809954,
+        "hard_violations": 1
+      },
+      "C2_deterministic": {
+        "cost_per_service_day": {
+          "mean": 101.50919275639727,
+          "lo": 86.67022899033033,
+          "hi": 118.92754609739745,
+          "n": 40
+        },
+        "cvar90": 242.26200895658408,
+        "hard_violations": 0
+      },
+      "C3_expected": {
+        "cost_per_service_day": {
+          "mean": 96.63520630015553,
+          "lo": 82.30507473522181,
+          "hi": 112.83161348609396,
+          "n": 40
+        },
+        "cvar90": 220.8358593970708,
+        "hard_violations": 0
+      },
+      "C4_cvar": {
+        "cost_per_service_day": {
+          "mean": 96.5583481370297,
+          "lo": 82.27704290037506,
+          "hi": 112.83070253712889,
+          "n": 40
+        },
+        "cvar90": 218.5457087189437,
+        "hard_violations": 0
+      },
+      "C5_validated": {
+        "cost_per_service_day": {
+          "mean": 96.97593417647548,
+          "lo": 82.61307511213705,
+          "hi": 113.24063401197954,
+          "n": 40
+        },
+        "cvar90": 220.12466986176682,
+        "hard_violations": 0
+      }
+    },
+    "unreliable": {
+      "C1_reserve_mean": {
+        "cost_per_service_day": {
+          "mean": 131.54272416247585,
+          "lo": 111.40128368299355,
+          "hi": 153.0490490849488,
+          "n": 40
+        },
+        "cvar90": 309.158480066739,
+        "hard_violations": 56
+      },
+      "C2_deterministic": {
+        "cost_per_service_day": {
+          "mean": 117.89879200931846,
+          "lo": 98.36190864433097,
+          "hi": 139.21943855181956,
+          "n": 40
+        },
+        "cvar90": 313.52042720388715,
+        "hard_violations": 1
+      },
+      "C3_expected": {
+        "cost_per_service_day": {
+          "mean": 109.36571323115481,
+          "lo": 92.42799779681567,
+          "hi": 128.09780337179598,
+          "n": 40
+        },
+        "cvar90": 266.81141968712785,
+        "hard_violations": 15
+      },
+      "C4_cvar": {
+        "cost_per_service_day": {
+          "mean": 108.03756006469561,
+          "lo": 91.52797825536261,
+          "hi": 126.22578565790903,
+          "n": 40
+        },
+        "cvar90": 257.407966225613,
+        "hard_violations": 10
+      },
+      "C5_validated": {
+        "cost_per_service_day": {
+          "mean": 107.07701862971325,
+          "lo": 90.43299878090727,
+          "hi": 124.55002524263764,
+          "n": 40
+        },
+        "cvar90": 253.59152992376124,
+        "hard_violations": 0
+      }
+    },
+    "disruption": {
+      "C1_reserve_mean": {
+        "cost_per_service_day": {
+          "mean": 147.09301643157013,
+          "lo": 125.30384643914142,
+          "hi": 172.03497655875526,
+          "n": 40
+        },
+        "cvar90": 348.95995890400394,
+        "hard_violations": 1
+      },
+      "C2_deterministic": {
+        "cost_per_service_day": {
+          "mean": 140.4113512766248,
+          "lo": 115.65830717274851,
+          "hi": 167.14561621482898,
+          "n": 40
+        },
+        "cvar90": 393.3412438180798,
+        "hard_violations": 0
+      },
+      "C3_expected": {
+        "cost_per_service_day": {
+          "mean": 122.22946931481147,
+          "lo": 103.47004496989997,
+          "hi": 142.30678667840496,
+          "n": 40
+        },
+        "cvar90": 306.4666763573782,
+        "hard_violations": 0
+      },
+      "C4_cvar": {
+        "cost_per_service_day": {
+          "mean": 119.57390740136532,
+          "lo": 101.55334372574428,
+          "hi": 139.34315914930272,
+          "n": 40
+        },
+        "cvar90": 296.53634637648497,
+        "hard_violations": 0
+      },
+      "C5_validated": {
+        "cost_per_service_day": {
+          "mean": 120.70468987349372,
+          "lo": 102.34655260969734,
+          "hi": 140.30642671656366,
+          "n": 40
+        },
+        "cvar90": 295.3791891994394,
+        "hard_violations": 0
+      }
+    }
+  },
+  "paired": {
+    "normal": {
+      "C5_vs_C3": {
+        "a": "C5_validated",
+        "b": "C3_expected",
+        "diff_cost_per_day": {
+          "mean": 0.3407278763199324,
+          "lo": -0.11802564882854431,
+          "hi": 0.8796575528772964,
+          "n": 40
+        },
+        "relative_diff": 0.0035259186518587066,
+        "relative_lo": -0.0012213524795709402,
+        "relative_hi": 0.009102868266716585,
+        "excludes_zero": false,
+        "b_mean": 96.63520630015553
+      },
+      "C4_vs_C3": {
+        "a": "C4_cvar",
+        "b": "C3_expected",
+        "diff_cost_per_day": {
+          "mean": -0.07685816312582629,
+          "lo": -0.7754862536112145,
+          "hi": 0.6582033007549997,
+          "n": 40
+        },
+        "relative_diff": -0.0007953432922479577,
+        "relative_lo": -0.008024883303943093,
+        "relative_hi": 0.0068112163874372595,
+        "excludes_zero": false,
+        "b_mean": 96.63520630015553
+      },
+      "C3_vs_C1": {
+        "a": "C3_expected",
+        "b": "C1_reserve_mean",
+        "diff_cost_per_day": {
+          "mean": -22.78046203210544,
+          "lo": -28.37565445388259,
+          "hi": -17.304249913829345,
+          "n": 40
+        },
+        "relative_diff": -0.1907661059076545,
+        "relative_lo": -0.23762086542052796,
+        "relative_hi": -0.14490770060158412,
+        "excludes_zero": true,
+        "b_mean": 119.41566833226098
+      }
+    },
+    "unreliable": {
+      "C5_vs_C3": {
+        "a": "C5_validated",
+        "b": "C3_expected",
+        "diff_cost_per_day": {
+          "mean": -2.2886946014415748,
+          "lo": -4.443227615007272,
+          "hi": -0.17363858394433324,
+          "n": 40
+        },
+        "relative_diff": -0.020926984644668307,
+        "relative_lo": -0.040627244899103694,
+        "relative_hi": -0.0015876875742339063,
+        "excludes_zero": true,
+        "b_mean": 109.36571323115483
+      },
+      "C4_vs_C3": {
+        "a": "C4_cvar",
+        "b": "C3_expected",
+        "diff_cost_per_day": {
+          "mean": -1.3281531664592254,
+          "lo": -2.5796712530612744,
+          "hi": -0.08972081827124863,
+          "n": 40
+        },
+        "relative_diff": -0.012144145795054136,
+        "relative_lo": -0.023587568506126724,
+        "relative_hi": -0.0008203742802062211,
+        "excludes_zero": true,
+        "b_mean": 109.36571323115483
+      },
+      "C3_vs_C1": {
+        "a": "C3_expected",
+        "b": "C1_reserve_mean",
+        "diff_cost_per_day": {
+          "mean": -22.177010931321018,
+          "lo": -26.935618473793795,
+          "hi": -17.217228064224113,
+          "n": 40
+        },
+        "relative_diff": -0.16859169575908234,
+        "relative_lo": -0.20476707203147237,
+        "relative_hi": -0.13088696599409133,
+        "excludes_zero": true,
+        "b_mean": 131.54272416247585
+      }
+    },
+    "disruption": {
+      "C5_vs_C3": {
+        "a": "C5_validated",
+        "b": "C3_expected",
+        "diff_cost_per_day": {
+          "mean": -1.524779441317748,
+          "lo": -2.8955001618340566,
+          "hi": -0.23979348084719135,
+          "n": 40
+        },
+        "relative_diff": -0.012474728474771992,
+        "relative_lo": -0.02368905124161565,
+        "relative_hi": -0.0019618303359362926,
+        "excludes_zero": true,
+        "b_mean": 122.22946931481147
+      },
+      "C4_vs_C3": {
+        "a": "C4_cvar",
+        "b": "C3_expected",
+        "diff_cost_per_day": {
+          "mean": -2.6555619134461494,
+          "lo": -4.401063935815971,
+          "hi": -0.7569824653888396,
+          "n": 40
+        },
+        "relative_diff": -0.021726036514210366,
+        "relative_lo": -0.03600656994166186,
+        "relative_hi": -0.006193125681002285,
+        "excludes_zero": true,
+        "b_mean": 122.22946931481147
+      },
+      "C3_vs_C1": {
+        "a": "C3_expected",
+        "b": "C1_reserve_mean",
+        "diff_cost_per_day": {
+          "mean": -24.863547116758678,
+          "lo": -31.018267856827354,
+          "hi": -18.91995821037801,
+          "n": 40
+        },
+        "relative_diff": -0.16903281828016337,
+        "relative_lo": -0.21087519047008949,
+        "relative_hi": -0.12862580882063734,
+        "excludes_zero": true,
+        "b_mean": 147.09301643157013
+      }
+    }
+  },
+  "detection": {
+    "normal": {
+      "n_candidates": 200,
+      "n_unsafe": 0,
+      "recall": null,
+      "unnecessary_intervention_rate": 0.355,
+      "coverage": 0.645,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_rate_without_validation": 0.0,
+      "outcomes": {
+        "recommend": 129,
+        "escalate": 71
+      },
+      "outcomes_unsafe": {},
+      "by_event": {
+        "none": {
+          "n": 200,
+          "unsafe": 0,
+          "flagged_unsafe": 0,
+          "flagged_safe": 71
+        }
+      }
+    },
+    "unreliable": {
+      "n_candidates": 200,
+      "n_unsafe": 29,
+      "recall": 1.0,
+      "unnecessary_intervention_rate": 0.6783625730994152,
+      "coverage": 0.275,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_rate_without_validation": 0.145,
+      "outcomes": {
+        "recommend": 55,
+        "escalate": 54,
+        "investigate": 53,
+        "reject": 38
+      },
+      "outcomes_unsafe": {
+        "reject": 15,
+        "investigate": 14
+      },
+      "by_event": {
+        "launch_unconfirmed": {
+          "n": 53,
+          "unsafe": 14,
+          "flagged_unsafe": 14,
+          "flagged_safe": 39
+        },
+        "stale_price": {
+          "n": 46,
+          "unsafe": 1,
+          "flagged_unsafe": 1,
+          "flagged_safe": 26
+        },
+        "stale_quota": {
+          "n": 56,
+          "unsafe": 14,
+          "flagged_unsafe": 14,
+          "flagged_safe": 6
+        },
+        "stale_telemetry": {
+          "n": 45,
+          "unsafe": 0,
+          "flagged_unsafe": 0,
+          "flagged_safe": 45
+        }
+      }
+    },
+    "disruption": {
+      "n_candidates": 200,
+      "n_unsafe": 0,
+      "recall": null,
+      "unnecessary_intervention_rate": 0.39,
+      "coverage": 0.61,
+      "unsafe_rate_among_recommended": 0.0,
+      "unsafe_rate_without_validation": 0.0,
+      "outcomes": {
+        "recommend": 122,
+        "escalate": 78
+      },
+      "outcomes_unsafe": {},
+      "by_event": {
+        "demand_spike": {
+          "n": 67,
+          "unsafe": 0,
+          "flagged_unsafe": 0,
+          "flagged_safe": 21
+        },
+        "quota_cut": {
+          "n": 72,
+          "unsafe": 0,
+          "flagged_unsafe": 0,
+          "flagged_safe": 32
+        },
+        "spot_crunch": {
+          "n": 61,
+          "unsafe": 0,
+          "flagged_unsafe": 0,
+          "flagged_safe": 25
+        }
+      }
+    }
+  },
+  "reuse": {
+    "reused_unchanged": [
+      "DecisionCandidate schema v1.0",
+      "validation engine and gates G1-G7",
+      "EVPI and value of verification",
+      "CVaR",
+      "cluster bootstrap",
+      "paired comparison",
+      "detection metrics"
+    ],
+    "domain_specific": [
+      "cost model (reserved, spot, on-demand, SLA and delay penalties)",
+      "demand generator and trailing forecast",
+      "candidate grid",
+      "stress cases",
+      "anomaly signal (unconfirmed launch)",
+      "policies C1-C5"
+    ],
+    "engine_change_needed": "one generalization: spend counts only resources marked committed (usage-priced limits excluded)"
+  }
+}
