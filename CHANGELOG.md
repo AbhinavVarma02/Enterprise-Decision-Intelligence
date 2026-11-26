@@ -22,6 +22,7 @@ All notable changes. Dates are America/New_York.
 - 2026-11-26: Research results (run `research-76b4b4db2c95d63e`), generated findings tables, README findings, axe accessibility scans at three widths, validator latency script.
 
 ### Fixed
+- 2026-11-26: Preserve both Scenario Studio settings when several URL-backed controls are changed in quick succession.
 - 2026-11-26: Fixed Python 3.10 type checking against pandas 2.3 stubs by using distinct variables for the pipeline frame, latent-demand series and benchmark groups.
 - 2026-11-26: Fit retail selection and volume scaling before tuning, preserve official partition identity, and exclude earlier prediction targets and unavailable promotions from pilot scoring and model inputs respectively.
 - 2026-11-26: Enforce budget, availability and supplier minimums when settling submitted orders, and synchronize validator and reviewer randomness across variant runs. Record denominator and breach counts explicitly.

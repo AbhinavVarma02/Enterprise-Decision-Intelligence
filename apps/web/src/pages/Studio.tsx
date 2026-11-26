@@ -89,7 +89,8 @@ function StudioBody({ c, all, params }: { c: DecisionCase; all: DecisionCase[]; 
   const updating = mods !== deferred;
   const [saved, setSaved] = useState(false);
   const set = (k: keyof StudioMods, v: number | boolean) => {
-    const next = new URLSearchParams(sp);
+    // History updates before React renders the new search params.
+    const next = new URLSearchParams(window.location.search);
     next.set(k, typeof v === "boolean" ? (v ? "1" : "0") : String(v));
     setSp(next, { replace: true });
     setSaved(false);
@@ -125,7 +126,7 @@ function StudioBody({ c, all, params }: { c: DecisionCase; all: DecisionCase[]; 
         </div>
         <label className="row small" style={{ gap: 8 }}>
           <span className="muted">Decision</span>
-          <select className="select" value={c.id} onChange={(e) => nav(`/studio/${e.target.value}?${sp.toString()}`)} aria-label="Choose a decision">
+          <select className="select" value={c.id} onChange={(e) => nav(`/studio/${e.target.value}${window.location.search}`)} aria-label="Choose a decision">
             {all.map((x) => <option key={x.id} value={x.id}>{x.title} ({caseLocation(x)})</option>)}
           </select>
         </label>

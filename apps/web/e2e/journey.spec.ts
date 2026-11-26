@@ -23,7 +23,8 @@ test.describe("signature decision journey", () => {
     const before = await page.getByTestId("studio-recommended").innerText();
     await page.getByRole("button", { name: "+2 days" }).click();
     await page.locator("#s-demand").fill("0.4");
-    await expect(page).toHaveURL(/primary_delay_days=2/);
+    await expect(page).toHaveURL((url) => url.searchParams.get("primary_delay_days") === "2"
+      && url.searchParams.get("demand_shift") === "0.4");
     await expect.poll(async () => page.getByTestId("studio-recommended").innerText()).not.toBe(before);
     await page.getByRole("button", { name: "Save scenario" }).click();
     await expect(page.getByRole("button", { name: "Saved to history" })).toBeVisible();
