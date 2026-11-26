@@ -325,14 +325,15 @@ def audit(samples: list[dict[str, Any]], cfg: dict[str, Any], limit: int = 240) 
             )
     df = pd.DataFrame(rows)
     by: dict[str, Any] = {}
-    for fault, g in df.groupby("fault"):
-        flagged = g["outcome"] != "recommend"
-        by[str(fault)] = {
-            "n": int(len(g)),
-            "unsafe_share": float(g["unsafe"].mean()),
+    for fault_name, fault_rows in df.groupby("fault"):
+        flagged = fault_rows["outcome"] != "recommend"
+        unsafe_rows = fault_rows["unsafe"]
+        by[str(fault_name)] = {
+            "n": int(len(fault_rows)),
+            "unsafe_share": float(unsafe_rows.mean()),
             "flagged_share": float(flagged.mean()),
-            "recall_on_unsafe": float((flagged & g["unsafe"]).sum() / max(g["unsafe"].sum(), 1)),
-            "outcomes": g["outcome"].value_counts().to_dict(),
+            "recall_on_unsafe": float((flagged & unsafe_rows).sum() / max(unsafe_rows.sum(), 1)),
+            "outcomes": fault_rows["outcome"].value_counts().to_dict(),
         }
     safe = df[~df["unsafe"].astype(bool)]
     u = df[df["unsafe"].astype(bool)]
@@ -485,10 +486,10 @@ def build_report(cfg: dict[str, Any]) -> dict[str, Any]:
     fv["cost_per_day"] = fv["total"] / fv["n_days"]
     rows = []
     stage_b = fmetrics["stage_B"]["models"]
-    for p, g in fv.groupby("policy"):
-        model = str(p)[3:-1]
+    for policy_name, variant_rows in fv.groupby("policy"):
+        model = str(policy_name)[3:-1]
         m = stage_b[model]
-        ci = bootstrap_mean(_series_values(g, "cost_per_day").to_numpy(), B, seed)
+        ci = bootstrap_mean(_series_values(variant_rows, "cost_per_day").to_numpy(), B, seed)
         rows.append(
             {
                 "model": model,

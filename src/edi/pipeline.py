@@ -300,9 +300,9 @@ def load_panel(cfg: dict[str, Any]) -> Panel:
         lat = pd.read_parquet(lay.raw_synthetic / "latent_demand.parquet")
         lat["series_id"] = "s" + lat["store_id"].astype(str) + "_p" + lat["product_id"].astype(str)
         lat["day_index"] = (pd.to_datetime(lat["dt"]) - pd.Timestamp(start)).dt.days + 1
-        lat = lat.set_index(["series_id", "day_index"])["latent_daily"]
+        latent_daily = lat.set_index(["series_id", "day_index"])["latent_daily"]
         idx = pd.MultiIndex.from_product([series_ids, range(1, n_d + 1)])
-        latent = lat.reindex(idx).to_numpy(dtype=float).reshape(n_s, n_d)
+        latent = latent_daily.reindex(idx).to_numpy(dtype=float).reshape(n_s, n_d)
     profiles = dim["profile"].tolist()
     if any(p not in CATEGORY_PROFILES for p in profiles):
         raise ValueError("unknown economics profile in series_dim")
