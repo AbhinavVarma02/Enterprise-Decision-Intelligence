@@ -7,25 +7,27 @@ Access date for every web source below: 2026-11-25 (America/New_York), unless no
 ### FreshRetailNet-50K (primary)
 
 - Dataset card: https://huggingface.co/datasets/Dingdong-Inc/FreshRetailNet-50K (verified)
-- Paper: Wang, Gu, Long, Li, Shen, Fu, Zhou, Jiang. *FreshRetailNet-50K: A Stockout-Annotated Censored Demand Dataset for Latent Demand Recovery and Forecasting in Fresh Retail.* arXiv:2505.16319, first submitted 2025-05-23, v5 dated 2026-06-19 (verified).
+- Paper by Wang, Gu, Long, Li, Shen, Fu, Zhou and Jiang. *FreshRetailNet-50K: A Stockout-Annotated Censored Demand Dataset for Latent Demand Recovery and Forecasting in Fresh Retail.* First submitted 2025-05-22, revision 6 dated 2026-11-20, checked 2026-11-26. [arXiv record](https://arxiv.org/abs/2505.16319)
 - Baseline code: https://github.com/Dingdong-Inc/frn-50k-baseline (README read through raw.githubusercontent.com).
 - License: CC BY 4.0 (stated on the dataset card). Attribution and citation are required; see `THIRD_PARTY_NOTICES.md`.
-- Revision: the card reports data version 1.0 released 2025-05-08. No commit hash was visible from the card text. `scripts/download_freshretailnet.py` records the resolved Hub commit SHA and SHA-256 of every file at download time in `data/raw/freshretailnet/PROVENANCE.json`.
+- The audited Hub revision is `c374e85975c82816c495acfa904cc55ab14a47d3`. Both parquet file hashes and the full-partition counts are in `artifacts/real/dataset_audit.json`. [Pinned dataset](https://huggingface.co/datasets/Dingdong-Inc/FreshRetailNet-50K/tree/c374e85975c82816c495acfa904cc55ab14a47d3)
 
 Schema (19 fields, from the card): `city_id`, `store_id`, `management_group_id`, `first_category_id`, `second_category_id`, `third_category_id`, `product_id` (int64 encoded IDs); `dt` (date string); `sale_amount` (float, daily sales, globally normalized and scaled by an undisclosed coefficient); `hours_sale` (24 floats); `stock_hour6_22_cnt` (int, out-of-stock hours between 06:00 and 22:00); `hours_stock_status` (24 ints); `discount` (1.0 means no discount); `holiday_flag`, `activity_flag` (ints); `precpt`, `avg_temperature`, `avg_humidity`, `avg_wind_level` (floats).
 
-Splits: train 4,500,000 rows (50,000 series x 90 days), eval 350,000 rows (50,000 x 7 days). Total size about 115 MB. Coverage: 898 stores, 18 cities, perishable SKUs (the card says 865, the arXiv abstract says 863; we record both and will count from the data). About 20% of observations involve organically occurring stockouts per the card.
+The downloaded files contain 4,500,000 training rows (March 28 to June 25, 2024) and 350,000 evaluation rows (June 26 to July 2, 2024). Both contain the same 50,000 store-product pairs across 898 stores, 18 cities and 865 distinct product IDs. The files total about 115 MB. At least one flagged business-hour stockout occurred on 44.27% of training rows and 40.98% of evaluation rows. These are daily rates.
 
-Stockout encoding: the card does not define the values of `hours_stock_status`. Sample rows show `stock_hour6_22_cnt` equal to the count of 1s in positions 6 to 21, which suggests 1 = out of stock. **This is an inference.** `edi.data_quality` re-checks it on the real data (consistency rate between the two fields) before any model relies on it.
+The daily stockout count equals the number of `1` values in hours 06:00–21:59 on every downloaded row. Including hour 22 creates 2,020,515 disagreements. This verifies the half-open business-hour window and the out-of-stock flag convention for this revision.
 
 Implications for this project:
 
 1. `sale_amount` is normalized, so all currency figures are assumptions applied to normalized units. We never present them as real money.
 2. Observed sales are censored whenever any hour is out of stock. Real latent demand during true stockouts is unobservable, so controlled recovery experiments use artificially censored in-stock days where the answer is known.
 3. Weather fields are same-day actuals. A replenishment decision made the previous day could not have known them, so models use only lagged weather (ADR-0005).
-4. `discount` and `activity_flag` are treated as planned promotions known one day ahead. This is an assumption, documented in ADR-0005 and tested by an ablation that removes them.
+4. The synthetic study evaluates a planned-promotion assumption and a no-promotion variant. The retail pilot excludes target-day discount and activity because availability timestamps are missing. It uses the holiday calendar and trailing weather.
 
-Access constraint in this build environment: huggingface.co and its CDN were refused by the network allowlist (HTTP 403 at the proxy) in both available shells. Engineering therefore proceeded on a schema-identical synthetic fixture (ADR-0002). Real-data experiments are marked not run until `scripts/download_freshretailnet.py` and `edi run-all --config configs/research.yaml` are executed on a machine with access.
+The observed-data pilot used 60 deterministically stratified pairs. Selection and volume scales use days 1–69. The benchmark assumes new inventory, supplier, cost and disruption scenarios. [Independent audit](RELEASE_AUDIT.md)
+
+Paired retail sensitivity resamples stores and products independently, following the crossed-row/column bootstrap, and retains all days and scenario realizations within each pair. [Owen, The Pigeonhole Bootstrap](https://arxiv.org/abs/0712.1111)
 
 ### Closely related prior work on the same dataset
 

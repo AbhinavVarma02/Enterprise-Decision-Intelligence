@@ -172,6 +172,7 @@ def build_candidate(
 
 class InventoryAdapter:
     name = "inventory_replenishment"
+    resource_order: tuple[str, ...] = RESOURCES
 
     def required_state(self) -> list[str]:
         return ["on_hand_by_age", "pipeline_by_day"]
@@ -216,8 +217,9 @@ class InventoryAdapter:
         pipe_h = np.zeros(h)
         pipe_h[: min(h, len(pipe))] = pipe[:h]
         acts = np.minimum(np.atleast_2d(actions), sup.capacities[None, :])  # undeliverable units never arrive
-        if len(cohorts) != econ.shelf_life:
-            cohorts = np.resize(cohorts, econ.shelf_life)
+        cohorts = cohorts[: econ.shelf_life]
+        if len(cohorts) < econ.shelf_life:
+            cohorts = np.pad(cohorts, (0, econ.shelf_life - len(cohorts)))
         return evaluate_actions(cohorts, pipe_h, acts, sup.leads, sup.unit_costs, scenarios[:, :h], econ).cost
 
     def grid(self, cand: DecisionCandidate, ctx: AuthoritativeContext) -> np.ndarray:

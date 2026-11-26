@@ -16,6 +16,7 @@ export const EntrySchema = z.object({
   assumptions: z.record(z.string(), z.union([z.number().finite(), z.boolean()])),
   note: z.string().max(500),
   simulated: z.literal(true),
+  hash_version: z.literal(2).optional(),
   prev_hash: z.string().max(64),
   hash: z.string().max(64),
 });
@@ -36,7 +37,7 @@ export async function importLog(text: string): Promise<{ ok: true; count: number
   const parsed = LogSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: "File does not match the decision-log format (version 1)." };
   const v = await verify(parsed.data.entries);
-  if (!v.ok) return { ok: false, error: `Hash chain breaks at entry ${(v.brokenAt ?? 0) + 1}; the file was edited or truncated.` };
+  if (!v.ok) return { ok: false, error: `Hash chain fails verification at entry ${(v.brokenAt ?? 0) + 1}.` };
   replaceAll(parsed.data.entries as Entry[]);
   return { ok: true, count: parsed.data.entries.length };
 }

@@ -1,7 +1,6 @@
 /**
  * Browser-local decision log. Entries are hash-chained (SHA-256 over the previous hash and the entry),
- * which detects accidental edits or truncation. It is a demonstration: localStorage is not tamper-proof,
- * not shared and not a system of record.
+ * which detects accidental edits or missing entries inside the chain. A valid prefix still verifies.
  */
 import { useSyncExternalStore } from "react";
 
@@ -25,6 +24,7 @@ export interface Entry {
   assumptions: Record<string, number | boolean>;
   note: string;
   simulated: true;
+  hash_version?: 2;
   prev_hash: string;
   hash: string;
 }
@@ -36,6 +36,7 @@ export function isEntry(x: unknown): x is Entry {
   const str = (k: string, max: number) => typeof e[k] === "string" && (e[k] as string).length <= max;
   return str("id", 80) && str("at", 40) && str("case_id", 40) && str("title", 200) && str("entity", 120) && str("note", 500)
     && str("prev_hash", 64) && str("hash", 64) && e.simulated === true
+    && (e.hash_version === undefined || e.hash_version === 2)
     && (ACTIONS as readonly string[]).includes(e.action as string) && (OUTCOMES as readonly string[]).includes(e.validator_outcome as string)
     && Array.isArray(e.orders) && e.orders.length === 3 && e.orders.every((v) => typeof v === "number" && Number.isFinite(v) && v >= 0)
     && (e.expected_cost === null || typeof e.expected_cost === "number") && (e.cvar === null || typeof e.cvar === "number")
@@ -87,15 +88,27 @@ async function sha256(text: string): Promise<string> {
 
 function canonical(e: Omit<Entry, "hash">): string {
   const { prev_hash, ...rest } = e;
-  return prev_hash + "|" + JSON.stringify(rest, Object.keys(rest).sort());
+  if (e.hash_version === undefined) return prev_hash + "|" + JSON.stringify(rest, Object.keys(rest).sort());
+  const sorted = (x: Record<string, unknown>) => Object.fromEntries(Object.keys(x).sort().map((key) => [key, x[key]]));
+  return prev_hash + "|" + JSON.stringify(sorted({ ...rest, assumptions: sorted(rest.assumptions) }));
 }
 
-export async function append(e: Omit<Entry, "id" | "at" | "prev_hash" | "hash" | "simulated">): Promise<Entry> {
-  const prev = snapshot.length ? snapshot[snapshot.length - 1].hash : "genesis";
-  const base = { ...e, id: `rec-${Date.now().toString(36)}-${snapshot.length + 1}`, at: new Date().toISOString(), simulated: true as const, prev_hash: prev };
-  const entry: Entry = { ...base, hash: await sha256(canonical(base)) };
-  write([...snapshot, entry]);
-  return entry;
+let appendQueue: Promise<unknown> = Promise.resolve();
+
+export function append(e: Omit<Entry, "id" | "at" | "prev_hash" | "hash" | "simulated" | "hash_version">): Promise<Entry> {
+  const pending = appendQueue.then(async () => {
+    for (;;) {
+      const entries = snapshot;
+      const prev = entries.at(-1)?.hash ?? "genesis";
+      const base = { ...e, id: `rec-${Date.now().toString(36)}-${entries.length + 1}`, at: new Date().toISOString(), simulated: true as const, hash_version: 2 as const, prev_hash: prev };
+      const entry: Entry = { ...base, hash: await sha256(canonical(base)) };
+      if (entries !== snapshot) continue;
+      write([...entries, entry]);
+      return entry;
+    }
+  });
+  appendQueue = pending.catch(() => undefined);
+  return pending;
 }
 
 export async function verify(entries: Entry[]): Promise<{ ok: boolean; brokenAt: number | null }> {

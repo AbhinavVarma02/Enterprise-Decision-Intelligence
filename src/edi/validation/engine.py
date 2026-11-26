@@ -81,6 +81,7 @@ class ValidatorParams:
 
 class DomainAdapter(Protocol):
     name: str
+    resource_order: tuple[str, ...]
 
     def revenue_scale(self, cand: DecisionCandidate, ctx: AuthoritativeContext) -> float: ...
 
@@ -140,9 +141,10 @@ def validate(
     gates: list[GateResult] = []
     reasons: list[str] = []
     metrics: dict[str, float | None] = {}
-    names = [r.name for r in cand.constraints.resources]
+    names = adapter.resource_order
+    plan = {r.name: r for r in cand.constraints.resources}
     auth = {r.name: r for r in ctx.constraints.resources}
-    a = np.array(cand.action_vector(), dtype=float)
+    a = np.array([cand.action.get(n, 0.0) for n in names], dtype=float)
     rev = adapter.revenue_scale(cand, ctx)
     metrics["revenue_scale"] = rev
 
@@ -156,6 +158,8 @@ def validate(
     unknown_auth = [n for n in names if n not in auth]
     if unknown_auth:
         missing.append(f"authoritative terms for {unknown_auth}")
+    if set(names) != plan.keys():
+        missing.append("candidate resource terms for the domain")
     g6 = GateResult(
         gate="G6",
         name="Missing critical evidence",
@@ -202,24 +206,17 @@ def validate(
             viol.append(f"{nm} order of {_fmt(q)} units exceeds current capacity of {_fmt(r.capacity)}")
         if TOL < q < r.min_quantity - TOL:
             viol.append(f"{nm} order of {_fmt(q)} units is below the minimum of {_fmt(r.min_quantity)}")
-        cr = cand.constraints.resources[i]
+        cr = plan.get(nm)
+        if cr is None:
+            continue
         if cr.lead_days != r.lead_days:
             warn2.append(f"{nm}: plan assumed lead {cr.lead_days} d, current terms say {r.lead_days} d")
         if abs(cr.unit_cost - r.unit_cost) > 1e-6 * max(1.0, r.unit_cost):
             warn2.append(f"{nm}: plan priced at {_usd(cr.unit_cost)}, current price {_usd(r.unit_cost)}")
-    auth_costs = np.array(
-        [
-            auth[n].unit_cost if n in auth else cand.constraints.resources[i].unit_cost
-            for i, n in enumerate(names)
-        ]
-    )
+    terms = [auth.get(n) or plan.get(n) for n in names]
+    auth_costs = np.array([r.unit_cost if r is not None else 0.0 for r in terms])
     # Only committed resources count toward spend (usage-priced limits, e.g. on-demand caps, do not).
-    committed = np.array(
-        [
-            bool((auth[n] if n in auth else cand.constraints.resources[i]).attributes.get("committed", True))
-            for i, n in enumerate(names)
-        ]
-    )
+    committed = np.array([r is not None and bool(r.attributes.get("committed", True)) for r in terms])
     spend = float((a * committed) @ auth_costs)
     if spend > ctx.constraints.budget * (1 + 1e-6) + TOL:
         viol.append(f"spend of {_usd(spend)} exceeds the budget of {_usd(ctx.constraints.budget)}")

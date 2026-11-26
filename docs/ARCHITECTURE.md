@@ -33,6 +33,8 @@ flowchart LR
 
 The two environments share contracts, not code: the decision candidate JSON Schema (`schemas/decision_candidate.v1.json`), the scenario evaluator semantics (checked by golden fixtures), and the validation gate definitions (checked by gate fixtures).
 
+The static app serves the controlled synthetic workflow and the observed-data retail pilot from separate JSON artifacts. The pilot's source dataset, forecasts and run records use `configs/research-real.yaml`. The site serves aggregate evidence from that config while its workspace continues to replay synthetic cases. [ADR 0010](decisions/0010-observed-retail-pilot.md)
+
 ## 2. Data layers
 
 | Layer | Storage | Contents | Key |

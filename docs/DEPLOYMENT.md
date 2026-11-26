@@ -2,11 +2,11 @@
 
 The product is a static site. Hosting it costs nothing on Cloudflare Pages' free plan, needs no server code, and needs no secrets in the repository.
 
-**Status: not deployed.** The build environment used to create this project had no Cloudflare credentials, and none were requested. No URL exists yet. The steps below are what the owner runs once, from their own machine, signed in to their own Cloudflare account.
+The release uses the dedicated `enterprise-decision-intelligence` Pages project. The commands below reproduce the static deployment from an authorized Wrangler session.
 
 ## Prerequisites
 
-- Node.js 20 or newer.
+- Node.js 22 or newer.
 - A Cloudflare account (free plan is enough). No payment method is required for Pages.
 - The site built locally: `cd apps/web && npm ci && npm run build`. The build fails if the output breaks the size budget or contains a `functions/` directory.
 
@@ -17,10 +17,10 @@ From the repository root:
 ```bash
 npx wrangler login                     # opens a browser; signs in to YOUR account
 npx wrangler whoami                    # confirm the account before creating anything
-npx wrangler pages project create enterprise-decision-intelligence --production-branch main
+npx wrangler pages project create enterprise-decision-intelligence --production-branch main --force
 ```
 
-Use a new project with this exact name. Do not reuse or overwrite an existing Pages project.
+For first creation with Wrangler 4.168, the create flag selects direct Pages hosting. The audit already created this project. Subsequent deployments use the existing project and the standard deploy command.
 
 ## Deploy
 
@@ -31,7 +31,7 @@ npm run build
 npx wrangler pages deploy dist --project-name enterprise-decision-intelligence --branch main
 ```
 
-Wrangler prints the deployment URL. The production address will be `https://enterprise-decision-intelligence.pages.dev` if that subdomain is free; Cloudflare appends a suffix when it is taken, so use the URL wrangler prints.
+Wrangler prints a deployment-specific URL. The project's production domain is `https://enterprise-decision-intelligence.pages.dev`.
 
 ## What gets served
 
@@ -46,7 +46,8 @@ Wrangler prints the deployment URL. The production address will be `https://ente
 URL=https://enterprise-decision-intelligence.pages.dev   # or the URL wrangler printed
 curl -sI "$URL/" | grep -i -E "content-security-policy|x-content-type-options"
 curl -s "$URL/data/meta.json" | head -c 300
-cd apps/web && BASE_URL="$URL" npx playwright test e2e/journey.spec.ts --project=desktop
+cd apps/web && BASE_URL="$URL" npx playwright test e2e/journey.spec.ts e2e/a11y.spec.ts
+BASE_URL="$URL" A11Y_TABLET=1 npx playwright test e2e/a11y.spec.ts --project=desktop
 ```
 
 `playwright.config.ts` reads `BASE_URL`; without it the tests start `vite preview` locally.
@@ -56,8 +57,9 @@ cd apps/web && BASE_URL="$URL" npx playwright test e2e/journey.spec.ts --project
 The site only shows what is in `apps/web/public/data/`. To publish new results, rerun the pipeline and export, then rebuild and deploy:
 
 ```bash
-edi run-all --config configs/research.yaml
-edi export-web --config configs/research.yaml
+edi run-all --config configs/research-real.yaml
+edi selective-validation --config configs/research-real.yaml
+edi export-web --config configs/research-real.yaml
 cd apps/web && npm run build && npx wrangler pages deploy dist --project-name enterprise-decision-intelligence --branch main
 ```
 

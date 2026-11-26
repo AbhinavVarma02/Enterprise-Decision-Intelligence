@@ -17,7 +17,7 @@ GateStatus = Literal["pass", "warn", "fail"]
 
 
 class _Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=False)
+    model_config = ConfigDict(extra="forbid", frozen=False, allow_inf_nan=False)
 
 
 class Resource(_Strict):
@@ -36,6 +36,13 @@ class Constraints(_Strict):
     budget: float = Field(ge=0)
     min_commitment: float = Field(default=0.0, ge=0)
     extra: dict[str, float] = Field(default_factory=dict)
+
+    @field_validator("resources")
+    @classmethod
+    def _resource_names_unique(cls, resources: list[Resource]) -> list[Resource]:
+        if len({r.name for r in resources}) != len(resources):
+            raise ValueError("resource names must be unique")
+        return resources
 
 
 class DataSnapshot(_Strict):
@@ -63,8 +70,8 @@ class ForecastDistribution(_Strict):
         for row in self.quantiles:
             if len(row) != len(self.levels):
                 raise ValueError("each quantile row must match levels")
-            if any(x < 0 for x in row):
-                raise ValueError("quantiles must be nonnegative")
+            if any(x < 0 for x in row) or any(b < a for a, b in zip(row, row[1:])):
+                raise ValueError("quantiles must be nonnegative and nondecreasing")
         return self
 
 

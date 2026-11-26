@@ -56,7 +56,7 @@ edi run-all --config configs/dev.yaml      # everything above in order
 python scripts/findings_tables.py --write  # after a research run: regenerate tables in docs/BENCHMARK_FINDINGS.md
 ```
 
-The committed site data and findings come from `configs/research.yaml`. `export-web` with another config overwrites `apps/web/public/data/`; do not commit that. Reports refuse to combine artifacts written by different configs.
+The synthetic site cases and historical findings come from the amendment 2 study. `configs/research.yaml` runs the current harness on synthetic data. Use `configs/research-real.yaml` for the pinned observed-data pilot. Its export writes only `research_evidence.json`. Other exports overwrite shared synthetic site data and fixtures, so use an isolated checkout for dev and CI exports. Reports refuse to combine artifacts written by different configs.
 
 Web:
 

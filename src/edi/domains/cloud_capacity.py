@@ -143,6 +143,7 @@ def forecast_quantiles(history: list[np.ndarray]) -> np.ndarray:
 
 class CloudAdapter:
     name = "cloud_capacity"
+    resource_order: tuple[str, ...] = NAMES
 
     def __init__(self, prices: CloudPrices):
         self.prices = prices

@@ -1,0 +1,56 @@
+{
+  "provenance": {
+    "data_source": "freshretailnet_50k",
+    "repo": "Dingdong-Inc/FreshRetailNet-50K",
+    "revision": "c374e85975c82816c495acfa904cc55ab14a47d3",
+    "retrieved_at": "2026-11-26T17:34:45+00:00",
+    "license": "CC BY 4.0",
+    "attribution": "Dingdong-Inc, FreshRetailNet-50K; Wang et al., arXiv:2505.16319",
+    "files": [
+      {
+        "path": "data\\eval.parquet",
+        "bytes": 8440124,
+        "sha256": "1b118840664280c6b88bffc84c80ee1f54c05d911e354b7599e5da10995e960e"
+      },
+      {
+        "path": "data\\train.parquet",
+        "bytes": 106436287,
+        "sha256": "6706832db892bbae4969c19d87e07975d2543d2ba7d7d4756360654785de5a3d"
+      }
+    ]
+  },
+  "partitions": {
+    "train": {
+      "rows": 4500000,
+      "dates": 90,
+      "first_date": "2024-03-28",
+      "last_date": "2024-06-25",
+      "store_products": 50000,
+      "cities": 18,
+      "stores": 898,
+      "products": 865,
+      "duplicate_keys": 0,
+      "stockout_days": 1992006,
+      "malformed_hours": 0,
+      "count_mismatch_6_to_21": 0,
+      "count_mismatch_6_to_22": 1886333
+    },
+    "eval": {
+      "rows": 350000,
+      "dates": 7,
+      "first_date": "2024-06-26",
+      "last_date": "2024-07-02",
+      "store_products": 50000,
+      "cities": 18,
+      "stores": 898,
+      "products": 865,
+      "duplicate_keys": 0,
+      "stockout_days": 143438,
+      "malformed_hours": 0,
+      "count_mismatch_6_to_21": 0,
+      "count_mismatch_6_to_22": 134182
+    }
+  },
+  "train_only_pairs": 0,
+  "eval_only_pairs": 0
+}

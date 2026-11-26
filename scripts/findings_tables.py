@@ -28,7 +28,7 @@ POLICY = {
     "P4": "P4 quantiles + mean-CVaR MILP",
     "P5a": "P5a validator over P3",
     "P5b": "P5b validator over P4",
-    "ORACLE": "Oracle (hindsight bound)",
+    "ORACLE": "Oracle (rolling hindsight reference)",
 }
 ABLATION = {
     "P5a_no_stockout_aware": "P5a with P3 forecasting from observed sales (no stockout-aware target)",
@@ -100,12 +100,12 @@ def tables(root: Path) -> str:
         "stock-count costs (every policy pays for an approval review when an order's spend exceeds the approval "
         "threshold; the validator adds its own counts and reviews). Brackets: 95% cluster-bootstrap interval over "
         "store-products. Tail: average of the worst "
-        "10% of store-product daily costs. Unsafe: share of executed orders that were unsafe by the protocol's definition."
+        "10% of episode-average daily costs. Unsafe decisions use every decision day, including days without an order."
     )
     for cond, label in COND.items():
         out += ["", f"**{label}**", ""]
         out.append(
-            "| Policy | Cost per day | Tail (CVaR90) | Fill rate | Waste | Review and count cost per day | Unsafe executed | Hard breaches |"
+            "| Policy | Cost per day | Tail (CVaR90) | Fill rate | Waste | Review and count cost per day | Unsafe decisions | Constraint breaches |"
         )
         out.append("|---|---|---|---|---|---|---|---|")
         for p, v in s["main"][cond].items():
@@ -279,12 +279,12 @@ def main() -> None:
     if not args.write:
         print(block)
         return
-    text = DOC.read_text()
+    text = DOC.read_text(encoding="utf-8")
     if BEGIN not in text or END not in text:
         raise SystemExit(f"markers not found in {DOC}")
     head, rest = text.split(BEGIN, 1)
     _, tail = rest.split(END, 1)
-    DOC.write_text(head + block + tail)
+    DOC.write_text(head + block + tail, encoding="utf-8", newline="\n")
     print(f"updated {DOC}")
 
 

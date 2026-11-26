@@ -96,14 +96,18 @@ export function HistoryPage() {
 
 // ------------------------------------------------------------------ import a decision from another system
 
-const Num = z.number().finite();
+const Num = z.number().min(-1e9).max(1e9);
 const ResourceZ = z.object({
-  name: z.string().max(40), lead_days: z.number().int().min(0).max(3), unit_cost: Num.positive(), capacity: Num.min(0),
+  name: z.enum(["primary", "alternate", "expedite"]), lead_days: z.number().int().min(0).max(3), unit_cost: Num.positive(), capacity: Num.min(0),
   min_quantity: Num.min(0).default(0), eligible: z.boolean().default(true), available: z.boolean().default(true),
   attributes: z.record(z.string(), z.union([Num, z.string().max(80), z.boolean()])).default({}),
-});
-const TermsZ = z.object({ resources: z.array(ResourceZ).length(3), budget: Num.min(0), min_commitment: Num.min(0).default(0), extra: z.record(z.string(), Num).optional() });
+}).refine((r) => r.attributes.committed === undefined || r.attributes.committed === true, "Inventory suppliers must count toward committed spend");
+const TermsZ = z.object({ resources: z.array(ResourceZ).length(3).refine((resources) => new Set(resources.map((r) => r.name)).size === 3, "Provide each inventory supplier once"), budget: Num.min(0), min_commitment: Num.min(0).default(0), extra: z.record(z.string(), Num).optional() });
 const EconZ = z.object({ currency: z.string().max(30).optional(), price: Num.positive(), unit_cost: Num.positive(), holding: Num.min(0), disposal: Num.min(0), goodwill: Num.min(0), shelf_life_days: z.number().int().min(1).max(10), terminal_waste_risk: Num.min(0).max(1) });
+const ForecastZ = z.object({ levels: z.array(Num.gt(0).lt(1)).min(3).max(21), quantiles: z.array(z.array(Num.min(0)).min(3).max(21)).min(1).max(4) })
+  .refine(({ levels, quantiles }) => levels.every((v, i) => i === 0 || levels[i - 1] < v)
+      && quantiles.every((row) => row.length === levels.length && row.every((v, i) => i === 0 || row[i - 1] <= v)),
+  "Provide one ordered quantile per strictly increasing probability level for each day");
 const BundleZ = z.object({
   candidate: z.object({
     decision_id: z.string().regex(/^[A-Za-z0-9_.:-]{1,120}$/),
@@ -112,7 +116,7 @@ const BundleZ = z.object({
     data_snapshot: z.object({ age_hours: Num.min(0), history_days_missing: z.number().int().min(0).default(0), state: z.object({ on_hand_by_age: z.array(Num.min(0)).max(10), pipeline_by_day: z.array(Num.min(0)).max(8) }) }).passthrough(),
     action: z.object({ primary: Num.min(0).max(1e7), alternate: Num.min(0).max(1e7), expedite: Num.min(0).max(1e7) }),
     constraints: TermsZ,
-    forecast: z.object({ levels: z.array(Num.gt(0).lt(1)).min(3).max(21), quantiles: z.array(z.array(Num.min(0))).min(1).max(4) }).passthrough().nullable(),
+    forecast: ForecastZ.nullable(),
     financial_assumptions: EconZ,
     scenario_results: z.object({ expected_cost: Num.nullable(), n_scenarios: z.number().int().min(0).default(0) }).passthrough().nullable().optional(),
     risk_tolerance: z.object({ cvar_alpha: Num.gt(0).lt(1) }).passthrough().optional(),

@@ -63,7 +63,7 @@ describe("studio and validator parity", () => {
       expect(r.validation.outcome).toBe(e.validation.outcome);
       expect(r.validation.gates.map((g) => g.status)).toEqual(e.validation.gates.map((g: { status: string }) => g.status));
       for (const key of ["expected_cost", "cvar", "tail_gain", "stress_gain", "spend"]) {
-        const pv = (e.validation.metrics as Record<string, number | null>)[key];
+        const pv = (e.validation.metrics as Record<string, number | null | undefined>)[key];
         const tv = r.validation.metrics[key];
         if (pv !== null && pv !== undefined) expect(Math.abs((tv ?? NaN) - pv), key).toBeLessThan(1e-3);
       }

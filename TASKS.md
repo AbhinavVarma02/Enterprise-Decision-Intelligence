@@ -17,6 +17,8 @@ Status values: todo, doing, done, blocked. Priority follows MASTER_PROMPT.md sec
 | T10 | Web app: design system, 7 pages, TS evaluator and gates, parity tests | T9 | Core journey works; vitest parity passes | done |
 | T11 | Playwright e2e and screenshots, visual refinement pass | T10 | Screenshots at 3 viewports reviewed; issues fixed | done |
 | T12 | Docs, README, security review, CI workflow, deployment commands | T11 | Docs match implementation; build verified | done |
-| T13 | Real-data run on FreshRetailNet-50K | dataset access | Real artifacts replace synthetic in research config | blocked (host refused by network allowlist) |
-| T14 | Cloudflare Pages deployment | T12, credentials | Verified pages.dev URL | blocked (no Cloudflare credentials in the build environment; commands in docs/DEPLOYMENT.md) |
+| T13 | Real-data run on FreshRetailNet-50K | dataset access | Verified official revision and reproducible pilot artifacts alongside preserved synthetic outputs | done |
+| T14 | Cloudflare Pages deployment | T12, credentials | Verified pages.dev URL | doing (dedicated project created) |
 | T15 | Research rerun after harness fix (amendment 2), refresh findings, screenshots and docs | T7 | Invariant passes; docs match artifacts | done |
+| T16 | Independent trade-off, inference and engineering audit | T13 | Paired safety and cost reconciliation, breach sensitivity, fresh selective replay, regression suites and documentation | done |
+| T17 | GitHub publication and hosted Actions | authorization | Authorized publication and actual workflow run | blocked (publication authorization) |

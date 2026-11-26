@@ -30,4 +30,10 @@ describe("decision log", () => {
     expect((await importLog("x".repeat(1_000_001))).ok).toBe(false);
     _setForTests([]);
   });
+
+  it("authenticates scenario assumptions and serializes concurrent records", async () => {
+    const [a, b] = await Promise.all([append({ ...base, assumptions: { demand_shift: 0.1 } }), append(base)]);
+    expect((await verify([a, b])).ok).toBe(true);
+    expect((await verify([{ ...a, assumptions: { demand_shift: 0.2 } }, b])).ok).toBe(false);
+  });
 });

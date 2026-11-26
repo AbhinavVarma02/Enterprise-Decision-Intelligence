@@ -15,8 +15,11 @@ Get the real dataset (CC BY 4.0, Dingdong-Inc) on a machine that can reach huggi
 
 ```bash
 pip install huggingface_hub
-python scripts/download_freshretailnet.py            # pins and records the resolved revision
-edi run-all --config configs/research.yaml
+python scripts/download_freshretailnet.py --revision c374e85975c82816c495acfa904cc55ab14a47d3
+python scripts/audit_freshretailnet.py
+edi run-all --config configs/research-real.yaml
 ```
+
+The pilot reads the pinned files from this directory, writes derived data under ignored `data_real/`, and publishes aggregate evidence separately in `artifacts/real/`.
 
 Attribution: FreshRetailNet-50K by Dingdong-Inc, https://huggingface.co/datasets/Dingdong-Inc/FreshRetailNet-50K, licensed CC BY 4.0. Values of `sale_amount` and `hours_sale` are normalized by the publisher; currency amounts in this project are assumptions applied to those normalized units.

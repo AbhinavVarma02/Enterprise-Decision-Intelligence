@@ -106,8 +106,7 @@ function Dossier({ c, all }: { c: DecisionCase; all: DecisionCase[] }) {
             <span className="small muted">{c.title}</span>
           </div>
           <h1 id="verdict-h">{OUTCOME_HEADLINE[v.outcome]}</h1>
-          <p className="why">{v.reasons[0]}</p>
-          <p className="small faint" style={{ marginTop: 6, maxWidth: "88ch" }}>{v.explanation}</p>
+          <p className="why">{v.reasons[0].charAt(0).toUpperCase() + v.reasons[0].slice(1)}</p>
         </div>
       </section>
 
@@ -116,7 +115,7 @@ function Dossier({ c, all }: { c: DecisionCase; all: DecisionCase[] }) {
           <Panel title="Options and their consequences" hint={`${c.scenarios.length} demand scenarios over ${c.horizon_days} days`} pad={false} id="opts-h">
             <div style={{ padding: "4px 8px 6px" }}>
               <AlternativesTable alts={options} selected={selected} onSelect={setSelected} proposed={c.candidate.orders} isFeasible={canSubmit}
-                caption="Spread: blue dot is expected cost, grey tick the 90th percentile, red tick the average of the worst 10% of scenarios." />
+                caption="The markers below tail cost show expected cost in blue, the 90th percentile in gray and the worst-10% average in red." />
             </div>
             <div className="panel-pad" style={{ borderTop: "1px solid var(--line-2)" }} aria-live="polite">
               <h3 style={{ fontSize: "var(--fs-md)" }}>{alt.label}: {ordersText(alt.orders)}{alt.key !== "suggested" && alt.key !== "smaller" && alt.key !== "no_action" && c.candidate.orders.some((q, i) => q > alt.orders[i] + 1e-6) ? " can be delivered" : ""}</h3>

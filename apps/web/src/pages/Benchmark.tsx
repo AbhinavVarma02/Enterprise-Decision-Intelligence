@@ -92,7 +92,7 @@ export function Benchmark() {
         <div>
           <h1>Decision Reliability Benchmark</h1>
           <p>
-            {meta.n_series} store-products, {meta.realizations} matched realizations per condition, final test on days {meta.window[0]} to {meta.window[1]} (the official evaluation split), {meta.n_decisions.toLocaleString("en-US")} simulated decisions.
+            {meta.n_series} store-products, {meta.realizations} matched realizations per condition, {meta.n_decisions.toLocaleString("en-US")} simulated decisions. Final evaluation {retail ? "uses" : "mirrors"} days {meta.window[0]} to {meta.window[1]} of the official split.
             Every policy faces identical demand, faults and disruptions. Intervals are 95% cluster-bootstrap intervals over store-products.
           </p>
         </div>
@@ -273,7 +273,11 @@ function ValidationTradeOff({ economics, detection }: { economics: Loose; detect
         <div className="row breach-label"><label htmlFor="breach-cost">Additional cost per breached submission</label><strong className="num">{money(breachCost)}</strong></div>
         <input id="breach-cost" type="range" min={0} max={50} step={0.25} value={breachCost} onChange={(e) => setBreachCost(e.currentTarget.valueAsNumber)} aria-valuetext={money(breachCost)} />
         <p className="breach-total" aria-live="polite"><strong className="num">{money(delta, { signed: true })}</strong> net validation cost per store-product day</p>
-        <p className="small muted">{economics.break_even_per_breached_submission === null ? "This comparison has no positive count of avoided submissions." : `Break-even is ${money(economics.break_even_per_breached_submission)} per breached submission.`} Apply only costs beyond procurement, expediting and shortages already charged by the simulator.</p>
+        <p className="small muted">{economics.break_even_per_breached_submission === null
+          ? "This comparison offers no positive count of avoided submissions."
+          : economics.break_even_per_breached_submission === 0
+            ? "The pilot point estimate favors validation at $0 extra. Its cost interval includes zero."
+            : `Break-even is ${money(economics.break_even_per_breached_submission)} per breached submission.`} Apply only costs beyond procurement, expediting and shortages already charged by the simulator.</p>
       </div>
     </div>
   </Panel>;

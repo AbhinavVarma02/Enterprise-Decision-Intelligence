@@ -26,6 +26,16 @@ def _forecast(mu: float = 20.0, h: int = 2) -> np.ndarray:
     return np.tile(base, (h, 1))
 
 
+def test_named_resources_keep_financial_cost_when_reordered(base_cfg) -> None:
+    candidate, context = make_case(base_cfg, orders=[16.0, 0.0, 2.0])
+    reference = validate(candidate, context, ADAPTER, PARAMS)
+    candidate.constraints.resources.reverse()
+    context.constraints.resources.reverse()
+    reordered = validate(candidate, context, ADAPTER, PARAMS)
+    assert reordered.metrics == reference.metrics
+    assert reordered.recommended_action == reference.recommended_action
+
+
 def make_case(
     cfg,
     *,

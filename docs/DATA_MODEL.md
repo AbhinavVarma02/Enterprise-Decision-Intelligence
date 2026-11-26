@@ -12,7 +12,7 @@ artifacts/                benchmark, forecast and secondary-domain summaries (JS
 apps/web/public/data/     small JSON exports for the static site
 ```
 
-`data/` is gitignored. `data/manifest.json` records the run id, config hash, git SHA and SHA-256 of every file written by the last pipeline run.
+Raw and intermediate data are gitignored. The pipeline manifest records an input fingerprint, output paths and the code revision. The download provenance records a SHA-256 per official input file. The real pilot reads the download from `data/raw/freshretailnet/` and writes curated data to `data_real/` and its summaries to `artifacts/real/`.
 
 ## Raw
 
@@ -30,7 +30,7 @@ FreshRetailNet-50K columns, kept as delivered (the synthetic fixture writes the 
 | holiday_flag, activity_flag | int | Holiday; promotion activity |
 | precpt, avg_temperature, avg_humidity, avg_wind_level | float | Weather |
 
-The train file holds 90 days and the eval file 7 days. The eval days are the official test split and are used once, for the final benchmark.
+The official training file covers 2024-03-28 through 2024-06-25. The evaluation file covers 2024-06-26 through 2024-07-02. The loader checks consecutive, non-overlapping dates and retains file-derived partition labels. Subset selection and the common unit scale fit on days 1–69.
 
 ## Staged and quarantine
 
@@ -72,7 +72,7 @@ Built by `src/edi/sql/curated.sql` in DuckDB:
 | `artifacts/forecast/metrics.json` | `edi forecast` | Accuracy, bias, coverage, and the controlled censoring experiment |
 | `artifacts/benchmark/summary.json` | `edi benchmark`, `edi report` | Policy metrics with cluster-bootstrap intervals, paired differences, ablations, sensitivity, audit, hypotheses verdicts |
 | `artifacts/benchmark/secondary_cloud.json` | `edi secondary` | Cloud capacity domain results |
-| `artifacts/runs/<run_id>/` | every command | Manifest with config hash, git SHA, timings and output hashes |
+| `artifacts/runs/<run_id>/` | `edi benchmark` | Decision and episode ledgers with a manifest recording config hash, code revision, data source, timings and tuning |
 
 ## Decision contract
 

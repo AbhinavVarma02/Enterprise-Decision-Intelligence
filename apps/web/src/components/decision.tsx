@@ -41,7 +41,6 @@ export function AlternativesTable({ alts, selected, onSelect, caption, proposed,
             <th scope="col">Order</th>
             <th scope="col" className="r">Expected cost</th>
             <th scope="col" className="r">Worst 10% avg</th>
-            <th scope="col">Spread</th>
             <th scope="col" className="r">Fill rate</th>
           </tr>
         </thead>
@@ -62,8 +61,7 @@ export function AlternativesTable({ alts, selected, onSelect, caption, proposed,
                   : <OrderLines orders={a.orders} late={a.arrives_after_horizon} />}
               </td>
               <td className="r num" data-label="Expected cost">{money(a.expected_cost)}{a.key !== "act_now" && <div className="xs faint">{money(a.delta_vs_act_now, { signed: true })}</div>}</td>
-              <td className="r num" data-label="Worst 10% avg">{money(a.cvar)}</td>
-              <td data-label="Spread"><RangeBar expected={a.expected_cost} cvar={a.cvar} p90={a.p90} domain={[lo, hi]} width={112} /></td>
+              <td className="r num" data-label="Worst 10% avg">{money(a.cvar)}<div className="option-spread"><RangeBar expected={a.expected_cost} cvar={a.cvar} p90={a.p90} domain={[lo, hi]} width={86} /></div></td>
               <td className="r num" data-label="Fill rate">{pct(a.expected_fill_rate, 1)}</td>
             </tr>
           ))}

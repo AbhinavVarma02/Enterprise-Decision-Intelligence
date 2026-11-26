@@ -72,7 +72,8 @@ export function validateCandidate(
   const metrics: Record<string, number | null> = {};
   const reasons: string[] = [];
   const auth = new Map(ctx.terms.resources.map((r) => [r.name, r]));
-  const planRes = cand.plan_terms.resources;
+  const planByName = new Map(cand.plan_terms.resources.map((r) => [r.name, r]));
+  const planRes = NAMES.flatMap((n) => planByName.get(n) ?? []);
   const names = planRes.map((r) => r.name);
   const a = names.map((n) => cand.action[n] ?? 0);
   const rev = cand.typical_daily_volume * ctx.econ.price;
@@ -85,6 +86,7 @@ export function validateCandidate(
   if (!cand.pipeline_by_day) missing.push("state 'pipeline_by_day'");
   const unknownAuth = names.filter((n) => !auth.has(n));
   if (unknownAuth.length) missing.push(`authoritative terms for ${unknownAuth.join(", ")}`);
+  if (planRes.length !== NAMES.length) missing.push("candidate resource terms for the domain");
   const g6: Gate = {
     gate: "G6",
     name: "Missing critical evidence",

@@ -1,15 +1,15 @@
 # Benchmark findings
 
-**Read this first.** Every result below comes from a synthetic fixture with the exact schema of FreshRetailNet-50K, not from the real dataset, which could not be downloaded in the build environment. Suppliers, costs, faults and disruptions are simulated, and the economics are assumptions (`configs/base.yaml`). The results show how the policies and the validator behave inside this simulator. They are not evidence about real stores, and no dollar figure here is a real cost or saving.
+This page preserves the controlled synthetic benchmark under amendment 2. The [FreshRetailNet-50K pilot and independent audit](RELEASE_AUDIT.md) report a separate study with observed sales and stockout flags. Both studies simulate inventory, suppliers, faults and disruptions and use assumed financial inputs from `configs/base.yaml`.
 
 The protocol (`docs/EXPERIMENT_PROTOCOL.md`) was frozen before the first run. Two amendments are recorded there: the first after a debugging run, the second after the first research run exposed a harness bug. The numbers below come from the run after amendment 2.
 
 ## Summary
 
-- **The validator made decisions safer but not cheaper.** Under unreliable data it stopped every unsafe proposal from P3 (174 of 4,200, all caused by a stale supplier snapshot), cut executed hard-constraint breaches from 177 to 0 and unsafe executed orders from 4.21% to 0.02% (one deferral). Total cost still rose by 0.67% (95% interval 0.33% to 0.99%). Before review and stock-count costs, P5a and P3 cost the same (about $67.30 a store-product day each); the whole increase is the $0.47 a day the validator spends on reviews and counts.
+- **Validation improved safety and increased modeled cost.** It intercepted all 174 unsafe proposals made by P5a's wrapped optimizer across 4,200 decision days. The separate unwrapped P3 trajectory breached constraints on 177 decision days, compared with zero for P5a. Unsafe decisions fell from 177/4,200 (4.21%) to 1/4,200 (0.02%), with a deferral as the remaining case. Total cost rose by 0.67% (95% interval 0.33% to 0.99%). Governance costs increased by $0.47 per day while other modeled costs decreased by about $0.02.
 - **That cost comparison understates what a breach costs.** In the simulator a breached order is simply cut to what the supplier can deliver, so a breach costs only the resulting shortage. Rejected purchase orders, emergency sourcing and supplier penalties are not priced. A real deployment would have to put a number on those before the trade-off could be judged.
 - **In normal operations and held-out disruptions validation changed cost by less than 0.1%** (normal: 0.01% lower, interval 0.03% lower to no change; disruptions: 0.05% higher, interval 0.01% to 0.09%). It escalated or rejected 0.4% and 2.8% of decisions.
-- **The risk-aware optimizer (P4) was the cheapest real policy in every condition**, and lowered tail cost too: 1.3% cheaper than P3 in normal operations and 3.5% cheaper under unreliable data, with CVaR90 about 4% lower in both. In held-out disruptions P3 and P4 tied on mean cost, and P4's tail was 2% lower.
+- **P4 had the lowest mean cost among deployable policies in the synthetic run.** It cost 1.30% less than P3 in normal operations and 3.46% less under unreliable data, with CVaR90 about 4% lower. In held-out disruptions the paired mean-cost interval included zero and P4's tail cost was 2% lower.
 - **Stockout-aware forecasting mattered more than the validator.** Training on recovered demand instead of observed sales lowered P3's cost by 1.3% in normal operations, although the observed-sales model scored better on the usual accuracy metric.
 - **A tuned base-stock rule was as good as the expected-cost MILP** in normal operations and with unreliable data (intervals include zero). The MILP only won during disruptions (1.3% cheaper).
 - **The validator's soft risk gates added nothing measurable here.** Every unsafe proposal was caught by hard rules. Tuning set the soft thresholds so loose they were effectively off, and the untuned defaults raised cost by 0.3% to 1.4%.
@@ -29,7 +29,7 @@ Each day, for each of 200 store-products, a policy proposes orders from three so
 | P5b | The validator over P4 |
 | Oracle | Knows realized demand; a hindsight bound, not a policy |
 
-Three conditions: **normal operations**; **unreliable data**, where 30% of decision days carry a fault (phantom stock in the record, a stale supplier snapshot, sales history two days late, or a forecast level shift); and **held-out disruptions** (supplier outages, lead-time increases, budget cuts, demand surges and collapses) of kinds and timings not used for tuning. Three demand realizations per condition. Days 91 to 97 are the official test split and were used once.
+The unreliable-data generator draws each fault type at the configured 30% rate per episode and ensures at least one fault. Faults span multiple days. The two other conditions are normal operations and held-out disruptions. The held-out set includes a combined scenario that reuses the demand-spike mechanism with a supplier outage and budget cut. The synthetic evaluation mirrors official split days 91–97 and uses three matched world realizations per condition.
 
 Costs per store-product day include procurement, holding, waste, lost sales at full price plus goodwill, and every stock count and planner review the validator triggers. A decision is **unsafe** if it breaks a hard constraint under the true terms, or if, given the true state, its expected cost exceeds the best order on the evaluation grid by more than half a day of revenue. The definition was fixed before evaluation.
 
@@ -71,10 +71,11 @@ The first research run (`research-34e2e906a51d916f`) had the investigation re-pl
 ## Reproduce
 
 ```bash
-edi run-all --config configs/research.yaml   # about 105 minutes on 2 CPU cores
-python scripts/findings_tables.py --write    # regenerates the tables below
-python scripts/findings_digest.py            # every headline number, as plain text
+python scripts/findings_digest.py            # reads the preserved historical artifacts
+python scripts/findings_tables.py --write    # regenerates the tables from those artifacts
 ```
+
+To rerun the historical specification, run `edi run-all --config configs/research.yaml` from commit `97acf8b` in an isolated checkout using the pinned environment. The current synthetic config runs the amended harness and will produce a new synthetic study.
 
 ## Result tables
 
@@ -84,11 +85,11 @@ Run `research-76b4b4db2c95d63e` (code `2558d98`), data source `synthetic_fixture
 
 ### Policy results by condition
 
-Cost per store-product day includes procurement, holding, waste, lost sales with goodwill, and review and stock-count costs (every policy pays for an approval review when an order's spend exceeds the approval threshold; the validator adds its own counts and reviews). Brackets: 95% cluster-bootstrap interval over store-products. Tail: average of the worst 10% of store-product daily costs. Unsafe: share of executed orders that were unsafe by the protocol's definition.
+Cost per store-product day includes procurement, holding, waste, lost sales with goodwill, and review and stock-count costs (every policy pays for an approval review when an order's spend exceeds the approval threshold; the validator adds its own counts and reviews). Brackets: 95% cluster-bootstrap interval over store-products. Tail: average of the worst 10% of episode-average daily costs. Unsafe decisions use every decision day, including days without an order.
 
 **Normal operations**
 
-| Policy | Cost per day | Tail (CVaR90) | Fill rate | Waste | Review and count cost per day | Unsafe executed | Hard breaches |
+| Policy | Cost per day | Tail (CVaR90) | Fill rate | Waste | Review and count cost per day | Unsafe decisions | Constraint breaches |
 |---|---|---|---|---|---|---|---|
 | P1 base-stock rule | $57.04 ($50.91 to $64.08) | $173.86 | 96.5% | 2.1% | $0.38 | 0.17% | 0 |
 | P2 point forecast + MILP | $59.68 ($53.04 to $67.01) | $185.07 | 88.8% | 0.1% | $0.02 | 0.00% | 0 |
@@ -96,11 +97,11 @@ Cost per store-product day includes procurement, holding, waste, lost sales with
 | P4 quantiles + mean-CVaR MILP | $55.88 ($49.84 to $62.80) | $170.45 | 97.9% | 1.4% | $0.07 | 0.00% | 0 |
 | P5a validator over P3 | $56.60 ($50.21 to $63.73) | $177.24 | 94.2% | 0.3% | $0.02 | 0.00% | 0 |
 | P5b validator over P4 | $55.90 ($49.86 to $62.82) | $170.45 | 97.9% | 1.4% | $0.07 | 0.00% | 0 |
-| Oracle (hindsight bound) | $50.42 ($44.76 to $56.86) | $155.99 | 99.7% | 0.0% | $0.10 | n/a | 0 |
+| Oracle (rolling hindsight reference) | $50.42 ($44.76 to $56.86) | $155.99 | 99.7% | 0.0% | $0.10 | n/a | 0 |
 
 **Unreliable data**
 
-| Policy | Cost per day | Tail (CVaR90) | Fill rate | Waste | Review and count cost per day | Unsafe executed | Hard breaches |
+| Policy | Cost per day | Tail (CVaR90) | Fill rate | Waste | Review and count cost per day | Unsafe decisions | Constraint breaches |
 |---|---|---|---|---|---|---|---|
 | P1 base-stock rule | $66.81 ($59.13 to $75.52) | $207.48 | 91.6% | 1.5% | $0.50 | 4.83% | 185 |
 | P2 point forecast + MILP | $71.23 ($62.96 to $80.59) | $224.62 | 81.0% | 0.1% | $0.03 | 4.19% | 169 |
@@ -108,11 +109,11 @@ Cost per store-product day includes procurement, holding, waste, lost sales with
 | P4 quantiles + mean-CVaR MILP | $65.03 ($57.19 to $73.75) | $205.66 | 93.7% | 0.8% | $0.12 | 4.52% | 190 |
 | P5a validator over P3 | $67.81 ($59.65 to $76.89) | $215.39 | 88.5% | 0.4% | $0.51 | 0.02% | 0 |
 | P5b validator over P4 | $66.11 ($58.18 to $74.83) | $209.13 | 92.8% | 0.7% | $0.49 | 0.02% | 0 |
-| Oracle (hindsight bound) | $58.14 ($51.37 to $65.80) | $182.29 | 99.5% | 0.0% | $0.29 | n/a | 0 |
+| Oracle (rolling hindsight reference) | $58.14 ($51.37 to $65.80) | $182.29 | 99.5% | 0.0% | $0.29 | n/a | 0 |
 
 **Held-out disruptions**
 
-| Policy | Cost per day | Tail (CVaR90) | Fill rate | Waste | Review and count cost per day | Unsafe executed | Hard breaches |
+| Policy | Cost per day | Tail (CVaR90) | Fill rate | Waste | Review and count cost per day | Unsafe decisions | Constraint breaches |
 |---|---|---|---|---|---|---|---|
 | P1 base-stock rule | $61.22 ($54.61 to $69.18) | $192.99 | 92.1% | 3.3% | $0.35 | 0.88% | 0 |
 | P2 point forecast + MILP | $62.49 ($55.45 to $70.61) | $199.30 | 85.7% | 0.8% | $0.09 | 0.00% | 0 |
@@ -120,7 +121,7 @@ Cost per store-product day includes procurement, holding, waste, lost sales with
 | P4 quantiles + mean-CVaR MILP | $60.40 ($53.69 to $67.99) | $189.86 | 93.4% | 2.3% | $0.28 | 0.00% | 0 |
 | P5a validator over P3 | $60.45 ($53.64 to $68.29) | $193.93 | 90.2% | 1.1% | $0.16 | 0.00% | 0 |
 | P5b validator over P4 | $60.44 ($53.72 to $68.04) | $189.89 | 93.5% | 2.4% | $0.28 | 0.00% | 0 |
-| Oracle (hindsight bound) | $55.10 ($48.79 to $62.35) | $177.13 | 94.0% | 0.1% | $0.23 | n/a | 0 |
+| Oracle (rolling hindsight reference) | $55.10 ($48.79 to $62.35) | $177.13 | 94.0% | 0.1% | $0.23 | n/a | 0 |
 
 ### Paired comparisons
 

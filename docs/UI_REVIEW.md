@@ -51,13 +51,19 @@ The review questions were the ones the design system sets out (`docs/DESIGN_SYST
 
 `e2e/a11y.spec.ts` runs axe-core (WCAG 2.0 and 2.1, levels A and AA) on all seven pages at desktop, phone (Pixel 7) and tablet (820 px) widths. The first run found one serious issue: on phones the Scenario studio's result table scrolled sideways inside a container that keyboard users could not reach. That table now stacks on phones, and any table wrapper that does overflow at the current width becomes a focusable, labeled region (only while it overflows). axe checks a subset of WCAG; screen-reader behavior has not been tested with a real screen reader.
 
+## Independent audit pass
+
+Payment Integrity informed the placement of uncertainty near the reported effect. Patient Outreach made the separation between modeled scenarios and observed evidence especially clear. Clinical Trace's screenshot sequence showed how workflow state and scope can stay visible on narrow screens. Enterprise Decision Intelligence uses its own IBM Plex typography, cobalt selection states, decision queue and aligned financial comparisons. [Payment Integrity](https://healthcare-payment-integrity.pages.dev/) · [Patient Outreach](https://patient-outreach-optimization.pages.dev/) · [Clinical Trace](https://github.com/AbhinavVarma02/Clinical-Trace-AI#clinical-workspace-screenshots)
+
+The benchmark now opens with a source switch, a safety ledger and a keyboard-operable breach-cost slider. The Studio shows the best-scoring feasible order and separate validator verdict, with a concise result above the controls on narrow screens. The workspace distinguishes blocked submissions from executable alternatives. The data page identifies the observed-data pilot independently of synthetic cases. The history flow now supports verified export, clear, cancellation, re-import and validation of an external bundle's dimensions.
+
 ## Verified state
 
 - No horizontal overflow on any route at 390 px or 820 px.
-- 10 of 10 browser journey tests pass (desktop and mobile).
+- 16 browser journey tests pass (desktop and mobile).
 - 21 of 21 accessibility scans pass (7 pages x desktop, phone, tablet).
 - 21 screenshots captured without errors.
-- Bundle: 29 files, about 0.95 MB in total, inside the 3 MB budget.
+- Bundle: 30 static files, about 1.04 MB in total, inside the 3 MB budget.
 
 ## Known limits
 

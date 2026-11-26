@@ -6,7 +6,7 @@ This project's own code is MIT-licensed (see `LICENSE`). It uses the data and so
 
 | Source | License | How it is used |
 |---|---|---|
-| FreshRetailNet-50K, Dingdong-Inc (Hugging Face dataset `Dingdong-Inc/FreshRetailNet-50K`) | CC BY 4.0 | Primary dataset when available. `scripts/download_freshretailnet.py` records the revision and file hashes. **The committed results do not use it**: the dataset host was unreachable from the build environment, so the published numbers come from a schema-identical synthetic fixture (see ADR-0002). No FreshRetailNet rows are redistributed in this repository. |
+| FreshRetailNet-50K, Dingdong-Inc | CC BY 4.0 | The observed-data pilot uses revision `c374e85975c82816c495acfa904cc55ab14a47d3`. The project rescales publisher-normalized observations, estimates censored demand and publishes derived aggregates. The synthetic benchmark and browser cases use generated data. [Dataset source](https://huggingface.co/datasets/Dingdong-Inc/FreshRetailNet-50K/tree/c374e85975c82816c495acfa904cc55ab14a47d3) · [License](https://creativecommons.org/licenses/by/4.0/) |
 
 Attribution for FreshRetailNet-50K: Dingdong-Inc, "FreshRetailNet-50K", https://huggingface.co/datasets/Dingdong-Inc/FreshRetailNet-50K, licensed under CC BY 4.0. If you run the pipeline on it, keep this attribution with any results you publish.
 

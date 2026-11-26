@@ -131,6 +131,11 @@ function StudioBody({ c, all, params }: { c: DecisionCase; all: DecisionCase[]; 
         </label>
       </div>
 
+      {result.ok && <div className="studio-quick-result" aria-live="polite">
+        <div className="row"><OutcomeChip outcome={result.r.validation.outcome} /><span className="small muted">Best-scoring order</span></div>
+        <strong>{ordersText(result.r.recommended.orders)}</strong>
+        <span className="small muted num">{money(result.r.recommended.score)} risk-adjusted</span>
+      </div>}
       <div className="studio-layout">
         <Panel title="Assumptions" hint={changed ? "Changed from the base case" : "Base case"}>
           <div className="stack" style={{ gap: 18 }}>

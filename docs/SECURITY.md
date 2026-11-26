@@ -42,13 +42,13 @@ The deployed product is a static site: HTML, JavaScript, fonts and precomputed J
 
 ## What the browser decision log is, and is not
 
-Each record stores the SHA-256 of the previous record, so accidental edits or truncation are detectable, and the History page shows whether the chain is intact. This is **not** tamper-proof: anyone with access to the browser can rewrite the whole chain consistently, and clearing site data deletes it. It is a convenience for demonstrating replay and audit trails, not a compliance record. The UI says so.
+New records hash their own fields, including nested scenario assumptions, together with the previous record's SHA-256. Legacy entries verify under their original rules. A removed tail can leave a valid prefix, and anyone with browser access can rewrite the chain consistently. Records exist for local demonstration and replay.
 
 ## Known gaps
 
 - Cloudflare Pages serves `_headers` only when deployed there; other static hosts need equivalent headers configured.
 - The CSP keeps `style-src 'unsafe-inline'`. Removing it would require moving all chart geometry into CSS classes or SVG attributes; React's `style` prop does not use inline `<style>` blocks, so the practical risk is low, but it is still a relaxation.
-- Dependency scanning: CI runs `npm audit --omit=dev` on the shipped web packages. Python packages are not scanned in CI; on 2026-11-26 `pip-audit` over the installed environment (the versions in `requirements-lock.txt`) and `npm audit --omit=dev` both reported no known vulnerabilities. Re-run both before deploying.
+- On 2026-11-26 the release audit found zero known vulnerabilities in both `pip-audit --no-deps --disable-pip -r requirements-lock.txt` and `npm audit --omit=dev`. CI checks the shipped npm dependencies.
 - The download script trusts Hugging Face's TLS and the dataset publisher. It records hashes so later runs can detect a changed upstream file, but it cannot tell whether the first download was genuine.
 
 ## Reporting

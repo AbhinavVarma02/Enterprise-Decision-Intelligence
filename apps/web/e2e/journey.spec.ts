@@ -91,4 +91,34 @@ test.describe("signature decision journey", () => {
     await chooser.setFiles({ name: "bundle.json", mimeType: "application/json", buffer: bundle });
     await expect(page.locator(".chip").filter({ hasText: /Reject|Recommend|Escalate|Defer|Investigate/ }).last()).toBeVisible();
   });
+
+  test("decision history exports, cancels a clear, clears and restores records", async ({ page }) => {
+    await page.goto("/decisions");
+    await page.getByRole("button", { name: "Wait one day, then order" }).click();
+    await page.getByRole("button", { name: "Record deferral" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Recorded: deferred" })).toBeVisible();
+    await page.getByRole("link", { name: "decision history", exact: true }).click();
+    const save = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export log" }).click();
+    const exported = await save;
+    expect(exported.suggestedFilename()).toBe("edi-decision-log.json");
+    await page.getByRole("button", { name: "Clear history" }).click();
+    await page.getByRole("button", { name: "Keep" }).click();
+    await expect(page.getByText("Hash chain: Intact")).toBeVisible();
+    await page.getByRole("button", { name: "Clear history" }).click();
+    await page.getByRole("button", { name: "Confirm clear" }).click();
+    await expect(page.getByRole("heading", { name: "No decisions recorded yet" })).toBeVisible();
+    const [chooser] = await Promise.all([page.waitForEvent("filechooser"), page.getByRole("button", { name: "Import log" }).click()]);
+    await chooser.setFiles((await exported.path())!);
+    await expect(page.getByText("Imported 1 decisions. The hash chain verified.")).toBeVisible();
+  });
+
+  test("bundle import refuses quantiles with the wrong dimensions", async ({ page, request }) => {
+    const payload = await (await request.get("/data/example_bundle.json")).json();
+    payload.candidate.forecast.quantiles[0] = [0, 1, 2];
+    await page.goto("/history");
+    const [chooser] = await Promise.all([page.waitForEvent("filechooser"), page.getByRole("button", { name: "Choose a bundle file" }).click()]);
+    await chooser.setFiles({ name: "bundle.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(payload)) });
+    await expect(page.getByText(/one ordered quantile per strictly increasing probability level/)).toBeVisible();
+  });
 });

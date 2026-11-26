@@ -12,4 +12,4 @@ Reasons. Engineering and tests can proceed; the latent truth enables exact check
 
 Trade-offs. Synthetic results say nothing about real retail behavior. They must never be presented as findings about the dataset.
 
-Consequences and validation. Every artifact carries `data_source: synthetic_fixture | freshretailnet_50k`. The web app shows a persistent provenance banner when the source is synthetic. `PROGRESS.md` lists real-data experiments as not run.
+Consequences and validation. The fixture and its results remain a separate controlled study. The subsequent observed-data pilot and isolated publication path are recorded in [ADR 0010](0010-observed-retail-pilot.md).
