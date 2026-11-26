@@ -27,13 +27,14 @@ src/edi/            Python package (ingestion, data_quality, forecasting, simula
                     finance, optimization, validation, information_value, benchmark,
                     domains, integrations, explain, export, cli.py)
 apps/web/           React + TypeScript + Vite application (Cloudflare Pages)
-configs/            YAML experiment configs (dev.yaml, research.yaml)
+configs/            YAML experiment configs (base.yaml holds every assumption; dev, research, ci extend it)
 schemas/            JSON Schemas generated from the Pydantic models
 tests/              pytest suite (unit, property, integration)
-artifacts/          Small versioned research outputs (JSON). Large outputs are ignored.
+artifacts/          Small versioned research outputs (JSON) from configs/research.yaml. Run folders are ignored.
+                    dev and ci write to data_dev/, artifacts_dev/, data_ci/, artifacts_ci/ (all ignored).
 docs/               Research, architecture, methodology, ADRs (docs/decisions/), screenshots
 data/               Local data lake (raw/staged/curated). Never committed except README.
-scripts/            Helper scripts (dataset download, full reproduction)
+scripts/            Dataset download, findings digest and table generator, validator latency
 ```
 
 ## Commands
@@ -48,9 +49,14 @@ pytest -q
 edi pipeline --config configs/dev.yaml     # ingest + validate + curate
 edi forecast --config configs/dev.yaml
 edi benchmark --config configs/dev.yaml
-edi export-web --config configs/dev.yaml   # writes apps/web/public/data/*.json
+edi report --config configs/dev.yaml       # summary.json; enforces the harness invariant
+edi secondary --config configs/dev.yaml    # cloud capacity domain
+edi export-web --config configs/dev.yaml   # writes apps/web/public/data/*.json and golden fixtures
 edi run-all --config configs/dev.yaml      # everything above in order
+python scripts/findings_tables.py --write  # after a research run: regenerate tables in docs/BENCHMARK_FINDINGS.md
 ```
+
+The committed site data and findings come from `configs/research.yaml`. `export-web` with another config overwrites `apps/web/public/data/`; do not commit that. Reports refuse to combine artifacts written by different configs.
 
 Web:
 
